@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
-import { Link } from 'next/link';
-import { db } from '../firebase';
+import Link from 'next/link';
+import { db } from '@/firebase';
 import { ref, onValue } from 'firebase/database';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 
@@ -55,9 +55,9 @@ const Footer: React.FC = () => {
   return (
     <FooterWrapper>
       <FooterNav>
-        <FooterLink to="/">Tijdlijn</FooterLink>
-        <FooterLink to="/stats">Statistieken</FooterLink>
-        <FooterLink to="/login">Admin Login</FooterLink>
+        <FooterLink href="/">Tijdlijn</FooterLink>
+        <FooterLink href="/stats">Statistieken</FooterLink>
+        <FooterLink href="/login">Admin Login</FooterLink>
         {isAdmin && (
           <>
             <a

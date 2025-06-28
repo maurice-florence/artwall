@@ -1,36 +1,53 @@
+# Creatieve Tijdlijn — Next.js App
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started
 
-First, run the development server:
+1. **Install dependencies:**
+   ```bash
+   npm install
+   ```
+2. **Set up environment variables:**
+   - Copy `.env.local.example` to `.env.local` (if present) or create `.env.local` manually.
+   - Add your Firebase credentials and other secrets (see `PROJECT_STRUCTURE.md` for required keys).
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+3. **Run the development server:**
+   ```bash
+   npm run dev
+   ```
+   Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+4. **Build for production:**
+   ```bash
+   npm run build
+   npm start
+   ```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Project Structure
+See [`PROJECT_STRUCTURE.md`](./PROJECT_STRUCTURE.md) for a detailed overview of all files, folders, and conventions.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Key Features
+- Next.js App Router (`src/app/`)
+- TypeScript (strict mode, path aliasing)
+- Styled-components for all styling
+- Firebase (Realtime Database, Auth, Storage)
+- Context providers for global state
+- Modern, accessible UI with reusable components
+- All filters and view options in Sidebar use a local styled `<select>`
+- Admin page uses `<Suspense>` for `useSearchParams` (see `/admin`)
+
+## Conventions & Best Practices
+- All new code is strictly typed
+- Use context/hooks for business logic
+- Avoid direct use of `window` or browser globals in server components/SSR
+- See `PROJECT_STRUCTURE.md` for more
 
 ## Learn More
+- [Next.js Documentation](https://nextjs.org/docs)
+- [Learn Next.js](https://nextjs.org/learn)
+- [Deploy on Vercel](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme)
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+For setup, development, and deployment instructions, see `PROJECT_STRUCTURE.md` and comments in the codebase.

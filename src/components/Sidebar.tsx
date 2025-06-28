@@ -1,20 +1,7 @@
 import React, { useMemo, useContext, Dispatch, SetStateAction } from 'react';
 import styled from 'styled-components';
-import { StyledFilterSelect } from '../pages/HomePage.styles';
-import { ThemeContext } from '../../../context/ThemeContext';
-import { Artwork } from '../types';
-import { FilterOptions, ViewOptions } from '../pages/HomePage';
-
-type SidebarProps = {
-  isOpen: boolean;
-  allArtworks: Artwork[];
-  filters: FilterOptions;
-  setFilters: Dispatch<SetStateAction<FilterOptions>>;
-  viewOptions: ViewOptions;
-  setViewOptions: Dispatch<SetStateAction<ViewOptions>>;
-  searchTerm: string;
-  setSearchTerm: Dispatch<SetStateAction<string>>;
-};
+import { ThemeContext } from '@/context/ThemeContext';
+import { Artwork, FilterOptions, ViewOptions } from '@/components/types';
 
 const SidebarContainer = styled.aside<{ $isOpen: boolean }>`
   width: 350px;
@@ -101,7 +88,36 @@ const ThemeButton = styled.button<{ $active: boolean; color: string }>`
   transition: border-color 0.2s;
 `;
 
-const SearchInput = styled(StyledFilterSelect)``;
+// Locally defined styled select to replace StyledFilterSelect
+const StyledSelect = styled.select`
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  border: 1px solid #ccc;
+  font-size: 1rem;
+  background: ${({ theme }) => (theme && (theme as any).colors?.backgroundSecondary) || '#fff'};
+  color: ${({ theme }) => (theme && (theme as any).colors?.textPrimary) || '#222'};
+  margin-bottom: 1rem;
+`;
+
+const SearchInput = styled.input`
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  background: ${({ theme }) => theme.cardBg};
+  color: ${({ theme }) => theme.text};
+  font-size: 1rem;
+`;
+
+interface SidebarProps {
+  isOpen: boolean;
+  allArtworks: Artwork[];
+  filters: FilterOptions;
+  setFilters: Dispatch<SetStateAction<FilterOptions>>;
+  viewOptions: ViewOptions;
+  setViewOptions: Dispatch<SetStateAction<ViewOptions>>;
+  searchTerm: string;
+  setSearchTerm: Dispatch<SetStateAction<string>>;
+}
 
 const Sidebar = ({
   isOpen,
@@ -116,17 +132,17 @@ const Sidebar = ({
   const { toggleTheme } = useContext(ThemeContext);
 
   const availableYears = useMemo(() => {
-    const years = new Set(allArtworks.map((art) => art.year));
-    return Array.from(years).sort((a, b) => b - a);
+    const years = new Set<number>(allArtworks.map((art: Artwork) => art.year));
+    return Array.from(years).sort((a, b) => (b as number) - (a as number));
   }, [allArtworks]);
 
   const handleFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setFilters((prev) => ({ ...prev, [name]: value }));
+    setFilters((prev: FilterOptions) => ({ ...prev, [name]: value }));
   };
 
   const handleViewOptionChange = (option: keyof ViewOptions, value: any) => {
-    setViewOptions((prev) => ({ ...prev, [option]: value }));
+    setViewOptions((prev: ViewOptions) => ({ ...prev, [option]: value }));
   };
 
   return (
@@ -139,127 +155,28 @@ const Sidebar = ({
 
       <SectionTitle>Filters</SectionTitle>
       <OptionGroup>
-        <StyledFilterSelect name="category" value={filters.category} onChange={handleFilterChange}>
+        <StyledSelect name="category" value={filters.category} onChange={handleFilterChange}>
           <option value="all">Alle Categorieën</option>
           <option value="poëzie">Poëzie</option>
           <option value="proza">Proza</option>
           <option value="sculptuur">Sculptuur</option>
           <option value="tekening">Tekening</option>
           <option value="muziek">Muziek</option>
-        </StyledFilterSelect>
-        <StyledFilterSelect name="year" value={filters.year} onChange={handleFilterChange}>
+        </StyledSelect>
+        <StyledSelect name="year" value={filters.year} onChange={handleFilterChange}>
           <option value="all">Alle Jaren</option>
           {availableYears.map((year) => (
             <option key={year} value={year}>
               {year}
             </option>
           ))}
-        </StyledFilterSelect>
+        </StyledSelect>
         <SearchInput
-          as="input"
           type="text"
           placeholder="Zoek op trefwoord..."
           value={searchTerm}
           onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
         />
-      </OptionGroup>
-
-      <SectionTitle>Weergave Opties</SectionTitle>
-      <OptionGroup>
-        <OptionRow>
-          <span>Afstand</span>
-          <ToggleButtonGroup>
-            <ToggleButton
-              $active={viewOptions.spacing === 'compact'}
-              onClick={() => handleViewOptionChange('spacing', 'compact')}
-            >
-              Compact
-            </ToggleButton>
-            <ToggleButton
-              $active={viewOptions.spacing === 'comfortabel'}
-              onClick={() => handleViewOptionChange('spacing', 'comfortabel')}
-            >
-              Comfortabel
-            </ToggleButton>
-          </ToggleButtonGroup>
-        </OptionRow>
-        <OptionRow>
-          <span>Layout</span>
-          <ToggleButtonGroup>
-            <ToggleButton
-              $active={viewOptions.layout === 'alternerend'}
-              onClick={() => handleViewOptionChange('layout', 'alternerend')}
-            >
-              Alternerend
-            </ToggleButton>
-            <ToggleButton
-              $active={viewOptions.layout === 'enkelzijdig'}
-              onClick={() => handleViewOptionChange('layout', 'enkelzijdig')}
-            >
-              Enkelzijdig
-            </ToggleButton>
-          </ToggleButtonGroup>
-        </OptionRow>
-        <OptionRow>
-          <span>Details</span>
-          <ToggleButtonGroup>
-            <ToggleButton
-              $active={viewOptions.details === 'titels'}
-              onClick={() => handleViewOptionChange('details', 'titels')}
-            >
-              Alleen Titels
-            </ToggleButton>
-            <ToggleButton
-              $active={viewOptions.details === 'volledig'}
-              onClick={() => handleViewOptionChange('details', 'volledig')}
-            >
-              Volledig
-            </ToggleButton>
-          </ToggleButtonGroup>
-        </OptionRow>
-        <OptionRow>
-          <span>Animaties</span>
-          <CheckboxLabel>
-            <input
-              type="checkbox"
-              checked={viewOptions.animations}
-              onChange={(e) => handleViewOptionChange('animations', e.target.checked)}
-            />
-            Aan
-          </CheckboxLabel>
-        </OptionRow>
-        <OptionRow>
-          <span>Thema</span>
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
-            <ThemeButton
-              color="#E07A5F"
-              $active={viewOptions.theme === 'atelier'}
-              onClick={() => {
-                if (toggleTheme) toggleTheme('atelier');
-                handleViewOptionChange('theme', 'atelier');
-              }}
-              title="Atelier Thema"
-            />
-            <ThemeButton
-              color="#2E86C1"
-              $active={viewOptions.theme === 'blueprint'}
-              onClick={() => {
-                if (toggleTheme) toggleTheme('blueprint');
-                handleViewOptionChange('theme', 'blueprint');
-              }}
-              title="Blueprint Thema"
-            />
-            <ThemeButton
-              color="#1E2732"
-              $active={viewOptions.theme === 'dark'}
-              onClick={() => {
-                if (toggleTheme) toggleTheme('dark');
-                handleViewOptionChange('theme', 'dark');
-              }}
-              title="Dark Mode"
-            />
-          </div>
-        </OptionRow>
       </OptionGroup>
     </SidebarContainer>
   );

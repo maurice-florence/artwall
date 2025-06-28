@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { FaArrowUp } from 'react-icons/fa';
 
-const Button = styled.button<{ visible: boolean }>`
+const Button = styled.button<{ $visible: boolean }>`
   position: fixed;
   bottom: 20px;
   right: 20px;
@@ -18,8 +18,8 @@ const Button = styled.button<{ visible: boolean }>`
   justify-content: center;
   align-items: center;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-  opacity: ${(props) => (props.visible ? 1 : 0)};
-  transform: ${(props) => (props.visible ? 'scale(1)' : 'scale(0)')};
+  opacity: ${(props) => (props.$visible ? 1 : 0)};
+  transform: ${(props) => (props.$visible ? 'scale(1)' : 'scale(0)')};
   transition:
     opacity 0.3s,
     transform 0.3s;
@@ -29,28 +29,30 @@ const Button = styled.button<{ visible: boolean }>`
 const ScrollToTop = () => {
   const [isVisible, setIsVisible] = useState<boolean>(false);
 
-  const toggleVisibility = () => {
-    if (window.pageYOffset > 300) {
-      setIsVisible(true);
-    } else {
-      setIsVisible(false);
-    }
-  };
-
-  const scrollToTop = () => {
-    window.scrollTo({
-      top: 0,
-      behavior: 'smooth',
-    });
-  };
-
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const toggleVisibility = () => {
+      if (window.pageYOffset > 300) {
+        setIsVisible(true);
+      } else {
+        setIsVisible(false);
+      }
+    };
     window.addEventListener('scroll', toggleVisibility);
     return () => window.removeEventListener('scroll', toggleVisibility);
   }, []);
 
+  const scrollToTop = () => {
+    if (typeof window !== 'undefined') {
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth',
+      });
+    }
+  };
+
   return (
-    <Button visible={isVisible} onClick={scrollToTop} title="Naar boven">
+    <Button $visible={isVisible} onClick={scrollToTop} title="Naar boven">
       <FaArrowUp />
     </Button>
   );

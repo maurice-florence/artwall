@@ -1,5 +1,5 @@
 import React from 'react';
-import { Artwork } from '../types';
+import { Artwork } from '@/types';
 
 interface TimelineYearProps {
   year: number | string;

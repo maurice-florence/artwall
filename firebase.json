@@ -1,0 +1,33 @@
+{
+  "hosting": {
+    "public": "build",
+    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
+  },
+  "database": {
+    "rules": "database.rules.json"
+  },
+  "storage": {
+    "rules": "storage.rules"
+  },
+  "rules": {
+    ".read": "auth != null",
+    ".write": "auth != null"
+  },
+  "rules_version": "2",
+  "service": "firebase.storage",
+  "match": {
+    "/b/{bucket}/o": {
+      "match": "/{allPaths=**}",
+      "allow": {
+        "read": "request.auth != null",
+        "write": "request.auth != null"
+      }
+    }
+  }
+}

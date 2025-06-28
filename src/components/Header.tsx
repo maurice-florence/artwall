@@ -1,7 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 import { FaBars } from 'react-icons/fa';
-import LanguageSwitcher from './ThemeSwitcher';
+import ThemeSwitcher from '@/components/ThemeSwitcher';
 
 const HeaderWrapper = styled.header`
   background: ${({ theme }) => theme.headerBg};
@@ -44,7 +44,7 @@ const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
         <FaBars />
       </ToggleButton>
       <Title>Mijn Creatieve Tijdlijn</Title>
-      <LanguageSwitcher /> {/* Assuming LanguageSwitcher is now ThemeSwitcher based on context */}
+      <ThemeSwitcher />
     </HeaderWrapper>
   );
 };

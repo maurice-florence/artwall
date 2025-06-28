@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useMemo } from 'react';
-import { useArtworks } from '../context/ArtworksContext';
-import { PageWrapper, StatGrid, StatCard, StatTitle, StatValue } from './StatsPage.styles';
+import { useArtworks } from '@/context/ArtworksContext';
+import { PageWrapper, StatGrid, StatCard, StatTitle, StatValue } from '@/app/stats/StatsPage.styles';
 
 const StatsPage: React.FC = () => {
   const { artworks: allArtworks } = useArtworks();

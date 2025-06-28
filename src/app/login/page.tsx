@@ -1,9 +1,9 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { auth } from '../firebase';
+import { auth } from '@/firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { useNavigate } from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   FormWrapper,
   StyledForm,
@@ -13,24 +13,24 @@ import {
   StyledInput,
   StyledButton,
   BackToHomeLink,
-} from '../components/Form.styles';
+} from '@/components/Form.styles';
 
 const LoginPage: React.FC = () => {
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
-  const navigate = useNavigate();
+  const router = useRouter();
 
   useEffect(() => {
     if (auth.currentUser) {
-      navigate('/admin');
+      router.push('/admin');
     }
-  }, [navigate]);
+  }, [router]);
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      navigate('/admin');
+      router.push('/admin');
     } catch (error) {
       if (error instanceof Error) {
         alert('Login mislukt: ' + error.message);
@@ -66,7 +66,7 @@ const LoginPage: React.FC = () => {
         </FormGroup>
         <StyledButton type="submit">Login</StyledButton>
       </StyledForm>
-      <BackToHomeLink to="/">Terug naar tijdlijn</BackToHomeLink>
+      <BackToHomeLink href="/">Terug naar tijdlijn</BackToHomeLink>
     </FormWrapper>
   );
 };

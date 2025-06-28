@@ -1,5 +1,4 @@
 import styled from 'styled-components';
-import { Link } from 'next/link';
 
 // Een wrapper die het formulier mooi in het midden van de pagina zet
 export const FormWrapper = styled.div`
@@ -89,18 +88,5 @@ export const StyledButton = styled.button`
 
   &:hover {
     background: #3d405b; // Leisteen Grijs
-  }
-`;
-
-export const BackToHomeLink = styled(Link)`
-  display: block;
-  text-align: center;
-  margin-top: 1.5rem;
-  color: #e07a5f; /* Zandsteen */
-  text-decoration: none;
-  font-weight: bold;
-
-  &:hover {
-    text-decoration: underline;
   }
 `;

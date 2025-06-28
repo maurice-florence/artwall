@@ -2,8 +2,8 @@ import React from 'react';
 import styled from 'styled-components';
 import { FaTimes, FaSoundcloud, FaShareAlt } from 'react-icons/fa';
 import ReactMarkdown from 'react-markdown';
-import { formatDate } from '../utils';
-import { Artwork } from '../types';
+import { formatDate } from '@/utils';
+import { Artwork } from '@/types';
 
 const ModalBackdrop = styled.div.attrs({
   role: 'dialog',
@@ -129,7 +129,9 @@ const StyledHr = styled.hr`
   margin: 1.5rem 0;
 `;
 
-const isMobile = window.innerWidth < 768;
+// Only use window in client-side code
+const isClient = typeof window !== 'undefined';
+const isMobile = isClient ? window.innerWidth < 768 : false;
 
 type ModalProps = {
   item: Artwork;
@@ -137,16 +139,17 @@ type ModalProps = {
 };
 
 const Modal: React.FC<ModalProps> = ({ item, onClose }) => {
-  const formattedDateStr = formatDate(item);
+  const dateObj = new Date(item.year, (item.month ?? 1) - 1, item.day ?? 1);
+  const formattedDateStr = formatDate(dateObj);
 
   const handleShare = () => {
-    if (navigator.share) {
+    if (typeof window !== 'undefined' && navigator.share) {
       navigator.share({
         title: item.title,
         text: item.description,
         url: window.location.href,
       });
-    } else {
+    } else if (typeof window !== 'undefined') {
       navigator.clipboard.writeText(window.location.href);
       alert('Link gekopieerd!');
     }

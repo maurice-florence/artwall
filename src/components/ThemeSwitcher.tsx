@@ -1,6 +1,6 @@
 // src/components/ThemeSwitcher.tsx
 import React, { useContext } from 'react';
-import { ThemeContext } from '../../../context/ThemeContext';
+import { ThemeContext } from '@/context/ThemeContext';
 import styled from 'styled-components';
 
 const SwitcherContainer = styled.div`

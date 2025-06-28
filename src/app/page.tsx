@@ -1,56 +1,37 @@
 "use client";
 
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { useNavigate } from 'next/link';
-import { db } from '../firebase';
+import React, { useState, useEffect, useMemo, useCallback, useContext } from 'react';
+import { useRouter } from 'next/navigation';
+import { db } from '@/firebase';
 import { ref, onValue, remove, update } from 'firebase/database';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
-import { getStorage, ref as storageRef, deleteObject } from 'firebase/storage';
+import { getStorage, ref as storageRef, deleteObject } from "firebase/storage";
 import {
-  PageLayout,
-  MainContent,
-  TimelineContainer,
-  YearHeader,
-  TimelineEntry,
-  TimelineDot,
-  TimelineItemWrapper,
-  ItemHeader,
-  ItemCategory,
-  ActionsContainer,
-  CompactYearHeader,
-  SkeletonCard,
-  NoResultsMessage,
-} from './HomePage.styles';
-import {
-  FaPenNib,
-  FaPaintBrush,
-  FaMusic,
-  FaEdit,
-  FaTrash,
-  FaEye,
-  FaEyeSlash,
-  FaBookOpen,
-} from 'react-icons/fa';
-import Modal from '../components/Modal';
-import Footer from '../components/Footer';
-import Sidebar from '../components/Sidebar';
-import Header from '../components/Header';
+    PageLayout, MainContent, TimelineContainer,
+    YearHeader, TimelineItemWrapper, ItemHeader, ItemCategory, NoResultsMessage, TimelineYearGroup
+} from '@/app/HomePage.styles';
+import { FaPenNib, FaPaintBrush, FaMusic, FaEdit, FaTrash, FaEye, FaEyeSlash, FaBookOpen } from 'react-icons/fa';
+import Modal from '@/components/Modal';
+import Footer from '@/components/Footer';
+import Sidebar from '@/components/Sidebar';
+import Header from '@/components/Header';
 import toast from 'react-hot-toast';
-import { Artwork } from '../types';
-import TimelineYear from '../components/TimelineYear';
+import { Artwork } from '@/types';
+import { ThemeContext } from '@/context/ThemeContext';
 
 export interface FilterOptions {
-  category: string;
-  year: string;
+    category: string;
+    year: string;
 }
 
-export interface ViewOptions {
+// Gebruik de juiste string literals voor ViewOptions
+type ViewOptionsType = {
   spacing: 'compact' | 'comfortabel';
   layout: 'alternerend' | 'enkelzijdig';
   details: 'volledig' | 'titels';
   animations: boolean;
   theme: string;
-}
+};
 
 const iconMap: { [key: string]: React.ReactElement } = {
   poëzie: <FaPenNib />,
@@ -60,145 +41,196 @@ const iconMap: { [key: string]: React.ReactElement } = {
   muziek: <FaMusic />,
 };
 
-const HomePage: React.FC = () => {
-  const [allArtworks, setAllArtworks] = useState<Artwork[]>([]);
-  const [selectedItem, setSelectedItem] = useState<Artwork | null>(null);
-  const [isAdmin, setIsAdmin] = useState<boolean>(false);
-  const [isSidebarOpen, setSidebarOpen] = useState<boolean>(window.innerWidth > 1024);
-  const [filters, setFilters] = useState<FilterOptions>(() => {
-    const saved = localStorage.getItem('timelineFilters');
-    return saved ? JSON.parse(saved) : { category: 'all', year: 'all' };
-  });
-  const [viewOptions, setViewOptions] = useState<ViewOptions>(() => {
-    const saved = localStorage.getItem('timelineViewOptions');
-    return saved
-      ? JSON.parse(saved)
-      : {
-          spacing: 'comfortabel',
-          layout: 'alternerend',
-          details: 'volledig',
-          animations: true,
-          theme: 'atelier',
-        };
-  });
-  const [searchTerm, setSearchTerm] = useState<string>('');
-  const navigate = useNavigate();
+export default function HomePage() {
+    const [allArtworks, setAllArtworks] = useState<Artwork[]>([]);
+    const [selectedItem, setSelectedItem] = useState<Artwork | null>(null);
+    const [isAdmin, setIsAdmin] = useState(false);
+    const [isSidebarOpen, setSidebarOpen] = useState(true);
+    
+    // Altijd vaste opties voor weergave
+    const filters: FilterOptions = { category: 'all', year: 'all' };
+    const viewOptions: ViewOptionsType = useMemo(() => ({
+        spacing: 'compact',
+        layout: 'alternerend',
+        details: 'volledig',
+        animations: true,
+        theme: 'atelier',
+    }), []);
+    const [searchTerm, setSearchTerm] = useState('');
+    const router = useRouter();
+    const { theme } = useContext(ThemeContext);
 
-  useEffect(() => {
-    localStorage.setItem('timelineFilters', JSON.stringify(filters));
-  }, [filters]);
-  useEffect(() => {
-    localStorage.setItem('timelineViewOptions', JSON.stringify(viewOptions));
-  }, [viewOptions]);
+    useEffect(() => {
+        const auth = getAuth();
+        onAuthStateChanged(auth, (user) => setIsAdmin(!!user));
+    }, []);
 
-  useEffect(() => {
-    const auth = getAuth();
-    const unsubscribe = onAuthStateChanged(auth, (user) => setIsAdmin(!!user));
-    return () => unsubscribe();
-  }, []);
+    useEffect(() => {
+        const artworksRef = ref(db, 'artworks');
+        onValue(artworksRef, (snapshot) => {
+            const data = snapshot.val();
+            const loadedArtworks: Artwork[] = data ? Object.entries(data).map(([id, value]) => ({ id, ...(value as Omit<Artwork, 'id'>) })) : [];
+            setAllArtworks(loadedArtworks);
+        });
+    }, []);
 
-  useEffect(() => {
-    const artworksRef = ref(db, 'artworks');
-    const unsubscribe = onValue(artworksRef, (snapshot) => {
-      const data = snapshot.val();
-      const loadedArtworks: Artwork[] = data
-        ? Object.entries(data).map(([id, value]) => ({ id, ...(value as Omit<Artwork, 'id'>) }))
-        : [];
-      setAllArtworks(loadedArtworks);
-    });
-    return () => unsubscribe();
-  }, []);
+    const handleToggleHide = useCallback(async (artwork: Artwork) => {
+        const artworkRef = ref(db, 'artworks/' + artwork.id);
+        await update(artworkRef, { isHidden: !artwork.isHidden });
+        toast.success(`Item is nu ${artwork.isHidden ? 'zichtbaar' : 'verborgen'}.`);
+    }, []);
 
-  // Memoized filtered and grouped artworks
-  const filteredArtworks = useMemo(() => {
-    let result = allArtworks;
-    if (filters.category && filters.category !== 'all') {
-      result = result.filter((a) => a.category === filters.category);
-    }
-    if (filters.year && filters.year !== 'all') {
-      result = result.filter((a) => String(a.year) === String(filters.year));
-    }
-    if (searchTerm) {
-      result = result.filter((a) => a.title.toLowerCase().includes(searchTerm.toLowerCase()));
-    }
-    return result;
-  }, [allArtworks, filters, searchTerm]);
+    const handleDelete = useCallback(async (artwork: Artwork) => {
+        if (typeof window !== 'undefined' && window.confirm(`Weet je zeker dat je "${artwork.title}" permanent wilt verwijderen?`)) {
+            try {
+                await remove(ref(db, 'artworks/' + artwork.id));
+                const storage = getStorage();
+                if (artwork.mediaUrl) {
+                    const fileRef = storageRef(storage, artwork.mediaUrl);
+                    await deleteObject(fileRef);
+                }
+                if (artwork.coverImageUrl) {
+                    const coverRef = storageRef(storage, artwork.coverImageUrl);
+                    await deleteObject(coverRef);
+                }
+                toast.success('Kunstwerk en bestanden verwijderd.');
+            } catch (error: any) {
+                 if (error.code !== 'storage/object-not-found') {
+                     toast.error("Fout bij verwijderen: " + error.message);
+                } else {
+                     toast.success('Database entry verwijderd (bestand was al weg).');
+                }
+            }
+        }
+    }, []);
 
-  // Group by year
-  const groupedByYear = useMemo(() => {
-    const groups: { [year: string]: Artwork[] } = {};
-    filteredArtworks.forEach((art) => {
-      const year = String(art.year);
-      if (!groups[year]) groups[year] = [];
-      groups[year].push(art);
-    });
-    return groups;
-  }, [filteredArtworks]);
+    const handleEdit = useCallback((artwork: Artwork) => {
+        router.push(`/admin?edit=${artwork.id}`);
+    }, [router]);
 
-  // Handlers
-  const handleSidebarToggle = useCallback(() => setSidebarOpen((open) => !open), []);
-  const handleFilterChange = useCallback((newFilters: FilterOptions) => setFilters(newFilters), []);
-  const handleViewOptionsChange = useCallback(
-    (newOptions: ViewOptions) => setViewOptions(newOptions),
-    [],
-  );
-  const handleSearchChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value),
-    [],
-  );
+    const groupedAndFilteredArtworks = useMemo(() => {
+        const startYear = 1987;
+        const currentYear = new Date().getFullYear();
+        const initialGroups: { [key: number]: Artwork[] } = {};
+        for (let year = currentYear; year >= startYear; year--) {
+            initialGroups[year] = [];
+        }
 
-  // Render artwork item
-  const renderArtwork = useCallback(
-    (artwork: Artwork, idx: number) => (
-      <TimelineItemWrapper key={artwork.id}>
-        <ItemHeader $details={viewOptions.details}>
-          <span>{artwork.title}</span>
-          <ItemCategory category={artwork.category}>
-            {iconMap[artwork.category] || null} {artwork.category}
-          </ItemCategory>
-        </ItemHeader>
-        {/* ...other artwork details... */}
-      </TimelineItemWrapper>
-    ),
-    [viewOptions.details],
-  );
+        const filtered = allArtworks.filter(artwork => {
+            if (!isAdmin && artwork.isHidden) return false;
+            const categoryMatch = filters.category === 'all' || artwork.category === filters.category;
+            const yearMatch = filters.year === 'all' || artwork.year.toString() === filters.year;
+            const searchMatch = searchTerm.trim() === '' ? true : 
+                artwork.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                artwork.description.toLowerCase().includes(searchTerm.toLowerCase());
+            return categoryMatch && yearMatch && searchMatch;
+        });
 
-  return (
-    <PageLayout>
-      <Sidebar
-        isOpen={isSidebarOpen}
-        filters={filters}
-        setFilters={setFilters}
-        viewOptions={viewOptions}
-        setViewOptions={setViewOptions}
-        searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
-        allArtworks={allArtworks}
-      />
-      <MainContent $isSidebarOpen={isSidebarOpen}>
-        <Header onToggleSidebar={handleSidebarToggle} />
-        <input
-          type="text"
-          value={searchTerm}
-          onChange={handleSearchChange}
-          placeholder="Zoek op titel..."
-        />
-        <TimelineContainer>
-          {Object.entries(groupedByYear).map(([year, artworks]) => (
-            <div key={year}>
-              <YearHeader>{year}</YearHeader>
-              <TimelineYear year={year} artworks={artworks} renderArtwork={renderArtwork} />
-            </div>
-          ))}
-          {filteredArtworks.length === 0 && (
-            <NoResultsMessage>Geen resultaten gevonden.</NoResultsMessage>
-          )}
-        </TimelineContainer>
-        <Footer />
-      </MainContent>
-      {selectedItem && <Modal item={selectedItem} onClose={() => setSelectedItem(null)} />}
-    </PageLayout>
-  );
-};
+        const grouped = filtered.reduce((acc, artwork) => {
+            if (acc[artwork.year]) {
+                acc[artwork.year].push(artwork);
+            }
+            return acc;
+        }, initialGroups);
+        
+        for (const year in grouped) {
+            grouped[year].sort((a, b) => {
+                const dateA = new Date(a.year, (a.month || 1) - 1, a.day || 1).getTime();
+                const dateB = new Date(b.year, (b.month || 1) - 1, b.day || 1).getTime();
+                return dateA - dateB;
+            });
+        }
+        return grouped;
+    }, [allArtworks, filters, isAdmin, searchTerm]);
 
-export default HomePage;
+    const sortedYears = Object.keys(groupedAndFilteredArtworks).sort((a, b) => Number(b) - Number(a));
+    const nonEmptyYearsCount = useMemo(() => Object.values(groupedAndFilteredArtworks).filter(arr => arr.length > 0).length, [groupedAndFilteredArtworks]);
+    
+    const formattedDate = (artwork: Artwork) => new Date(artwork.year, (artwork.month || 1) - 1, artwork.day || 1)
+                                .toLocaleDateString('nl-NL', { day: 'numeric', month: 'short', year: 'numeric' });
+
+    return (
+        <PageLayout>
+            <Sidebar 
+                isOpen={isSidebarOpen} 
+                allArtworks={allArtworks}
+                filters={filters}
+                setFilters={() => {}} // niet meer aanpasbaar
+                viewOptions={viewOptions}
+                setViewOptions={() => {}} // niet meer aanpasbaar
+                searchTerm={searchTerm}
+                setSearchTerm={setSearchTerm}
+            />
+            <MainContent $isSidebarOpen={isSidebarOpen}>
+                <Header onToggleSidebar={() => setSidebarOpen(!isSidebarOpen)} />
+                {allArtworks.length === 0 ? (
+                    <div style={{ padding: '2rem' }}>Laden...</div>
+                ) : (
+                    <TimelineContainer>
+                        {nonEmptyYearsCount === 0 && (
+                            <NoResultsMessage>
+                                <p>Geen kunstwerken gevonden die aan uw criteria voldoen.</p>
+                                <p>Probeer een ander filter of reset de filters.</p>
+                            </NoResultsMessage>
+                        )}
+                        {sortedYears.map((year, yearIdx) => {
+                          const artworks = groupedAndFilteredArtworks[Number(year)];
+                          if (artworks.length === 0 && filters.year === 'all') {
+                            return (
+                              <TimelineYearGroup key={year}>
+                                <YearHeader $empty>{year}</YearHeader>
+                              </TimelineYearGroup>
+                            );
+                          }
+                          if (artworks.length === 0) return null;
+
+                          return (
+                            <TimelineYearGroup key={year}>
+                              <YearHeader>{year}</YearHeader>
+                              {artworks.map((artwork, index) => {
+                                const isHiddenForVisitor = !isAdmin && artwork.isHidden;
+                                const side = (index % 2 === 0) ? 'left' : 'right';
+                                return (
+                                  <TimelineItemWrapper
+                                    key={artwork.id}
+                                    className={artwork.isHidden ? 'hidden' : ''}
+                                    $side={side}
+                                    onClick={() => !isHiddenForVisitor && setSelectedItem(artwork)}
+                                  >
+                                    {isAdmin && (
+                                      <div style={{ display: 'flex', gap: 8 }}>
+                                        <span onClick={(e) => { e.stopPropagation(); handleToggleHide(artwork); }} title={artwork.isHidden ? "Zichtbaar maken" : "Verbergen"}>
+                                          {artwork.isHidden ? <FaEyeSlash /> : <FaEye />}
+                                        </span>
+                                        <span onClick={(e) => { e.stopPropagation(); handleEdit(artwork); }} title="Bewerken"><FaEdit /></span>
+                                        <span onClick={(e) => { e.stopPropagation(); handleDelete(artwork); }} title="Verwijderen"><FaTrash /></span>
+                                      </div>
+                                    )}
+                                    <ItemHeader $details={viewOptions.details}>
+                                      <h2>{artwork.title}</h2>
+                                      <ItemCategory>
+                                        {iconMap[artwork.category] || <FaPenNib />}
+                                        {viewOptions.details === 'volledig' && <span>{artwork.category}</span>}
+                                      </ItemCategory>
+                                    </ItemHeader>
+                                    {viewOptions.details === 'volledig' && <>
+                                      <p><strong>Datum:</strong> {formattedDate(artwork)}</p>
+                                      <p>{artwork.description}</p>
+                                    </>}
+                                  </TimelineItemWrapper>
+                                );
+                              })}
+                            </TimelineYearGroup>
+                          );
+                        })}
+                    </TimelineContainer>
+                )}
+                <Footer />
+            </MainContent>
+
+            {selectedItem && (
+                <Modal item={selectedItem} onClose={() => setSelectedItem(null)} />
+            )}
+        </PageLayout>
+    );
+}
