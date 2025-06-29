@@ -22,6 +22,7 @@ export const atelierTheme = {
     sculptuur: 'radial-gradient(circle at 30% 30%, #e8e8e8 60%, #f5f5f5 100%)',
     tekening: 'repeating-linear-gradient(120deg, #e8e8e8 0px, #e8e8e8 10px, #f5f5f5 10px, #f5f5f5 20px)',
   },
+  primary: '#3D405B',
 };
 
 export const blueprintTheme = {
@@ -48,6 +49,7 @@ export const blueprintTheme = {
     sculptuur: 'radial-gradient(circle at 70% 70%, #fbeee6 60%, #eaf2f8 100%)',
     tekening: 'repeating-linear-gradient(120deg, #eaf2f8 0px, #eaf2f8 10px, #f8f9f9 10px, #f8f9f9 20px)',
   },
+  primary: '#2E86C1',
 };
 
 export const darkModeTheme = {
@@ -74,6 +76,7 @@ export const darkModeTheme = {
     sculptuur: 'radial-gradient(circle at 30% 30%, #232b36 60%, #1e2732 100%)',
     tekening: 'repeating-linear-gradient(120deg, #232b36 0px, #232b36 10px, #1e2732 10px, #1e2732 20px)',
   },
+  primary: '#BB86FC',
 };
 
 // We export the themes so they can be used in the application

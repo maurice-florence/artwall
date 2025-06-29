@@ -1,7 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 import { FaBars } from 'react-icons/fa';
-import ThemeSwitcher from '@/components/ThemeSwitcher';
+import ThemeSwitcher from './ThemeSwitcher'; // Importeren
 
 const HeaderWrapper = styled.header`
   background: ${({ theme }) => theme.headerBg};
@@ -10,41 +10,31 @@ const HeaderWrapper = styled.header`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
   position: sticky;
   top: 0;
   z-index: 100;
 `;
 
-const Title = styled.h1`
-  font-family: 'Lora', serif;
-  font-size: 1.8rem;
-  color: ${({ theme }) => theme.headerText};
-  @media (max-width: 768px) {
-    font-size: 1.5rem;
-  }
+const Title = styled.h1`/* ... */`;
+const ToggleButton = styled.button`/* ... */`;
+
+const RightSection = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
 `;
 
-const ToggleButton = styled.button`
-  background: none;
-  border: none;
-  color: ${({ theme }) => theme.headerText};
-  font-size: 1.5rem;
-  cursor: pointer;
-`;
-
-type HeaderProps = {
-  onToggleSidebar: () => void;
-};
-
-const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
+const Header = ({ onToggleSidebar }: { onToggleSidebar: () => void }) => {
   return (
     <HeaderWrapper>
       <ToggleButton onClick={onToggleSidebar} title="Toggle Sidebar">
-        <FaBars />
+          <FaBars />
       </ToggleButton>
       <Title>Mijn Creatieve Tijdlijn</Title>
-      <ThemeSwitcher />
+      <RightSection>
+        <ThemeSwitcher />
+      </RightSection>
     </HeaderWrapper>
   );
 };

@@ -1,8 +1,9 @@
 import styled from 'styled-components';
+import Link from 'next/link';
 
 // Een wrapper die het formulier mooi in het midden van de pagina zet
 export const FormWrapper = styled.div`
-  min-height: 100vh;
+  min-height: calc(100vh - 80px); /* 80px is ongeveer de hoogte van de header */
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -13,9 +14,10 @@ export const FormWrapper = styled.div`
 // Het formulier zelf, als een 'kaart'
 export const StyledForm = styled.form`
   width: 100%;
-  max-width: 500px;
+  max-width: 600px;
   padding: 2.5rem;
-  background: #ffffff;
+  background: ${({ theme }: { theme: import('styled-components').DefaultTheme }) => theme.cardBg};
+  color: ${({ theme }: { theme: import('styled-components').DefaultTheme }) => theme.cardText};
   border-radius: 8px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
 `;
@@ -25,6 +27,7 @@ export const FormTitle = styled.h2`
   text-align: center;
   margin-bottom: 2rem;
   font-size: 2rem;
+  color: ${({ theme }: { theme: import('styled-components').DefaultTheme }) => theme.text};
 `;
 
 // Een groep voor een label en zijn input
@@ -47,30 +50,23 @@ const inputStyles = `
   padding: 0.8rem 1rem;
   border-radius: 4px;
   border: 1px solid #DDDDDD;
-  background: #F8F7F2;
+  background: 
+    ${({ theme }: { theme: import('styled-components').DefaultTheme }) => theme.body};
   font-family: 'Nunito Sans', sans-serif;
   font-size: 1rem;
-  color: #3D405B;
+  color: ${({ theme }: { theme: import('styled-components').DefaultTheme }) => theme.text};
   transition: border-color 0.2s;
 
   &:focus {
     outline: none;
-    border-color: #1E3A8A; // Inkt Blauw
+    border-color: ${({ theme }: { theme: import('styled-components').DefaultTheme }) => theme.accent};
   }
 `;
 
 // De specifieke componenten
-export const StyledInput = styled.input`
-  ${inputStyles}
-`;
-export const StyledSelect = styled.select`
-  ${inputStyles}
-`;
-export const StyledTextarea = styled.textarea`
-  ${inputStyles}
-  min-height: 120px;
-  resize: vertical;
-`;
+export const StyledInput = styled.input`${inputStyles}`;
+export const StyledSelect = styled.select`${inputStyles}`;
+export const StyledTextarea = styled.textarea`${inputStyles}`;
 
 // De primaire actieknop
 export const StyledButton = styled.button`
@@ -78,8 +74,8 @@ export const StyledButton = styled.button`
   padding: 1rem;
   border: none;
   border-radius: 4px;
-  background: #1e3a8a; // Inkt Blauw
-  color: #ffffff;
+  background: ${({ theme }) => theme.accent};
+  color: ${({ theme }) => theme.accentText};
   font-family: 'Nunito Sans', sans-serif;
   font-size: 1rem;
   font-weight: bold;
@@ -87,6 +83,25 @@ export const StyledButton = styled.button`
   transition: background-color 0.2s;
 
   &:hover {
-    background: #3d405b; // Leisteen Grijs
+    filter: brightness(1.1);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+`;
+
+// FIX: De ontbrekende component is hier weer toegevoegd
+export const BackToHomeLink = styled(Link)`
+  display: block;
+  text-align: center;
+  margin-top: 1.5rem;
+  color: ${({ theme }) => theme.accent};
+  text-decoration: none;
+  font-weight: bold;
+
+  &:hover {
+    text-decoration: underline;
   }
 `;
