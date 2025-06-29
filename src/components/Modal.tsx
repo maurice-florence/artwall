@@ -1,9 +1,10 @@
 import React from 'react';
 import styled from 'styled-components';
-import { FaTimes, FaSoundcloud, FaShareAlt } from 'react-icons/fa';
+import { FaTimes, FaSoundcloud, FaShareAlt, FaTrash } from 'react-icons/fa';
 import ReactMarkdown from 'react-markdown';
 import { formatDate } from '@/utils';
 import { Artwork } from '@/types';
+import { useRouter } from 'next/navigation';
 
 const ModalBackdrop = styled.div.attrs({
   role: 'dialog',
@@ -129,6 +130,25 @@ const StyledHr = styled.hr`
   margin: 1.5rem 0;
 `;
 
+const ShareButton = styled.button`
+  position: absolute;
+  bottom: 1.5rem;
+  left: 1.5rem;
+  background: none;
+  border: none;
+  color: ${({ theme }) => theme.accent};
+  font-size: 1.5rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  z-index: 2;
+
+  &:hover {
+    color: ${({ theme }) => theme.accentText};
+  }
+`;
+
 // Only use window in client-side code
 const isClient = typeof window !== 'undefined';
 const isMobile = isClient ? window.innerWidth < 768 : false;
@@ -136,11 +156,14 @@ const isMobile = isClient ? window.innerWidth < 768 : false;
 type ModalProps = {
   item: Artwork;
   onClose: () => void;
+  onEdit?: (item: Artwork) => void;
+  isAdmin?: boolean;
 };
 
-const Modal: React.FC<ModalProps> = ({ item, onClose }) => {
+const Modal: React.FC<ModalProps> = ({ item, onClose, onEdit, isAdmin }) => {
   const dateObj = new Date(item.year, (item.month ?? 1) - 1, item.day ?? 1);
   const formattedDateStr = formatDate(dateObj);
+  const router = useRouter();
 
   const handleShare = () => {
     if (typeof window !== 'undefined' && navigator.share) {
@@ -167,52 +190,15 @@ const Modal: React.FC<ModalProps> = ({ item, onClose }) => {
         <StyledHr />
 
         <MediaContainer>
-          {item.category === 'proza' && (
-            <>
-              {item.coverImageUrl && (
-                <ModalImage
-                  src={item.coverImageUrl}
-                  alt={`Cover voor ${item.title}`}
-                  style={{ marginBottom: '1rem' }}
-                />
-              )}
-              {item.mediaUrl &&
-                (isMobile ? (
-                  <div style={{ color: '#888', fontStyle: 'italic', margin: '1rem 0' }}>
-                    PDF alleen leesbaar op desktop.
-                  </div>
-                ) : (
-                  <PdfViewer src={item.mediaUrl} title={`PDF voor ${item.title}`} />
-                ))}
-            </>
+          {item.category === 'proza' && item.coverImageUrl && (
+            <ModalImage src={item.coverImageUrl} alt={`Cover voor ${item.title}`} style={{ marginBottom: '1rem' }} />
           )}
-
-          {item.mediaType === 'image' && item.category !== 'proza' && (
-            <ModalImage src={item.mediaUrl || '/logo192.png'} alt={item.title} loading="lazy" />
-          )}
-
-          {item.mediaType === 'audio' &&
-            (item.soundcloudEmbedUrl ? (
-              <SoundCloudEmbed
-                scrolling="no"
-                frameBorder="no"
-                allow="autoplay"
-                src={item.soundcloudEmbedUrl}
-              ></SoundCloudEmbed>
-            ) : (
-              item.mediaUrl && (
-                <audio controls src={item.mediaUrl} style={{ width: '100%' }}>
-                  <track kind="captions" />
-                  Your browser does not support the audio element.
-                </audio>
-              )
-            ))}
-
-          {item.mediaType === 'text' && (
-            <div style={{ whiteSpace: 'pre-wrap' }}>
-              <ReactMarkdown>{item.content || ''}</ReactMarkdown>
+          {(item.category === 'poëzie' || item.category === 'prozapoëzie') && item.content && (
+            <div style={{ marginTop: '1rem', whiteSpace: 'pre-wrap' }}>
+              <ReactMarkdown>{item.content}</ReactMarkdown>
             </div>
           )}
+          {/* Add more media rendering as needed */}
         </MediaContainer>
 
         {item.soundcloudTrackUrl && (
@@ -239,9 +225,28 @@ const Modal: React.FC<ModalProps> = ({ item, onClose }) => {
           </LyricsChordsSection>
         )}
 
-        <button onClick={handleShare} style={{ marginTop: 8 }}>
-          <FaShareAlt /> Delen
-        </button>
+        {isAdmin && item.id && onEdit && (
+          <button
+            style={{
+              marginTop: 16,
+              alignSelf: 'flex-end',
+              background: '#E07A5F',
+              color: '#fff',
+              border: 'none',
+              borderRadius: 6,
+              padding: '0.5rem 1.2rem',
+              fontWeight: 600,
+              cursor: 'pointer',
+            }}
+            onClick={() => onEdit(item)}
+          >
+            Bewerken
+          </button>
+        )}
+        {/* Place the share button at the bottom left */}
+        <ShareButton onClick={handleShare} title="Deel deze kaart">
+          <FaShareAlt />
+        </ShareButton>
       </ModalContent>
     </ModalBackdrop>
   );

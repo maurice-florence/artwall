@@ -2,6 +2,7 @@
 
 export const CATEGORIES = [
   "poëzie",
+  "prozapoëzie",
   "proza",
   "muziek",
   "beeld",
@@ -11,6 +12,7 @@ export const CATEGORIES = [
 
 export const CATEGORY_LABELS: Record<string, string> = {
   "poëzie": "Poëzie",
+  "prozapoëzie": "Prozapoëzie",
   "proza": "Proza",
   "muziek": "Muziek",
   "beeld": "Beeld",

@@ -1,4 +1,38 @@
-import styled, { keyframes, css } from 'styled-components';
+import styled, { keyframes } from 'styled-components';
+
+// --- Styled Components voor de Layout ---
+
+export const PageLayout = styled.div`
+  display: flex;
+  background-color: ${({ theme }) => theme.body};
+`;
+
+export const MainContent = styled.div<{ $isSidebarOpen: boolean }>`
+  flex-grow: 1;
+  transition: margin-left 0.3s ease-in-out, width 0.3s ease-in-out;
+  margin-left: ${props => props.$isSidebarOpen ? '350px' : '0'};
+  width: ${props => props.$isSidebarOpen ? 'calc(100% - 350px)' : '100%'};
+
+  @media (max-width: 1024px) {
+    margin-left: 0;
+    width: 100%;
+  }
+`;
+
+export const CollageContainer = styled.main`
+  display: grid;
+  padding: 1.5rem;
+  gap: ${({ theme }) => theme.gridGap ? `${theme.gridGap}px` : '24px'};
+  
+  /* De kern van de nieuwe layout */
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  grid-auto-rows: ${({ theme }) => theme.cardHeight ? `${theme.cardHeight}px` : '280px'};
+  
+  /* Deze regel vertelt de grid om gaten op te vullen! */
+  grid-auto-flow: dense;
+`;
+
+// --- Hulp-componenten ---
 
 const pulse = keyframes`
   0% { background-color: #e0e0e0; }
@@ -7,43 +41,16 @@ const pulse = keyframes`
 `;
 
 export const SkeletonCard = styled.div`
-  height: 150px;
+  height: ${({ theme }) => theme.cardHeight ? `${theme.cardHeight}px` : '280px'};
   width: 100%;
-  border-radius: 8px;
-  margin-bottom: 2rem;
+  border-radius: 12px;
   animation: ${pulse} 1.5s ease-in-out infinite;
 `;
 
-export const PageLayout = styled.div`
-  display: flex;
-`;
-
-export const MainContent = styled.div<{ $isSidebarOpen: boolean }>`
-  flex-grow: 1;
-  transition: margin-left 0.3s ease-in-out;
-  margin-left: ${props => props.$isSidebarOpen ? '350px' : '0'};
-
-  @media (max-width: 1024px) {
-    margin-left: 0;
-  }
-`;
-
-export const CollageContainer = styled.main`
-  display: grid;
-  padding: 2rem;
-  gap: 1rem;
-  /* De Magie: maak kolommen van minimaal 200px breed, 
-     en laat ze de beschikbare ruimte opvullen */
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  
-  /* Zorg dat alle rijen dezelfde hoogte hebben */
-  grid-auto-rows: 250px; 
-`;
-
 export const NoResultsMessage = styled.div`
+    grid-column: 1 / -1; 
     text-align: center;
     padding: 4rem 2rem;
-    color: ${({ theme }) => theme.text}99; /* Iets transparanter */
+    color: ${({ theme }) => theme.text}99; 
     font-style: italic;
-    width: 100%;
 `;

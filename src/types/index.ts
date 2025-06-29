@@ -1,4 +1,4 @@
-export type ArtworkCategory = 'poëzie' | 'proza' | 'sculptuur' | 'tekening' | 'muziek';
+export type ArtworkCategory = 'poëzie' | 'prozapoëzie' | 'proza' | 'sculptuur' | 'tekening' | 'muziek';
 
 export interface Artwork {
     id: string;
