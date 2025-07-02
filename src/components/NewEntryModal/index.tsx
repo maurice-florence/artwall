@@ -3,6 +3,11 @@ import SimpleModal from '@/components/SimpleModal';
 import { CATEGORIES } from '@/constants';
 import styled from 'styled-components';
 import { FaTrash, FaShareAlt } from 'react-icons/fa';
+import { storage } from '@/firebase';
+import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { push, ref as dbRef } from 'firebase/database';
+import { db } from '@/firebase';
+import { ArtworkCategory } from '@/types';
 
 const CategorySelect = styled.select`
   margin-bottom: 1.5rem;
@@ -77,18 +82,15 @@ const CardFooter = styled.div`
 `;
 
 const categoryFields: Record<string, string[]> = {
-  'poëzie': ['title', 'year', 'month', 'day', 'description', 'content'],
-  'prozapoëzie': ['title', 'year', 'month', 'day', 'description', 'content'],
-  'proza': ['title', 'year', 'month', 'day', 'description', 'content', 'coverImageUrl'],
-  'sculptuur': ['title', 'year', 'month', 'day', 'description', 'coverImageUrl'],
-  'tekening': ['title', 'year', 'month', 'day', 'description', 'coverImageUrl'],
-  'muziek': [
-    'title', 'year', 'month', 'day', 'description', 'lyrics', 'chords',
-    'mediaType', 'file', 'soundcloudEmbedUrl', 'soundcloudTrackUrl'
-  ],
-  'beeld': ['title', 'year', 'month', 'day', 'description', 'coverImageUrl'],
-  'video': ['title', 'year', 'month', 'day', 'description', 'coverImageUrl'],
-  'overig': ['title', 'year', 'month', 'day', 'description', 'content'],
+  'poetry': ['title', 'year', 'month', 'day', 'description', 'content'],
+  'prosepoetry': ['title', 'year', 'month', 'day', 'description', 'content'],
+  'prose': ['title', 'year', 'month', 'day', 'description', 'coverImageUrl', 'pdfUrl'],
+  'music': ['title', 'year', 'month', 'day', 'description', 'lyrics', 'audioFile', 'soundcloudUrl'],
+  'sculpture': ['title', 'year', 'month', 'day', 'description', 'coverImageUrl'],
+  'drawing': ['title', 'year', 'month', 'day', 'description', 'coverImageUrl'],
+  'image': ['title', 'year', 'month', 'day', 'description', 'coverImageUrl'],
+  'video': ['title', 'year', 'month', 'day', 'description', 'mediaUrl'],
+  'other': ['title', 'year', 'month', 'day', 'description', 'content', 'mediaUrl'],
 };
 
 interface NewEntryModalProps {
@@ -98,84 +100,244 @@ interface NewEntryModalProps {
   editItem?: any;
 }
 
-const NewEntryModal: React.FC<NewEntryModalProps> = ({ isOpen, onClose, onSave, editItem }) => {
-  const [category, setCategory] = useState<string>('');
-  const [fields, setFields] = useState<Record<string, any>>({});
+const initialState = {
+  title: '',
+  year: new Date().getFullYear(),
+  month: 1,
+  day: 1,
+  category: 'poetry',
+  description: '',
+  content: '',
+  lyrics: '',
+  soundcloudUrl: '',
+  youtubeUrl: '',
+  coverImageUrl: '',
+  pdfUrl: '',
+  audioUrl: '',
+  videoUrl: '',
+  audioFile: null,
+  videoFile: null,
+};
 
-  // Helper for auto-growing textarea
-  const handleAutoGrow = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    e.target.style.height = 'auto';
-    e.target.style.height = Math.min(e.target.scrollHeight, window.innerHeight * 0.4) + 'px';
-  };
+const NewEntryModal: React.FC<NewEntryModalProps> = ({ isOpen, onClose, onSave, editItem }) => {
+  const [form, setForm] = useState({ ...initialState });
+  const [coverFile, setCoverFile] = useState<File | null>(null);
+  const [pdfFile, setPdfFile] = useState<File | null>(null);
+  const [audioFile, setAudioFile] = useState<File | null>(null);
+  const [videoFile, setVideoFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   React.useEffect(() => {
     if (editItem) {
-      setCategory(editItem.category || '');
-      setFields(editItem);
+      setForm({ ...initialState, ...editItem });
     } else {
-      setCategory('');
-      setFields({});
+      setForm({ ...initialState });
     }
-  }, [editItem]);
+    setCoverFile(null);
+    setPdfFile(null);
+    setAudioFile(null);
+    setVideoFile(null);
+  }, [editItem, isOpen]);
 
-  const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setCategory(e.target.value);
-    setFields({});
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setForm(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleFieldChange = (field: string, value: any) => {
-    setFields((prev) => ({ ...prev, [field]: value }));
+  // File input handlers
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'cover' | 'pdf' | 'audio' | 'video') => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    const file = files[0];
+    if (type === 'cover') setCoverFile(file);
+    if (type === 'pdf') setPdfFile(file);
+    if (type === 'audio') setAudioFile(file);
+    if (type === 'video') setVideoFile(file);
   };
 
-  const handleSave = () => {
-    if (!category) return;
-    onSave({ ...fields, category });
-    setCategory('');
-    setFields({});
-    onClose();
+  // Upload helper
+  const uploadToStorage = async (file: File, path: string): Promise<string> => {
+    const fileRef = storageRef(storage, path);
+    await uploadBytes(fileRef, file);
+    return await getDownloadURL(fileRef);
+  };
+
+  const handleSave = async () => {
+    setUploading(true);
+    setError(null);
+    try {
+      let coverImageUrl = form.coverImageUrl || '';
+      let pdfUrl = form.pdfUrl || '';
+      let audioUrl = form.audioUrl || '';
+      let videoUrl = form.videoUrl || '';
+      // Upload cover image for proza, sculptuur, tekening
+      if (coverFile && ['prose', 'sculpture', 'drawing'].includes(form.category)) {
+        coverImageUrl = await uploadToStorage(coverFile, `covers/${Date.now()}_${coverFile.name}`);
+      }
+      // Upload PDF for proza
+      if (pdfFile && form.category === 'prose') {
+        pdfUrl = await uploadToStorage(pdfFile, `pdfs/${Date.now()}_${pdfFile.name}`);
+      }
+      // Upload audio for muziek
+      if (audioFile && form.category === 'music') {
+        audioUrl = await uploadToStorage(audioFile, `audio/${Date.now()}_${audioFile.name}`);
+      }
+      // Upload video for video
+      if (videoFile && form.category === 'video') {
+        videoUrl = await uploadToStorage(videoFile, `video/${Date.now()}_${videoFile.name}`);
+      }
+      // Compose artwork object
+      const newArtwork: any = {
+        ...form,
+        coverImageUrl: coverImageUrl || undefined,
+        pdfUrl: pdfUrl || undefined,
+        audioUrl: audioUrl || undefined,
+        videoUrl: videoUrl || undefined,
+        type: 'artwork',
+        year: Number(form.year),
+        month: Number(form.month),
+        day: Number(form.day),
+      };
+      // Remove empty fields
+      Object.keys(newArtwork).forEach(key => {
+        if (newArtwork[key] === '' || newArtwork[key] === undefined) {
+          delete newArtwork[key];
+        }
+      });
+      await onSave(newArtwork);
+      setForm({ ...initialState });
+      setCoverFile(null);
+      setPdfFile(null);
+      setAudioFile(null);
+      setVideoFile(null);
+      onClose();
+    } catch (err) {
+      let message = 'Onbekende fout.';
+      if (err instanceof Error) message = err.message;
+      setError(message);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  // Dynamic fields per category
+  const fields = categoryFields[form.category] || [];
+
+  const renderField = (field: string) => {
+    switch (field) {
+      case 'title':
+        return (
+          <FieldGroup key="title">
+            <Label>Titel</Label>
+            <Input name="title" value={form.title} onChange={handleInputChange} required />
+          </FieldGroup>
+        );
+      case 'year':
+        return (
+          <FieldGroup key="year">
+            <Label>Jaar</Label>
+            <Input name="year" type="number" value={form.year} onChange={handleInputChange} required />
+          </FieldGroup>
+        );
+      case 'month':
+        return (
+          <FieldGroup key="month">
+            <Label>Maand</Label>
+            <Input name="month" type="number" value={form.month} onChange={handleInputChange} min={1} max={12} />
+          </FieldGroup>
+        );
+      case 'day':
+        return (
+          <FieldGroup key="day">
+            <Label>Dag</Label>
+            <Input name="day" type="number" value={form.day} onChange={handleInputChange} min={1} max={31} />
+          </FieldGroup>
+        );
+      case 'description':
+        return (
+          <FieldGroup key="description">
+            <Label>Beschrijving</Label>
+            <TextArea name="description" value={form.description} onChange={handleInputChange} />
+          </FieldGroup>
+        );
+      case 'content':
+        return (
+          <FieldGroup key="content">
+            <Label>Tekst</Label>
+            <TextArea name="content" value={form.content} onChange={handleInputChange} />
+          </FieldGroup>
+        );
+      case 'lyrics':
+        return (
+          <FieldGroup key="lyrics">
+            <Label>Songtekst</Label>
+            <TextArea name="lyrics" value={form.lyrics} onChange={handleInputChange} />
+          </FieldGroup>
+        );
+      case 'audioFile':
+        return (
+          <FieldGroup key="audioFile">
+            <Label>Audio uploaden</Label>
+            <Input type="file" accept="audio/*" onChange={e => handleFileChange(e, 'audio')} />
+            {audioFile && <span>{audioFile.name}</span>}
+          </FieldGroup>
+        );
+      case 'soundcloudUrl':
+        return (
+          <FieldGroup key="soundcloudUrl">
+            <Label>SoundCloud URL</Label>
+            <Input name="soundcloudUrl" value={form.soundcloudUrl || ''} onChange={handleInputChange} />
+          </FieldGroup>
+        );
+      case 'coverImageUrl':
+        return (
+          <FieldGroup key="coverImageUrl">
+            <Label>Afbeelding uploaden</Label>
+            <Input type="file" accept="image/*" onChange={e => handleFileChange(e, 'cover')} />
+            {coverFile && <span>{coverFile.name}</span>}
+          </FieldGroup>
+        );
+      case 'pdfUrl':
+        return (
+          <FieldGroup key="pdfUrl">
+            <Label>PDF uploaden</Label>
+            <Input type="file" accept="application/pdf" onChange={e => handleFileChange(e, 'pdf')} />
+            {pdfFile && <span>{pdfFile.name}</span>}
+          </FieldGroup>
+        );
+      case 'videoFile':
+        return (
+          <FieldGroup key="videoFile">
+            <Label>Video uploaden</Label>
+            <Input type="file" accept="video/*" onChange={e => handleFileChange(e, 'video')} />
+            {videoFile && <span>{videoFile.name}</span>}
+          </FieldGroup>
+        );
+      case 'youtubeUrl':
+        return (
+          <FieldGroup key="youtubeUrl">
+            <Label>YouTube URL</Label>
+            <Input name="youtubeUrl" value={form.youtubeUrl || ''} onChange={handleInputChange} />
+          </FieldGroup>
+        );
+      default:
+        return null;
+    }
   };
 
   return (
     <SimpleModal isOpen={isOpen} onClose={onClose}>
-      <h2>Nieuwe kaart toevoegen</h2>
-      <CategorySelect value={category} onChange={handleCategoryChange}>
-        <option value="">Kies een categorie...</option>
-        {CATEGORIES.map((cat) => (
-          <option key={cat} value={cat}>{cat}</option>
-        ))}
-      </CategorySelect>
-      {category && (
-        <>
-          {categoryFields[category]?.map((field) => (
-            <FieldGroup key={field}>
-              <Label>{field}
-                {field === 'content' && (
-                  <span style={{ fontWeight: 'normal', color: '#888', fontSize: '0.85em', marginLeft: 8 }}>
-                    (Gebruik lege regels voor strofen, *cursief*, **vet**, [link](https://...))
-                  </span>
-                )}
-              </Label>
-              {field === 'description' || field === 'content' || field === 'lyrics' || field === 'chords' ? (
-                <TextArea
-                  value={fields[field] || ''}
-                  onChange={e => { handleFieldChange(field, e.target.value); handleAutoGrow(e as any); }}
-                  style={{ minHeight: '3.5em', maxHeight: '40vh', resize: 'vertical', overflowY: 'auto' }}
-                />
-              ) : (
-                <Input value={fields[field] || ''} onChange={e => handleFieldChange(field, e.target.value)} />
-              )}
-            </FieldGroup>
+      <form onSubmit={e => { e.preventDefault(); handleSave(); }}>
+        <CategorySelect name="category" value={form.category} onChange={handleInputChange}>
+          {Object.keys(categoryFields).map(cat => (
+            <option key={cat} value={cat}>{cat}</option>
           ))}
-          <CardFooter>
-            <SaveButton onClick={handleSave}>Opslaan</SaveButton>
-            {editItem && (
-              <DeleteButton onClick={() => { if (window.confirm('Weet je zeker dat je deze kaart wilt verwijderen?')) { onSave({ ...fields, _delete: true }); onClose(); } }}>
-                <FaTrash style={{ marginRight: 6 }} /> Verwijder
-              </DeleteButton>
-            )}
-          </CardFooter>
-        </>
-      )}
+        </CategorySelect>
+        {fields.map(renderField)}
+        {error && <div style={{ color: 'red', marginBottom: 8 }}>{error}</div>}
+        <SaveButton type="submit" disabled={uploading}>{uploading ? 'Opslaan...' : 'Opslaan'}</SaveButton>
+      </form>
     </SimpleModal>
   );
 };

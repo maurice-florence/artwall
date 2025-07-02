@@ -5,7 +5,7 @@ import { useRouter, useParams, notFound } from "next/navigation";
 import { db } from "@/firebase";
 import { ref, get } from "firebase/database";
 import { formatDate } from "@/utils";
-import { Artwork } from "@/types";
+import { Artwork, PoetryArtwork, ProseArtwork, VisualArtArtwork, MusicArtwork, VideoArtwork, OtherArtwork } from '@/types';
 import styled from "styled-components";
 import { FaTimes, FaSoundcloud, FaShareAlt } from "react-icons/fa";
 import ReactMarkdown from "react-markdown";
@@ -149,6 +149,42 @@ const Toast = styled.div`
   opacity: 0.95;
 `;
 
+const ModalFooter = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 1.5rem;
+  margin-top: 2rem;
+  border-top: 1px solid #eee;
+  padding-top: 1.5rem;
+`;
+
+// Type guards for union type fields
+function hasMediaType(artwork: Artwork): artwork is (MusicArtwork | VisualArtArtwork | VideoArtwork | PoetryArtwork) {
+  return 'mediaType' in artwork && typeof (artwork as any).mediaType === 'string';
+}
+function hasMediaUrl(artwork: Artwork): artwork is (ProseArtwork | VisualArtArtwork | MusicArtwork | VideoArtwork | OtherArtwork) {
+  return 'mediaUrl' in artwork && typeof (artwork as any).mediaUrl === 'string';
+}
+function hasCoverImageUrl(artwork: Artwork): artwork is ProseArtwork | VisualArtArtwork {
+  return 'coverImageUrl' in artwork && typeof (artwork as any).coverImageUrl === 'string';
+}
+function hasSoundcloudEmbedUrl(artwork: Artwork): artwork is MusicArtwork {
+  return 'soundcloudEmbedUrl' in artwork && typeof (artwork as any).soundcloudEmbedUrl === 'string';
+}
+function hasSoundcloudTrackUrl(artwork: Artwork): artwork is MusicArtwork {
+  return 'soundcloudTrackUrl' in artwork && typeof (artwork as any).soundcloudTrackUrl === 'string';
+}
+function hasLyrics(artwork: Artwork): artwork is MusicArtwork {
+  return 'lyrics' in artwork && typeof (artwork as any).lyrics === 'string';
+}
+function hasChords(artwork: Artwork): artwork is MusicArtwork {
+  return 'chords' in artwork && typeof (artwork as any).chords === 'string';
+}
+function hasContent(artwork: Artwork): artwork is PoetryArtwork {
+  return 'content' in artwork && typeof (artwork as any).content === 'string';
+}
+
 export default function ArtworkModalPage() {
   const router = useRouter();
   const params = useParams();
@@ -185,6 +221,15 @@ export default function ArtworkModalPage() {
     }
   };
 
+  const handleEdit = () => {
+    // TODO: Implement edit logic, e.g. open AdminModal with this artwork
+    alert('Edit functionality coming soon!');
+  };
+  const handleRemove = () => {
+    // TODO: Implement remove logic, e.g. show confirmation and remove artwork
+    alert('Remove functionality coming soon!');
+  };
+
   return (
     <ModalBackdrop onClick={() => router.back()}>
       <ModalContent onClick={e => e.stopPropagation()}>
@@ -196,25 +241,25 @@ export default function ArtworkModalPage() {
         <p style={{ marginTop: '1rem', fontStyle: 'italic' }}>{artwork.description}</p>
         <StyledHr />
         <MediaContainer>
-          {artwork.category === 'proza' && (
+          {artwork.category === 'prose' && (
             <>
-              {artwork.coverImageUrl && (
+              {hasCoverImageUrl(artwork) && (artwork as ProseArtwork).coverImageUrl && (
                 <ModalImage
-                  src={artwork.coverImageUrl}
-                  alt={`Cover voor ${artwork.title}`}
+                  src={(artwork as ProseArtwork).coverImageUrl}
+                  alt={`Cover voor ${(artwork as ProseArtwork).title}`}
                   style={{ marginBottom: '1rem' }}
                 />
               )}
-              {artwork.mediaUrl && (
-                <PdfViewer src={artwork.mediaUrl} title={`PDF voor ${artwork.title}`} />
+              {hasMediaUrl(artwork) && (artwork as ProseArtwork).mediaUrl && (
+                <PdfViewer src={(artwork as ProseArtwork).mediaUrl} title={`PDF voor ${(artwork as ProseArtwork).title}`} />
               )}
             </>
           )}
-          {artwork.mediaType === 'image' && artwork.category !== 'proza' && (
+          {hasMediaType(artwork) && artwork.mediaType === 'image' && hasMediaUrl(artwork) && (
             <ModalImage src={artwork.mediaUrl || '/logo192.png'} alt={artwork.title} loading="lazy" />
           )}
-          {artwork.mediaType === 'audio' &&
-            (artwork.soundcloudEmbedUrl ? (
+          {hasMediaType(artwork) && artwork.mediaType === 'audio' && (
+            hasSoundcloudEmbedUrl(artwork) && artwork.soundcloudEmbedUrl ? (
               <SoundCloudEmbed
                 scrolling="no"
                 frameBorder="no"
@@ -222,20 +267,21 @@ export default function ArtworkModalPage() {
                 src={artwork.soundcloudEmbedUrl}
               ></SoundCloudEmbed>
             ) : (
-              artwork.mediaUrl && (
+              hasMediaUrl(artwork) && artwork.mediaUrl && (
                 <audio controls src={artwork.mediaUrl} style={{ width: '100%' }}>
                   <track kind="captions" />
                   Your browser does not support the audio element.
                 </audio>
               )
-            ))}
-          {artwork.mediaType === 'text' && (
+            )
+          )}
+          {hasMediaType(artwork) && artwork.mediaType === 'text' && hasContent(artwork) && (
             <div style={{ whiteSpace: 'pre-wrap' }}>
               <ReactMarkdown>{artwork.content || ''}</ReactMarkdown>
             </div>
           )}
         </MediaContainer>
-        {artwork.soundcloudTrackUrl && (
+        {hasSoundcloudTrackUrl(artwork) && artwork.soundcloudTrackUrl && (
           <SoundCloudLinkButton
             href={artwork.soundcloudTrackUrl}
             target="_blank"
@@ -245,21 +291,29 @@ export default function ArtworkModalPage() {
             <span>Luister op SoundCloud</span>
           </SoundCloudLinkButton>
         )}
-        {artwork.lyrics && (
+        {hasLyrics(artwork) && artwork.lyrics && (
           <LyricsChordsSection>
             <h3>Songtekst / Extra Tekst</h3>
             <ReactMarkdown>{artwork.lyrics}</ReactMarkdown>
           </LyricsChordsSection>
         )}
-        {artwork.chords && artwork.mediaType !== 'audio' && (
+        {hasChords(artwork) && typeof artwork.chords === 'string' && (
           <LyricsChordsSection>
             <h3>Akkoorden / Notities</h3>
             <p>{artwork.chords}</p>
           </LyricsChordsSection>
         )}
-        <button onClick={handleShare} style={{ marginTop: 8 }}>
-          <FaShareAlt /> Delen
-        </button>
+        <ModalFooter>
+          <button onClick={handleShare} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <FaShareAlt /> Delen
+          </button>
+          <button onClick={handleEdit} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            ✏️ Bewerken
+          </button>
+          <button onClick={handleRemove} style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'red' }}>
+            🗑️ Verwijderen
+          </button>
+        </ModalFooter>
         {showToast && <Toast>Link gekopieerd!</Toast>}
       </ModalContent>
     </ModalBackdrop>

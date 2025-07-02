@@ -1,10 +1,9 @@
 "use client";
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { db } from '@/firebase';
 import { ref, onValue, remove, update, push } from 'firebase/database';
-import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { getStorage, ref as storageRef, deleteObject } from "firebase/storage";
 import { 
     PageLayout, MainContent, CollageContainer, 
@@ -14,7 +13,7 @@ import Modal from '@/components/Modal';
 import Footer from '@/components/Footer';
 import Sidebar from '@/components/Sidebar';
 import Header from '@/components/Header';
-import ArtworkCard from '@/components/ArtworkCard';
+import ArtworkCard, { CardContainer } from '@/components/ArtworkCard';
 import YearMarkerCard from '@/components/YearMarker';
 import toast from 'react-hot-toast';
 import { Artwork, TimelineItem } from '@/types';
@@ -22,6 +21,7 @@ import { CATEGORIES } from '@/constants';
 import NewEntryModal from '@/components/NewEntryModal';
 import { useFilterContext } from '@/context/FilterContext';
 import { useArtworks } from '@/context/ArtworksContext';
+import AdminModal from '@/components/AdminModal';
 
 export interface FilterOptions {
     category: string;
@@ -43,18 +43,26 @@ export default function HomePage() {
     const [isAdmin, setIsAdmin] = useState(false);
     const [isSidebarOpen, setSidebarOpen] = useState(false);
     const [showNewEntryModal, setShowNewEntryModal] = useState(false);
+    // New admin modal state
+    const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
+    const [artworkToEdit, setArtworkToEdit] = useState<Artwork | null>(null);
     
     const { filters, setFilters, searchTerm, setSearchTerm } = useFilterContext();
     const [viewOptions, setViewOptions] = useState<ViewOptions>({
         spacing: 'comfortabel', layout: 'alternerend',
         details: 'volledig', animations: true, theme: 'atelier'
     });
-    const router = useRouter();
 
     useEffect(() => {
         const auth = getAuth();
         onAuthStateChanged(auth, (user) => setIsAdmin(!!user));
     }, []);
+
+    // Compute available categories from artworks
+    const availableCategories = useMemo(() => {
+        const cats = new Set(allArtworks.map(a => a.category));
+        return Array.from(cats).filter(cat => typeof cat === 'string');
+    }, [allArtworks]);
 
     // Link header category filter to sidebar filter
     const handleCategoryToggle = (cat: string) => {
@@ -116,6 +124,28 @@ export default function HomePage() {
         await push(ref(db, 'artworks'), newEntry);
     };
 
+    // New handlers
+    const handleEdit = useCallback((artwork: Artwork) => {
+        setArtworkToEdit(prev => {
+            // Only update if the id is different or the object reference is different
+            if (!prev || prev.id !== artwork.id) {
+                return artwork;
+            }
+            // Optionally, do a deep compare if needed
+            return prev;
+        });
+        setIsAdminModalOpen(true);
+    }, []);
+    const handleAdd = () => {
+        setArtworkToEdit(null);
+        setIsAdminModalOpen(true);
+    };
+
+    // Type guard for Artwork
+    function isArtwork(item: TimelineItem): item is Artwork {
+        return (item as Artwork).category !== undefined;
+    }
+
     if (isLoading || allArtworks.length === 0) {
         return (
             <PageLayout>
@@ -132,31 +162,27 @@ export default function HomePage() {
             <MainContent $isSidebarOpen={isSidebarOpen}>
                 <Header 
                   onToggleSidebar={() => setSidebarOpen(!isSidebarOpen)}
-                  selectedCategories={[]}
-                  onCategoryToggle={() => {}}
+                  selectedCategories={filters.category !== 'all' ? [filters.category] : []}
+                  onCategoryToggle={handleCategoryToggle}
+                  availableCategories={availableCategories}
                 />
                 <CollageContainer>
                     {/* Plus card at the top left */}
-                    <div
-                        style={{
-                            width: 180, height: 180, minWidth: 180, minHeight: 180,
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            border: '2px dashed #E07A5F', borderRadius: 12, cursor: 'pointer',
-                            fontSize: 64, color: '#E07A5F', margin: 8, background: '#fff',
-                        }}
-                        onClick={() => setShowNewEntryModal(true)}
-                        title="Voeg een nieuwe kaart toe"
-                        key="plus-card"
-                    >
+                    <CardContainer category="poetry" onClick={handleAdd} style={{ border: '2px dashed #E07A5F', background: '#fff', color: '#E07A5F', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 64 }} title="Voeg een nieuwe kaart toe" key="plus-card">
                         +
-                    </div>
+                    </CardContainer>
                     {/* Timeline items */}
                     {timelineItems.map(item => {
-                        if (item.type === 'year-marker') {
+                        if ('type' in item && item.type === 'year-marker') {
                             return <YearMarkerCard key={item.id} year={item.year} />;
                         }
-                        // Use artwork.id as key, which is always unique
-                        return <ArtworkCard key={item.id} artwork={item} onSelect={() => setSelectedItem(item)} isAdmin={isAdmin} />;
+                        if (isArtwork(item)) {
+                            return <ArtworkCard key={item.id} artwork={item} onSelect={() => {
+                                setSelectedItem(item);
+                                if (isAdmin) handleEdit(item);
+                            }} isAdmin={isAdmin} />;
+                        }
+                        return null;
                     })}
                 </CollageContainer>
                 <Footer />
@@ -183,6 +209,14 @@ export default function HomePage() {
                 onSave={handleSaveNewEntry}
                 editItem={editItem}
             />
+            {/* AdminModal rendering */}
+            {isAdminModalOpen && (
+                <AdminModal 
+                    isOpen={isAdminModalOpen}
+                    onClose={() => setIsAdminModalOpen(false)}
+                    artworkToEdit={artworkToEdit}
+                />
+            )}
         </PageLayout>
     );
 };

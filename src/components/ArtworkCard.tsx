@@ -1,6 +1,6 @@
 import React from 'react';
 import styled, { useTheme } from 'styled-components';
-import { Artwork, ArtworkCategory } from '@/types';
+import { Artwork, ArtworkCategory, PoetryArtwork, ProseArtwork, VisualArtArtwork, MusicArtwork, VideoArtwork, OtherArtwork } from '@/types';
 import { FaPenNib, FaPaintBrush, FaMusic, FaBookOpen, FaVolumeUp, FaAlignLeft } from 'react-icons/fa';
 
 interface CardContainerProps {
@@ -9,16 +9,16 @@ interface CardContainerProps {
 
 const getGridSpan = (category: ArtworkCategory, rowSpan: number = 1) => {
     switch(category) {
-        case 'proza':
+        case 'prose':
             return `grid-column: span 2; grid-row: span ${rowSpan};`;
-        case 'prozapoëzie':
+        case 'prosepoetry':
             return `grid-column: span 1.5; grid-row: span ${rowSpan};`;
-        case 'muziek':
+        case 'music':
             return 'grid-column: span 2; grid-row: span 1;';
-        case 'sculptuur':
-            return 'grid-row: span 2;';
-        case 'tekening':
-        case 'poëzie':
+        case 'sculpture':
+            return 'grid-row: span 1;';
+        case 'drawing':
+        case 'poetry':
         default:
             return 'grid-column: span 1; grid-row: span 1;';
     }
@@ -27,6 +27,7 @@ const getGridSpan = (category: ArtworkCategory, rowSpan: number = 1) => {
 const CardContainer = styled.div<CardContainerProps & { $rowSpan?: number; $blank?: boolean }>`
   perspective: 1000px;
   width: 100%;
+  border-radius: 12px;
   /* Remove explicit height, let grid control it */
   ${props => getGridSpan(props.category, props.$rowSpan)}
 
@@ -160,18 +161,23 @@ const ProzaImage = styled.img`
 `;
 
 const iconMap: { [key: string]: React.JSX.Element } = {
-  poëzie: <FaPenNib />,
-  prozapoëzie: <FaAlignLeft />,
-  proza: <FaBookOpen />,
-  sculptuur: <FaPaintBrush />,
-  tekening: <FaPaintBrush />,
-  muziek: <FaMusic />,
+  poetry: <FaPenNib />,
+  prosepoetry: <FaAlignLeft />,
+  prose: <FaBookOpen />,
+  sculpture: <FaPaintBrush />,
+  drawing: <FaPaintBrush />,
+  music: <FaMusic />,
 };
 
 // Add a helper to get the correct icon for audio
 const getArtworkIcon = (artwork: Artwork) => {
-  if (artwork.mediaType === 'audio') return <FaMusic />;
+  if ('mediaType' in artwork && artwork.mediaType === 'audio') return <FaMusic />;
   return iconMap[artwork.category] || null;
+};
+
+const truncateText = (text: string, maxLength: number) => {
+  if (!text) return '';
+  return text.length > maxLength ? text.slice(0, maxLength - 3) + '...' : text;
 };
 
 interface ArtworkCardProps {
@@ -190,22 +196,21 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin }: ArtworkCardProps) => {
     const formattedDate = new Date(artwork.year, (artwork.month || 1) - 1, artwork.day || 1)
                             .toLocaleDateString('nl-NL', { month: 'short', year: 'numeric' });
 
-    const hasCover = artwork.category === 'proza' && artwork.coverImageUrl;
-    // Calculate rowSpan for proza: 2 rows + 1 gap, so rowSpan = 2 + (gridGap / reducedCardHeight)
+    const hasCover = artwork.category === 'prose' && 'coverImageUrl' in artwork;
+    // Calculate rowSpan for prose: 2 rows + 1 gap, so rowSpan = 2 + (gridGap / reducedCardHeight)
     let rowSpan = 1;
-    if (artwork.category === 'proza') {
+    if (artwork.category === 'prose') {
       rowSpan = Math.round((reducedCardHeight * 2 + gridGap) / reducedCardHeight);
     }
-
-    if (hasCover) {
-      // Proza with cover: header and footer outside image, image fills available space
+    // Only render prose cover if category is prose and artwork has coverImageUrl
+    if ((artwork as any).category === 'prose' && (artwork as any).coverImageUrl) {
       return (
         <CardContainer category={artwork.category} $rowSpan={rowSpan} onClick={onSelect}>
           <CardInner>
             <CardFront category={artwork.category}>
               <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
                 <CardTitle style={{ marginBottom: '0.5rem' }}>{artwork.title}</CardTitle>
-                <ProzaImage src={artwork.coverImageUrl} alt={artwork.title} style={{ maxHeight: `calc(100% - 3.5rem)` }} />
+                <ProzaImage src={(artwork as any).coverImageUrl} alt={artwork.title} style={{ maxHeight: `calc(100% - 3.5rem)` }} />
                 <CardFooter style={{ marginTop: '0.5rem', justifyContent: 'space-between' }}>
                   <span>{formattedDate}</span>
                   <CardCategory>
@@ -215,7 +220,15 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin }: ArtworkCardProps) => {
               </div>
             </CardFront>
             <CardBack>
-              <p>{artwork.description}</p>
+              <p style={{
+                maxHeight: '10em',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                display: '-webkit-box',
+                WebkitLineClamp: 8,
+                WebkitBoxOrient: 'vertical',
+                whiteSpace: 'normal',
+              }}>{artwork.description}</p>
             </CardBack>
           </CardInner>
         </CardContainer>
@@ -223,22 +236,9 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin }: ArtworkCardProps) => {
     }
 
     // Blank card rendering
-    const blank = !artwork.title && !artwork.description && !artwork.coverImageUrl;
+    const blank = !artwork.title && !artwork.description && !('coverImageUrl' in artwork && artwork.coverImageUrl);
     if (blank) {
-      return (
-        <CardContainer category="poëzie" $blank>
-          <CardInner>
-            <CardFront category="poëzie">
-              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
-                <span style={{ fontSize: '2.5rem', color: '#ccc' }}>+</span>
-              </div>
-              <CardFooter style={{ visibility: 'hidden' }}>
-                {/* Empty footer for consistent height */}
-              </CardFooter>
-            </CardFront>
-          </CardInner>
-        </CardContainer>
-      );
+      return null;
     }
 
     return (
@@ -246,9 +246,6 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin }: ArtworkCardProps) => {
         <CardInner>
           <CardFront category={artwork.category}>
             <CardTitle>{artwork.title}</CardTitle>
-            {artwork.category === 'proza' && artwork.coverImageUrl && (
-              <ProzaImage src={artwork.coverImageUrl} alt={artwork.title} style={{ maxHeight: `calc(100% - 3.5rem)` }} />
-            )}
             <CardFooter style={{ justifyContent: 'space-between' }}>
               <span>{formattedDate}</span>
               <CardCategory>
@@ -257,7 +254,15 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin }: ArtworkCardProps) => {
             </CardFooter>
           </CardFront>
           <CardBack>
-            <p>{artwork.description}</p>
+            <p style={{
+              maxHeight: '5em',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              display: '-webkit-box',
+              WebkitLineClamp: 4,
+              WebkitBoxOrient: 'vertical',
+              whiteSpace: 'normal',
+            }}>{artwork.description}</p>
           </CardBack>
         </CardInner>
       </CardContainer>
@@ -280,4 +285,5 @@ const DeleteButton = styled.button`
   }
 `;
 
+export { CardContainer };
 export default ArtworkCard;

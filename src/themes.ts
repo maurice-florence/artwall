@@ -8,20 +8,20 @@ export const atelierTheme = {
   cardBg: '#FFFFFF',
   cardText: '#3D405B',
   categories: {
-    muziek: '#D94A4A',
-    poëzie: '#2E86C1',
-    prozapoëzie: '#A569BD',
-    proza: '#28B463',
-    sculptuur: '#AF601A',
-    tekening: '#884EA0',
+    music: '#D94A4A',
+    poetry: '#2E86C1',
+    prosepoetry: '#A569BD',
+    prose: '#28B463',
+    sculpture: '#AF601A',
+    drawing: '#884EA0',
   },
   cardBackgrounds: {
     default: '#FFFFFF',
-    muziek: 'linear-gradient(145deg, #434343 0%, #212121 100%)',
-    poëzie: 'repeating-linear-gradient(135deg, #f2f2f2 0px, #f2f2f2 8px, #e6e6e6 8px, #ffffff 16px)',
-    proza: 'linear-gradient(120deg, #f8f5f0 0%, #ffffff 100%)',
-    sculptuur: 'radial-gradient(circle at 30% 30%, #e8e8e8 60%, #f5f5f5 100%)',
-    tekening: 'repeating-linear-gradient(120deg, #e8e8e8 0px, #e8e8e8 10px, #f5f5f5 10px, #f5f5f5 20px)',
+    music: 'linear-gradient(145deg, #434343 0%, #212121 100%)',
+    poetry: 'repeating-linear-gradient(135deg, #f2f2f2 0px, #f2f2f2 8px, #e6e6e6 8px, #ffffff 16px)',
+    prose: 'linear-gradient(120deg, #f8f5f0 0%, #ffffff 100%)',
+    sculpture: 'radial-gradient(circle at 30% 30%, #e8e8e8 60%, #f5f5f5 100%)',
+    drawing: 'repeating-linear-gradient(120deg, #e8e8e8 0px, #e8e8e8 10px, #f5f5f5 10px, #f5f5f5 20px)',
   },
   primary: '#3D405B',
   cardHeight: 280,
@@ -38,20 +38,20 @@ export const blueprintTheme = {
   cardBg: '#FFFFFF',
   cardText: '#17202A',
   categories: {
-    muziek: '#C0392B',
-    poëzie: '#2980B9',
-    prozapoëzie: '#8E44AD',
-    proza: '#27AE60',
-    sculptuur: '#D35400',
-    tekening: '#8E44AD',
+    music: '#C0392B',
+    poetry: '#2980B9',
+    prosepoetry: '#8E44AD',
+    prose: '#27AE60',
+    sculpture: '#D35400',
+    drawing: '#8E44AD',
   },
   cardBackgrounds: {
     default: '#FFFFFF',
-    muziek: 'linear-gradient(135deg, #1F618D 0%, #17202A 100%)',
-    poëzie: 'repeating-linear-gradient(135deg, #eaf2f8 0px, #eaf2f8 8px, #d6eaf8 8px, #ffffff 16px)',
-    proza: 'linear-gradient(120deg, #eafaf1 0%, #ffffff 100%)',
-    sculptuur: 'radial-gradient(circle at 70% 70%, #fbeee6 60%, #eaf2f8 100%)',
-    tekening: 'repeating-linear-gradient(120deg, #eaf2f8 0px, #eaf2f8 10px, #f8f9f9 10px, #f8f9f9 20px)',
+    music: 'linear-gradient(135deg, #1F618D 0%, #17202A 100%)',
+    poetry: 'repeating-linear-gradient(135deg, #eaf2f8 0px, #eaf2f8 8px, #d6eaf8 8px, #ffffff 16px)',
+    prose: 'linear-gradient(120deg, #eafaf1 0%, #ffffff 100%)',
+    sculpture: 'radial-gradient(circle at 70% 70%, #fbeee6 60%, #eaf2f8 100%)',
+    drawing: 'repeating-linear-gradient(120deg, #eaf2f8 0px, #eaf2f8 10px, #f8f9f9 10px, #f8f9f9 20px)',
   },
   primary: '#2E86C1',
   cardHeight: 280,
@@ -68,20 +68,20 @@ export const darkModeTheme = {
   cardBg: '#1E2732',
   cardText: '#EAF2F8',
   categories: {
-    muziek: '#CF6679',
-    poëzie: '#74B9FF',
-    prozapoëzie: '#BB8FCE',
-    proza: '#55E6C1',
-    sculptuur: '#FFB74D',
-    tekening: '#BA68C8',
+    music: '#CF6679',
+    poetry: '#74B9FF',
+    prosepoetry: '#BB8FCE',
+    prose: '#55E6C1',
+    sculpture: '#FFB74D',
+    drawing: '#BA68C8',
   },
   cardBackgrounds: {
     default: '#1E2732',
-    muziek: 'linear-gradient(145deg, #232526 0%, #414345 100%)',
-    poëzie: 'repeating-linear-gradient(135deg, #232b36 0px, #232b36 8px, #1e2732 8px, #232b36 16px)',
-    proza: 'linear-gradient(120deg, #232b36 0%, #1e2732 100%)',
-    sculptuur: 'radial-gradient(circle at 30% 30%, #232b36 60%, #1e2732 100%)',
-    tekening: 'repeating-linear-gradient(120deg, #232b36 0px, #232b36 10px, #1e2732 10px, #1e2732 20px)',
+    music: 'linear-gradient(145deg, #232526 0%, #414345 100%)',
+    poetry: 'repeating-linear-gradient(135deg, #232b36 0px, #232b36 8px, #1e2732 8px, #232b36 16px)',
+    prose: 'linear-gradient(120deg, #232b36 0%, #1e2732 100%)',
+    sculpture: 'radial-gradient(circle at 30% 30%, #232b36 60%, #1e2732 100%)',
+    drawing: 'repeating-linear-gradient(120deg, #232b36 0px, #232b36 10px, #1e2732 10px, #1e2732 20px)',
   },
   primary: '#BB86FC',
   cardHeight: 280,
@@ -98,21 +98,21 @@ export const natureTheme = {
   cardBg: '#F4F1EE',
   cardText: '#2C3E50',
   categories: {
-    muziek: '#388E3C', // green
-    poëzie: '#0288D1', // blue
-    prozapoëzie: '#8D6E63', // brown
-    proza: '#6D4C41', // dark brown
-    sculptuur: '#A1887F', // light brown
-    tekening: '#90A4AE', // gray
+    music: '#388E3C', // green
+    poetry: '#0288D1', // blue
+    prosepoetry: '#8D6E63', // brown
+    prose: '#6D4C41', // dark brown
+    sculpture: '#A1887F', // light brown
+    drawing: '#90A4AE', // gray
   },
   cardBackgrounds: {
     default: '#F4F1EE',
-    muziek: 'linear-gradient(135deg, #A8E063 0%, #56AB2F 100%)',
-    poëzie: 'linear-gradient(135deg, #81D4FA 0%, #0288D1 100%)',
-    prozapoëzie: 'linear-gradient(135deg, #BCAAA4 0%, #8D6E63 100%)',
-    proza: 'linear-gradient(135deg, #A1887F 0%, #6D4C41 100%)',
-    sculptuur: 'linear-gradient(135deg, #D7CCC8 0%, #A1887F 100%)',
-    tekening: 'linear-gradient(135deg, #CFD8DC 0%, #90A4AE 100%)',
+    music: 'linear-gradient(135deg, #A8E063 0%, #56AB2F 100%)',
+    poetry: 'linear-gradient(135deg, #81D4FA 0%, #0288D1 100%)',
+    prosepoetry: 'linear-gradient(135deg, #BCAAA4 0%, #8D6E63 100%)',
+    prose: 'linear-gradient(135deg, #A1887F 0%, #6D4C41 100%)',
+    sculpture: 'linear-gradient(135deg, #D7CCC8 0%, #A1887F 100%)',
+    drawing: 'linear-gradient(135deg, #CFD8DC 0%, #90A4AE 100%)',
   },
   primary: '#7FB77E',
   cardHeight: 280,
@@ -129,21 +129,21 @@ export const earthTheme = {
   cardBg: '#ECEFF1',
   cardText: '#3E2723',
   categories: {
-    muziek: '#388E3C', // green
-    poëzie: '#1976D2', // blue
-    prozapoëzie: '#8D6E63', // brown
-    proza: '#5D4037', // dark brown
-    sculptuur: '#A1887F', // light brown
-    tekening: '#757575', // gray
+    music: '#388E3C', // green
+    poetry: '#1976D2', // blue
+    prosepoetry: '#8D6E63', // brown
+    prose: '#5D4037', // dark brown
+    sculpture: '#A1887F', // light brown
+    drawing: '#757575', // gray
   },
   cardBackgrounds: {
     default: '#ECEFF1',
-    muziek: 'linear-gradient(135deg, #A5D6A7 0%, #388E3C 100%)',
-    poëzie: 'linear-gradient(135deg, #90CAF9 0%, #1976D2 100%)',
-    prozapoëzie: 'linear-gradient(135deg, #BCAAA4 0%, #8D6E63 100%)',
-    proza: 'linear-gradient(135deg, #A1887F 0%, #5D4037 100%)',
-    sculptuur: 'linear-gradient(135deg, #D7CCC8 0%, #A1887F 100%)',
-    tekening: 'linear-gradient(135deg, #BDBDBD 0%, #757575 100%)',
+    music: 'linear-gradient(135deg, #A5D6A7 0%, #388E3C 100%)',
+    poetry: 'linear-gradient(135deg, #90CAF9 0%, #1976D2 100%)',
+    prosepoetry: 'linear-gradient(135deg, #BCAAA4 0%, #8D6E63 100%)',
+    prose: 'linear-gradient(135deg, #A1887F 0%, #5D4037 100%)',
+    sculpture: 'linear-gradient(135deg, #D7CCC8 0%, #A1887F 100%)',
+    drawing: 'linear-gradient(135deg, #BDBDBD 0%, #757575 100%)',
   },
   primary: '#795548',
   cardHeight: 280,

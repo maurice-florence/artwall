@@ -1,21 +1,25 @@
 // src/constants.ts
 
 export const CATEGORIES = [
-  "poëzie",
-  "prozapoëzie",
-  "proza",
-  "muziek",
-  "beeld",
+  "poetry",
+  "prosepoetry",
+  "prose",
+  "music",
+  "image",
   "video",
-  "overig",
+  "other",
+  "sculpture",
+  "drawing",
 ];
 
 export const CATEGORY_LABELS: Record<string, string> = {
-  "poëzie": "Poëzie",
-  "prozapoëzie": "Prozapoëzie",
-  "proza": "Proza",
-  "muziek": "Muziek",
-  "beeld": "Beeld",
+  "poetry": "Poetry",
+  "prosepoetry": "Prose Poetry",
+  "prose": "Prose",
+  "music": "Music",
+  "image": "Image",
   "video": "Video",
-  "overig": "Overig",
+  "other": "Other",
+  "sculpture": "Sculpture",
+  "drawing": "Drawing",
 };

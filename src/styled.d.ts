@@ -1,8 +1,21 @@
 import 'styled-components';
-import { Theme } from './themes';
+
+export interface Theme {
+  body: string;
+  text: string;
+  headerBg: string;
+  headerText: string;
+  accent: string;
+  accentText: string;
+  cardBg: string;
+  cardText: string;
+  categories: Record<string, string>;
+  cardBackgrounds: Record<string, string>;
+  primary: string;
+  cardHeight: number;
+  gridGap: number;
+}
 
 declare module 'styled-components' {
-  export interface DefaultTheme extends Theme {
-    primary: string;
-  }
+  export interface DefaultTheme extends Theme {}
 }

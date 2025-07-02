@@ -153,6 +153,20 @@ const ShareButton = styled.button`
 const isClient = typeof window !== 'undefined';
 const isMobile = isClient ? window.innerWidth < 768 : false;
 
+// Type guards for union type fields
+function hasSoundcloudTrackUrl(artwork: Artwork): artwork is import("@/types").MusicArtwork {
+  return 'soundcloudTrackUrl' in artwork && typeof (artwork as any).soundcloudTrackUrl === 'string';
+}
+function hasLyrics(artwork: Artwork): artwork is import("@/types").MusicArtwork {
+  return 'lyrics' in artwork && typeof (artwork as any).lyrics === 'string';
+}
+function hasChords(artwork: Artwork): artwork is import("@/types").MusicArtwork {
+  return 'chords' in artwork && typeof (artwork as any).chords === 'string';
+}
+function hasMediaType(artwork: Artwork): artwork is (import("@/types").MusicArtwork | import("@/types").VisualArtArtwork | import("@/types").VideoArtwork | import("@/types").PoetryArtwork) {
+  return 'mediaType' in artwork && typeof (artwork as any).mediaType === 'string';
+}
+
 type ModalProps = {
   item: Artwork;
   onClose: () => void;
@@ -190,10 +204,10 @@ const Modal: React.FC<ModalProps> = ({ item, onClose, onEdit, isAdmin }) => {
         <StyledHr />
 
         <MediaContainer>
-          {item.category === 'proza' && item.coverImageUrl && (
+          {item.category === 'prose' && 'coverImageUrl' in item && item.coverImageUrl && (
             <ModalImage src={item.coverImageUrl} alt={`Cover voor ${item.title}`} style={{ marginBottom: '1rem' }} />
           )}
-          {(item.category === 'poëzie' || item.category === 'prozapoëzie') && item.content && (
+          {(item.category === 'poetry' || item.category === 'prosepoetry') && 'content' in item && item.content && (
             <div style={{ marginTop: '1rem', whiteSpace: 'pre-wrap' }}>
               <ReactMarkdown>{item.content}</ReactMarkdown>
             </div>
@@ -201,7 +215,7 @@ const Modal: React.FC<ModalProps> = ({ item, onClose, onEdit, isAdmin }) => {
           {/* Add more media rendering as needed */}
         </MediaContainer>
 
-        {item.soundcloudTrackUrl && (
+        {hasSoundcloudTrackUrl(item) && item.soundcloudTrackUrl && (
           <SoundCloudLinkButton
             href={item.soundcloudTrackUrl}
             target="_blank"
@@ -212,18 +226,24 @@ const Modal: React.FC<ModalProps> = ({ item, onClose, onEdit, isAdmin }) => {
           </SoundCloudLinkButton>
         )}
 
-        {item.lyrics && (
+        {hasLyrics(item) && item.lyrics && (
           <LyricsChordsSection>
             <h3>Songtekst / Extra Tekst</h3>
             <ReactMarkdown>{item.lyrics}</ReactMarkdown>
           </LyricsChordsSection>
         )}
-        {item.chords && item.mediaType !== 'audio' && (
-          <LyricsChordsSection>
-            <h3>Akkoorden / Notities</h3>
-            <p>{item.chords}</p>
-          </LyricsChordsSection>
-        )}
+        {hasChords(item) && (() => {
+          const musicItem = item as import("@/types").MusicArtwork;
+          if (!hasMediaType(musicItem) || musicItem.mediaType !== 'audio') {
+            return (
+              <LyricsChordsSection>
+                <h3>Akkoorden / Notities</h3>
+                <p>{musicItem.chords}</p>
+              </LyricsChordsSection>
+            );
+          }
+          return null;
+        })()}
 
         {isAdmin && item.id && onEdit && (
           <button

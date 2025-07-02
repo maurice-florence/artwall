@@ -145,13 +145,15 @@ const Sidebar = ({ isOpen, allArtworks }: SidebarProps) => {
             <OptionGroup>
                 <StyledSelect name="category" value={filters.category} onChange={handleFilterChange}>
                     <option value="all">Alle Categorieën</option>
-                    <option value="poëzie">Poëzie</option>
-                    <option value="prozapoëzie">Prozapoëzie</option>
-                    <option value="proza">Proza</option>
-                    <option value="muziek">Muziek</option>
-                    <option value="beeld">Beeld</option>
+                    <option value="poetry">Poetry</option>
+                    <option value="prosepoetry">Prose Poetry</option>
+                    <option value="prose">Prose</option>
+                    <option value="music">Music</option>
+                    <option value="sculpture">Sculpture</option>
+                    <option value="drawing">Drawing</option>
+                    <option value="image">Image</option>
                     <option value="video">Video</option>
-                    <option value="overig">Overig</option>
+                    <option value="other">Other</option>
                 </StyledSelect>
                 <StyledSelect name="year" value={filters.year} onChange={handleFilterChange}>
                     <option value="all">Alle Jaren</option>

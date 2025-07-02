@@ -1,27 +1,77 @@
-export type ArtworkCategory = 'poëzie' | 'prozapoëzie' | 'proza' | 'sculptuur' | 'tekening' | 'muziek';
+// De mogelijke categorieën, nu als een expliciet type
+export type ArtworkCategory = 'poetry' | 'prose' | 'sculpture' | 'drawing' | 'music' | 'video' | 'prosepoetry' | 'image' | 'other';
 
-export interface Artwork {
+// De basis-interface met alle gedeelde eigenschappen
+interface BaseArtwork {
     id: string;
-    type: 'artwork'; // Duidelijk type voor de union
     title: string;
+    // De creatiedatum van het KUNSTWERK zelf
     year: number;
     month: number;
     day: number;
-    category: ArtworkCategory;
     description: string;
-    mediaType?: 'text' | 'image' | 'audio';
-    mediaUrl?: string;
-    coverImageUrl?: string;
-    soundcloudEmbedUrl?: string;
-    soundcloudTrackUrl?: string;
-    content?: string;
-    lyrics?: string;
-    chords?: string;
     isHidden?: boolean;
+    
+    // Nieuwe velden voor organisatie en tracking
+    tags?: string[];
+    collectionId?: string;
+    recordCreationDate: number; // Timestamp van wanneer de *database entry* is gemaakt
+    recordLastUpdated?: number; // Timestamp van de laatste update
 }
 
+// Specifieke interfaces per categorie
+export interface PoetryArtwork extends BaseArtwork {
+    category: 'poetry' | 'prosepoetry';
+    mediaType: 'text';
+    content: string;
+}
+
+export interface ProseArtwork extends BaseArtwork {
+    category: 'prose';
+    mediaUrl: string; // Link to PDF
+    coverImageUrl: string;
+}
+
+export interface VisualArtArtwork extends BaseArtwork {
+    category: 'sculpture' | 'drawing' | 'image';
+    mediaType: 'image';
+    mediaUrl: string;
+}
+
+export interface MusicArtwork extends BaseArtwork {
+    category: 'music';
+    mediaType: 'audio';
+    mediaUrl?: string;
+    soundcloudEmbedUrl?: string;
+    soundcloudTrackUrl?: string;
+    lyrics?: string;
+    chords?: string;
+}
+
+export interface VideoArtwork extends BaseArtwork {
+    category: 'video';
+    mediaType: 'video';
+    mediaUrl: string;
+}
+
+export interface OtherArtwork extends BaseArtwork {
+    category: 'other';
+    content?: string;
+    mediaUrl?: string;
+}
+
+// De uiteindelijke "union" type
+export type Artwork = 
+    | PoetryArtwork 
+    | ProseArtwork 
+    | VisualArtArtwork 
+    | MusicArtwork 
+    | VideoArtwork
+    | OtherArtwork;
+
+// Jaartal-marker voor de collage
 export interface YearMarker {
-    id: string; // Gebruik het jaar als unieke ID
+    id: string;
     type: 'year-marker';
     year: number;
 }

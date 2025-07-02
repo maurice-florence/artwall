@@ -3,11 +3,10 @@
 
 import React, { useContext } from 'react';
 import { Toaster } from 'react-hot-toast';
-import { ThemeProvider, ThemeContext } from '../context/ThemeContext';
+import { ThemeProvider } from '../context/ThemeContext';
 import { GlobalStyle } from '../GlobalStyle'; // We maken dit bestand zo
 import ScrollToTop from '../components/ScrollToTop';
 import StyledComponentsRegistry from '../lib/registry';
-import { themes } from '../themes';
 import { FilterProvider } from '@/context/FilterContext';
 import { ArtworksProvider } from '../context/ArtworksContext';
 
@@ -34,10 +33,11 @@ export default function RootLayout({
 }
 
 function ThemedApp({ children }: { children: React.ReactNode }) {
-  const { theme } = React.useContext(ThemeContext);
+  // Get theme from ThemeContext with correct typing
+  const { themeObject } = useContext(require('../context/ThemeContext').ThemeContext) as { themeObject: any };
   return (
     <StyledComponentsRegistry>
-      <GlobalStyle theme={themes[theme]} />
+      <GlobalStyle theme={themeObject} />
       <Toaster position="bottom-center" />
       {children}
       <ScrollToTop />

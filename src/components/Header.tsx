@@ -1,9 +1,8 @@
 import React from 'react';
 import styled from 'styled-components';
-import { FaGripLines } from 'react-icons/fa';
+import { FaGripLines, FaPenNib, FaBookOpen, FaPaintBrush, FaMusic, FaAlignLeft, FaImage, FaVideo, FaEllipsisH, FaCube } from 'react-icons/fa';
 import ThemeSwitcher from './ThemeSwitcher'; // Importeren
 import { CATEGORIES, CATEGORY_LABELS } from '@/constants';
-import { FaPenNib, FaBookOpen, FaPaintBrush, FaMusic, FaAlignLeft, FaImage, FaVideo, FaEllipsisH } from 'react-icons/fa';
 
 const HeaderWrapper = styled.header`
   background: ${({ theme }) => theme.headerBg};
@@ -64,13 +63,14 @@ const CenteredTitleWrapper = styled.div`
 `;
 
 const CATEGORY_ICONS: Record<string, React.ReactNode> = {
-  'poëzie': <FaPenNib />,
-  'prozapoëzie': <FaAlignLeft />,
-  'proza': <FaBookOpen />,
-  'muziek': <FaMusic />,
-  'beeld': <FaImage />,
-  'video': <FaVideo />,
-  'overig': <FaEllipsisH />,
+  'poetry': <FaPenNib />,
+  'prosepoetry': <FaAlignLeft />,
+  'prose': <FaBookOpen />,
+  'music': <FaMusic />,
+  'sculpture': <FaCube />,
+  'drawing': <FaImage />,
+  'image': <FaImage />,
+  'other': <FaEllipsisH />,
 };
 
 const CategoryIconButton = styled.button<{ $selected?: boolean }>`
@@ -88,15 +88,15 @@ const CategoryIconButton = styled.button<{ $selected?: boolean }>`
   }
 `;
 
-const Header = ({ onToggleSidebar, selectedCategories = [], onCategoryToggle }: { onToggleSidebar: () => void, selectedCategories?: string[], onCategoryToggle?: (cat: string) => void }) => {
+const Header = ({ onToggleSidebar, selectedCategories = [], onCategoryToggle, availableCategories = [] }: { onToggleSidebar: () => void, selectedCategories?: string[], onCategoryToggle?: (cat: string) => void, availableCategories?: string[] }) => {
   return (
     <HeaderWrapper>
       <div style={{ display: 'flex', alignItems: 'center', flex: '0 0 auto' }}>
         <ToggleButton onClick={onToggleSidebar} title="Toggle Sidebar">
           <FaGripLines />
         </ToggleButton>
-        <IconsWrapper style={{ marginRight: 0 }}>
-          {CATEGORIES.map(cat => (
+        <IconsWrapper style={{ marginLeft: '2rem', marginRight: 0 }}>
+          {(availableCategories.length > 0 ? availableCategories : CATEGORIES).map(cat => (
             <CategoryIconButton
               key={cat}
               $selected={selectedCategories.includes(cat)}
