@@ -41,5 +41,5 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-importer/serviceAccountKey.json
-C:\Users\friem\OneDrive\Documenten\GitHub\creatieve-tijdlijn\importer\serviceAccountKey.json
+# firebase key
+serviceAccountKey.json
