@@ -80,6 +80,13 @@ def clean_html_content(html: str) -> str:
     clean_html = re.sub(r'<en-note[^>]*>', '', clean_html)
     clean_html = re.sub(r'</en-note>', '', clean_html)
     
+    # Remove Evernote styling and hidden elements
+    clean_html = re.sub(r'<div style="display:none;[^"]*"[^>]*>.*?</div>', '', clean_html, flags=re.DOTALL)
+    clean_html = re.sub(r'<div[^>]*style="[^"]*display:\s*none[^"]*"[^>]*>.*?</div>', '', clean_html, flags=re.DOTALL)
+    
+    # Remove all style attributes but keep the content
+    clean_html = re.sub(r'\s*style="[^"]*"', '', clean_html)
+    
     # First, normalize all <br> variants to <br>
     clean_html = re.sub(r'<br\s*/?>', '<br>', clean_html, flags=re.IGNORECASE)
     
@@ -87,7 +94,7 @@ def clean_html_content(html: str) -> str:
     clean_html = re.sub(r'<div><br></div>', '<br>', clean_html, flags=re.IGNORECASE)
     
     # Convert remaining Evernote formatting to standard HTML
-    clean_html = re.sub(r'<div>', '', clean_html, flags=re.IGNORECASE)
+    clean_html = re.sub(r'<div[^>]*>', '', clean_html, flags=re.IGNORECASE)
     clean_html = re.sub(r'</div>', '<br>', clean_html, flags=re.IGNORECASE)
     
     # Only remove leading and trailing <br> tags, preserve all internal spacing
@@ -150,6 +157,70 @@ def generate_filename(meta: Dict[str, Any], lang: str = None, version: Any = Non
         filename += f"_{lang.lower()}"
 
     return filename
+
+def extract_auto_description(content_html: str, max_length: int = 100, category: str = None) -> str:
+    """
+    Extracts the first sentence or row of content to use as description.
+    Excludes the title (first row) and looks for the next meaningful text.
+    For poetry and music: combines first two content lines into one string.
+    
+    :param content_html: The HTML content of the note
+    :param max_length: Maximum length for the description
+    :param category: The category of the note (poetry, music, etc.)
+    :return: Extracted description text
+    """
+    # First, let's work with the original HTML structure to better identify lines
+    html_lines = content_html.replace('<br>', '\n').replace('<br/>', '\n').replace('<br />', '\n')
+    html_lines = re.sub(r'</div>', '\n', html_lines, flags=re.IGNORECASE)
+    html_lines = re.sub(r'<div[^>]*>', '', html_lines, flags=re.IGNORECASE)
+    
+    # Now clean remaining HTML tags but preserve basic formatting markers
+    text_content = re.sub(r'<[^>]+>', '', html_lines)
+    lines = [line.strip() for line in text_content.split('\n') if line.strip()]
+    
+    if not lines:
+        return ""
+    
+    # Skip the title (first line) if it's short and looks like a title
+    start_index = 0
+    if len(lines) > 1 and len(lines[0]) <= 100:
+        # First line is likely the title, skip it
+        start_index = 1
+    
+    # Get content lines after the title
+    available_lines = lines[start_index:]
+    if not available_lines:
+        return ""
+    
+    # For poetry and music: combine first two lines
+    if category in ['poetry', 'music'] and len(available_lines) >= 2:
+        description_text = f"{available_lines[0]} {available_lines[1]}"
+    else:
+        # For other categories or when only one line available: use first line
+        description_text = available_lines[0]
+        
+        # Try to extract first sentence if the line contains sentence-ending punctuation
+        sentence_match = re.match(r'^([^.!?]+[.!?])', description_text)
+        if sentence_match:
+            description_text = sentence_match.group(1).strip()
+    
+    # Truncate if too long (reserve 3 characters for the "...")
+    if len(description_text) > max_length - 3:
+        # Try to cut at word boundary
+        truncated = description_text[:max_length - 3]
+        last_space = truncated.rfind(' ')
+        if last_space > (max_length - 3) * 0.7:  # Only cut at space if it's not too early
+            description_text = truncated[:last_space]
+        else:
+            description_text = truncated
+    
+    # Remove trailing comma if present
+    description_text = description_text.rstrip(',').strip()
+    
+    # Always add "..." at the end
+    description_text += "..."
+    
+    return description_text
 
 def process_enex_files(source_dir: pathlib.Path, dest_dir: pathlib.Path):
     """Valideert en verwerkt alle .enex bestanden in een enkele, efficiënte pass."""
@@ -255,6 +326,13 @@ def process_enex_files(source_dir: pathlib.Path, dest_dir: pathlib.Path):
                             if key == 'version':
                                 meta_lang['language'] = lang_code
                         
+                        # --- Auto-generate description if empty (per translation from its own content) ---
+                        if not meta_lang.get('description') or not str(meta_lang.get('description')).strip():
+                            auto_description = extract_auto_description(content_html, category=category)
+                            if auto_description:
+                                meta_lang['description'] = auto_description
+                                print(f"    📝 Auto-description ({lang_code}): {auto_description[:50]}{'...' if len(auto_description) > 50 else ''}")
+                        
                         filename_lang = generate_filename(meta, lang=lang_code)
                         file_path = category_folder / f"{filename_lang}.html"
                         
@@ -267,16 +345,34 @@ def process_enex_files(source_dir: pathlib.Path, dest_dir: pathlib.Path):
 
                 # --- Logica voor media-bestanden ---
                 elif category in ['drawing', 'sculpture', 'prose']:
+                    # Create ordered metadata with 'language' field
+                    meta_with_lang = {}
+                    for key, value in meta.items():
+                        meta_with_lang[key] = value
+                        # Insert 'language' right after 'version' and before 'language1'
+                        if key == 'version':
+                            # For media categories, use language1 as the primary language
+                            primary_lang = meta.get('language1', 'en')  # Default to 'en' if not specified
+                            meta_with_lang['language'] = primary_lang
+                    
+                    # --- Auto-generate description if empty (for media categories) ---
+                    if not meta_with_lang.get('description') or not str(meta_with_lang.get('description')).strip():
+                        auto_description = extract_auto_description(main_content_html)
+                        if auto_description:
+                            meta_with_lang['description'] = auto_description
+                            print(f"    📝 Auto-description: {auto_description[:50]}{'...' if len(auto_description) > 50 else ''}")
+                    
                     base_filename = generate_filename(meta)
                     html_path = category_folder / f"{base_filename}.html"
                     
                     # Check if file exists to determine if we're overwriting
                     html_file_status = "Overschreven" if html_path.exists() else "Nieuw"
                     
-                    # Generate HTML file for media categories
-                    generate_html_file(meta, main_content_html, html_path)
+                    # Generate HTML file for media categories with text content
+                    generate_html_file(meta_with_lang, main_content_html, html_path)
                     created_files_log.append(f"{html_path.name} ({html_file_status})")
 
+                    # Process attached media files
                     resources = note.findall('resource')
                     if not resources:
                         raise ValueError(f"Categorie is '{category}' maar er is geen afbeelding/bestand bijgevoegd.")
