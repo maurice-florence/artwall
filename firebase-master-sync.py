@@ -98,8 +98,9 @@ def parse_html_metadata(html_content: str) -> Dict[str, Any]:
                             except ValueError:
                                 metadata[key] = value
                         else:
-                            # Include all fields, even empty ones (convert empty string to null)
-                            metadata[key] = value if value else None
+                            # Include all fields, convert empty values to empty string instead of null
+                            # This ensures Firebase stores the field even when empty
+                            metadata[key] = value if value else ""
                     except Exception as e:
                         print(f"⚠️ Kon regel niet parsen: '{line}' - {e}")
                         continue
@@ -151,12 +152,17 @@ def extract_content_flexible(html_content: str) -> str:
     
     return content.strip()
 
-def sync_to_firebase():
+def sync_to_firebase(force_update: bool = False):
     """
     Scant de lokale media map, leest metadata uit .html bestanden,
     vergelijkt met Firebase, en uploadt/update nieuwe of gewijzigde items.
+    
+    :param force_update: Als True, overschrijft alle bestaande items
     """
-    print("\n--- Starten van Firebase Synchronisatie ---")
+    print("\n🚀 Firebase Synchronisatie Gestart")
+    if force_update:
+        print("🔄 FORCE UPDATE MODE - Alle bestanden worden overschreven")
+    print("=" * 50)
     
     try:
         cred = credentials.Certificate(SERVICE_ACCOUNT_KEY_PATH)
@@ -167,38 +173,42 @@ def sync_to_firebase():
                 'databaseURL': DATABASE_URL,
                 'storageBucket': STORAGE_BUCKET
             })
-        print("✅ Firebase succesvol geïnitialiseerd.")
+        print("✅ Firebase succesvol geïnitialiseerd")
     except Exception as e:
         print(f"❌ Fout bij initialiseren Firebase: {e}")
         return
 
-    print("🔄 Ophalen van bestaande data uit de database...")
+    print("\n🔍 Ophalen van bestaande data uit de database...")
     artworks_ref = db.reference('artworks')
     existing_artworks = artworks_ref.get() or {}
-    # Maak een set van unieke identifiers (bv. titel + datum + taal)
-    existing_identifiers = {}  # Changed to dict to store Firebase keys
-    for firebase_key, art in existing_artworks.items():
-        lang = art.get('language', 'en')
-        identifier = f"{art.get('title')}_{art.get('year')}{art.get('month'):02d}{art.get('day'):02d}_{lang}"
-        existing_identifiers[identifier] = {
-            'firebase_key': firebase_key,
-            'has_media': bool(art.get('mediaUrl') or art.get('mediaUrls'))
-        }
-    print(f"ℹ️  {len(existing_identifiers)} bestaande items gevonden.")
+    existing_keys = set(existing_artworks.keys())
+    print(f"ℹ️  {len(existing_keys)} bestaande items gevonden")
 
     bucket = storage.bucket()
     items_to_process: Dict[str, Dict[str, Any]] = {}
 
-    print("\n--- Scannen van lokale bestanden en metadata ---")
+    print(f"\n📁 Scannen van lokale bestanden en metadata...")
+    print(f"📂 Bron: {SOURCE_MEDIA_FOLDER}")
+    
+    total_html_files = 0
+    total_media_files = 0
+    
     for category_dir in SOURCE_MEDIA_FOLDER.iterdir():
         if not category_dir.is_dir():
             continue
         
         category = category_dir.name
-        print(f"\n📁 Scannen van map: '{category}'...")
+        print(f"\n  📁 {category}/")
         
         all_files = list(category_dir.iterdir())
         html_files = {f.stem: f for f in all_files if f.suffix == '.html'}
+        media_files = [f for f in all_files if f.suffix != '.html']
+        
+        print(f"    📄 {len(html_files)} HTML bestanden")
+        print(f"    🎨 {len(media_files)} media bestanden")
+        
+        total_html_files += len(html_files)
+        total_media_files += len(media_files)
 
         for file_path in all_files:
             if file_path.suffix == '.html':
@@ -211,18 +221,18 @@ def sync_to_firebase():
                         metadata = parse_metadata_from_filename(file_path.name)
                     
                     if metadata.get('title'):
-                        # Gebruik taal in identifier voor meertalige content
-                        lang = metadata.get('language', 'en')
-                        identifier = f"{metadata['title']}_{metadata['year']}{metadata['month']:02d}{metadata['day']:02d}_{lang}"
+                        # Use HTML filename (without extension) as key
+                        html_key = file_path.stem
                         
-                        if identifier not in items_to_process:
-                            items_to_process[identifier] = {'metadata': metadata, 'files': []}
+                        if html_key not in items_to_process:
+                            items_to_process[html_key] = {'metadata': metadata, 'files': []}
                         
-                        items_to_process[identifier]['files'].append(file_path)
-                        print(f"  - HTML metadata gevonden: {file_path.name}")
+                        items_to_process[html_key]['files'].append(file_path)
+                        # Store last modification time
+                        items_to_process[html_key]['last_modified'] = int(file_path.stat().st_mtime * 1000)
                         
                 except Exception as e:
-                    print(f"⚠️ Kon HTML niet lezen uit {file_path.name}: {e}")
+                    print(f"    ⚠️ Kon HTML niet lezen: {file_path.name} - {e}")
                     
             else:
                 # Verwerk media bestanden (zoek naar bijbehorend HTML bestand)
@@ -243,64 +253,72 @@ def sync_to_firebase():
                         metadata = parse_html_metadata(html_content)
                         
                         if metadata.get('title'):
-                            lang = metadata.get('language', 'en')
-                            identifier = f"{metadata['title']}_{metadata['year']}{metadata['month']:02d}{metadata['day']:02d}_{lang}"
+                            # Use HTML filename (without extension) as key
+                            html_key = matching_html.stem
                             
-                            if identifier not in items_to_process:
-                                items_to_process[identifier] = {'metadata': metadata, 'files': []}
+                            if html_key not in items_to_process:
+                                items_to_process[html_key] = {'metadata': metadata, 'files': []}
                             
-                            items_to_process[identifier]['files'].append(file_path)
+                            items_to_process[html_key]['files'].append(file_path)
+                            # Update last modification time if media file is newer
+                            media_modified = int(file_path.stat().st_mtime * 1000)
+                            if 'last_modified' not in items_to_process[html_key] or media_modified > items_to_process[html_key]['last_modified']:
+                                items_to_process[html_key]['last_modified'] = media_modified
                             
                     except Exception as e:
-                        print(f"⚠️ Kon bijbehorend HTML niet lezen voor {file_path.name}: {e}")
+                        print(f"    ⚠️ Kon bijbehorend HTML niet lezen voor {file_path.name}: {e}")
 
-    print("\n--- Verwerken en uploaden van nieuwe items ---")
-    for identifier, item_data in items_to_process.items():
-        if identifier in existing_identifiers:
-            existing_item = existing_identifiers[identifier]
+    print(f"\n📊 Scan resultaten:")
+    print(f"  📄 Totaal HTML bestanden: {total_html_files}")
+    print(f"  🎨 Totaal media bestanden: {total_media_files}")
+    print(f"  🔗 Items om te verwerken: {len(items_to_process)}")
+
+    # Tracking variables
+    database_operations = {
+        'created': [],
+        'updated': [],
+        'skipped': [],
+        'failed': []
+    }
+    
+    storage_operations = {
+        'uploaded': [],
+        'failed': []
+    }
+
+    print(f"\n🔄 Verwerken van items...")
+    print("=" * 50)
+    
+    for html_key, item_data in items_to_process.items():
+        title = item_data['metadata']['title']
+        language = item_data['metadata'].get('language', 'en')
+        local_modified = item_data.get('last_modified', 0)
+        
+        if html_key in existing_keys and not force_update:
+            existing_item = existing_artworks[html_key]
+            firebase_modified = existing_item.get('recordCreationDate', 0)
             
-            # Check if existing item has media files
-            if existing_item['has_media']:
-                print(f"⏭️  Item overgeslagen (bestaat al met media): {item_data['metadata']['title']}")
-                continue
+            # Check if local files are newer than Firebase data
+            if local_modified > firebase_modified:
+                print(f"🔄 {title} ({language}) - Lokale bestanden zijn nieuwer, bijwerken...")
+                needs_update = True
             else:
-                print(f"🔄 Item bestaat al maar mist media bestanden: {item_data['metadata']['title']}")
-                # Upload media files and update existing entry
-                artwork_payload = {**item_data['metadata']}
-                media_urls = []
-                
-                for file_path in item_data['files']:
-                    if file_path.suffix == '.html':
-                        continue  # HTML bestanden niet uploaden naar storage
-                        
-                    try:
-                        blob = bucket.blob(f"{artwork_payload['category']}/{file_path.name}")
-                        blob.upload_from_filename(str(file_path))
-                        blob.make_public() # Maak het bestand publiek toegankelijk
-                        media_urls.append(blob.public_url)
-                        print(f"  ☁️ Bestand geüpload: {file_path.name}")
-                    except Exception as e:
-                        print(f"❌ Fout bij uploaden van {file_path.name}: {e}")
-                
-                # Update existing entry with media URLs
-                if media_urls:
-                    update_data = {}
-                    if len(media_urls) > 1:
-                        update_data['mediaUrls'] = media_urls
-                    elif len(media_urls) == 1:
-                        update_data['mediaUrl'] = media_urls[0]
-                    
-                    try:
-                        artworks_ref.child(existing_item['firebase_key']).update(update_data)
-                        print(f"✅ Media toegevoegd aan bestaand item: {artwork_payload['title']}\n")
-                    except Exception as e:
-                        print(f"❌ Fout bij updaten van {artwork_payload['title']}: {e}\n")
+                print(f"⏭️  {title} ({language}) - Geen wijzigingen gedetecteerd")
+                database_operations['skipped'].append(f"{title} ({language})")
                 continue
+        else:
+            if html_key in existing_keys:
+                print(f"🔄 {title} ({language}) - FORCE UPDATE actief, overschrijven...")
+                needs_update = True
+            else:
+                print(f"🆕 {title} ({language}) - Nieuw item aanmaken...")
+                needs_update = False  # It's a new item
 
-        # Create new entry
+        # Process the item (create new or update existing)
         artwork_payload = {**item_data['metadata']}
         media_urls = []
         
+        # Upload media files
         for file_path in item_data['files']:
             if file_path.suffix == '.html':
                 continue  # HTML bestanden niet uploaden naar storage
@@ -310,33 +328,88 @@ def sync_to_firebase():
                 blob.upload_from_filename(str(file_path))
                 blob.make_public() # Maak het bestand publiek toegankelijk
                 media_urls.append(blob.public_url)
-                print(f"  ☁️ Bestand geüpload: {file_path.name}")
+                print(f"  ☁️ {file_path.name}")
+                storage_operations['uploaded'].append(file_path.name)
             except Exception as e:
-                print(f"❌ Fout bij uploaden van {file_path.name}: {e}")
+                print(f"  ❌ {file_path.name} - {e}")
+                storage_operations['failed'].append(f"{file_path.name}: {e}")
         
-        # Wijs URL's toe aan het payload object
+        # Assign URLs to payload
         if len(media_urls) > 1:
             artwork_payload['mediaUrls'] = media_urls
         elif len(media_urls) == 1:
             artwork_payload['mediaUrl'] = media_urls[0]
 
-        # Gebruik HTML bestand voor creation date
-        html_files = [f for f in item_data['files'] if f.suffix == '.html']
-        if html_files:
-            artwork_payload['recordCreationDate'] = int(html_files[0].stat().st_ctime * 1000)
-        else:
-            artwork_payload['recordCreationDate'] = int(item_data['files'][0].stat().st_ctime * 1000)
+        # Set record creation/update date
+        artwork_payload['recordCreationDate'] = local_modified
 
-        # Push naar de database
+        # Save to Firebase
         try:
-            artworks_ref.push(artwork_payload)
-            print(f"✅ Database entry aangemaakt voor: {artwork_payload['title']} ({artwork_payload.get('language', 'en')})\n")
+            artworks_ref.child(html_key).set(artwork_payload)
+            if needs_update:
+                print(f"  ✅ Database bijgewerkt")
+                database_operations['updated'].append(f"{title} ({language})")
+            else:
+                print(f"  ✅ Database entry aangemaakt")
+                database_operations['created'].append(f"{title} ({language})")
         except Exception as e:
-            print(f"❌ Fout bij schrijven naar database voor {artwork_payload['title']}: {e}\n")
+            print(f"  ❌ Database operatie mislukt: {e}")
+            database_operations['failed'].append(f"{title} ({language}): {e}")
+            
+        print()  # Empty line for spacing
 
+    # Summary report
     print("🎉 Synchronisatie voltooid!")
+    print("=" * 50)
+    
+    print(f"\n📊 DATABASE OPERATIES:")
+    print(f"  ✅ Nieuw aangemaakt: {len(database_operations['created'])}")
+    for item in database_operations['created']:
+        print(f"    • {item}")
+    
+    print(f"  🔄 Bijgewerkt: {len(database_operations['updated'])}")
+    for item in database_operations['updated']:
+        print(f"    • {item}")
+    
+    print(f"  ⏭️  Overgeslagen: {len(database_operations['skipped'])}")
+    for item in database_operations['skipped']:
+        print(f"    • {item}")
+    
+    if database_operations['failed']:
+        print(f"  ❌ Mislukt: {len(database_operations['failed'])}")
+        for item in database_operations['failed']:
+            print(f"    • {item}")
+    
+    print(f"\n☁️  STORAGE OPERATIES:")
+    print(f"  ✅ Geüpload: {len(storage_operations['uploaded'])}")
+    for item in storage_operations['uploaded']:
+        print(f"    • {item}")
+    
+    if storage_operations['failed']:
+        print(f"  ❌ Mislukt: {len(storage_operations['failed'])}")
+        for item in storage_operations['failed']:
+            print(f"    • {item}")
+    
+    print(f"\n🏁 TOTAAL OVERZICHT:")
+    print(f"  📄 HTML bestanden verwerkt: {total_html_files}")
+    print(f"  🎨 Media bestanden verwerkt: {total_media_files}")
+    print(f"  🗃️  Database items: {len(database_operations['created']) + len(database_operations['updated'])} actief")
+    print(f"  ☁️  Storage bestanden: {len(storage_operations['uploaded'])} geüpload")
+    
+    if database_operations['failed'] or storage_operations['failed']:
+        print(f"  ⚠️  Fouten: {len(database_operations['failed']) + len(storage_operations['failed'])}")
+    else:
+        print(f"  🎯 Geen fouten!")
 
 
 # --- SCRIPT UITVOEREN ---
 if __name__ == "__main__":
-    sync_to_firebase()
+    import sys
+    
+    # Check for command line arguments
+    force_update = '--force' in sys.argv or '-f' in sys.argv
+    
+    if force_update:
+        print("⚠️  FORCE UPDATE mode geactiveerd via command line argument")
+    
+    sync_to_firebase(force_update=force_update)
