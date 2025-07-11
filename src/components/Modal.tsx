@@ -202,13 +202,13 @@ const Modal: React.FC<ModalProps> = ({ item, onClose, onEdit, isAdmin }) => {
   const router = useRouter();
 
   const [currentLanguage, setCurrentLanguage] = useState(item.language1 || 'en');
-  
+
   // Get available languages
   const availableLanguages = [];
   if (item.language1) availableLanguages.push(item.language1);
   if (item.language2) availableLanguages.push(item.language2);
   if (item.language3) availableLanguages.push(item.language3);
-  
+
   // Get current translation
   const getCurrentTranslation = () => {
     if (currentLanguage === item.language1) {
@@ -216,39 +216,25 @@ const Modal: React.FC<ModalProps> = ({ item, onClose, onEdit, isAdmin }) => {
         title: item.title,
         description: item.description,
         content: item.content || '',
-        lyrics: item.lyrics || ''
+        lyrics: item.lyrics || '',
       };
     }
-    
+
     return item.translations?.[currentLanguage] || {
       title: item.title,
       description: item.description,
       content: item.content || '',
-      lyrics: item.lyrics || ''
+      lyrics: item.lyrics || '',
     };
   };
-  
-  const translation = getCurrentTranslation();
-  
-  const handleShare = () => {
-    if (typeof window !== 'undefined' && navigator.share) {
-      navigator.share({
-        title: item.title,
-        text: item.description,
-        url: window.location.href,
-      });
-    } else if (typeof window !== 'undefined') {
-      navigator.clipboard.writeText(window.location.href);
-      alert('Link gekopieerd!');
-    }
-  };
 
-  // Reset to primary language when closing
+  const translation = getCurrentTranslation();
+
   const handleClose = () => {
     setCurrentLanguage(item.language1 || 'en');
     onClose();
   };
-  
+
   return (
     <ModalBackdrop onClick={handleClose}>
       <ModalContent onClick={(e) => e.stopPropagation()}>
@@ -257,11 +243,11 @@ const Modal: React.FC<ModalProps> = ({ item, onClose, onEdit, isAdmin }) => {
         </CloseButton>
         <h2>{translation.title}</h2>
         <p style={{ marginTop: '0.25rem', opacity: 0.8 }}>({formattedDateStr})</p>
-        
+
         {/* Language Switcher */}
         {availableLanguages.length > 1 && (
           <LanguageSwitcher>
-            {availableLanguages.map(lang => (
+            {availableLanguages.map((lang) => (
               <LanguageButton
                 key={lang}
                 $active={currentLanguage === lang}
@@ -272,74 +258,24 @@ const Modal: React.FC<ModalProps> = ({ item, onClose, onEdit, isAdmin }) => {
             ))}
           </LanguageSwitcher>
         )}
-        
+
         <p style={{ marginTop: '1rem', fontStyle: 'italic' }}>{translation.description}</p>
         <StyledHr />
 
         <MediaContainer>
-          {item.category === 'prose' && 'coverImageUrl' in item && item.coverImageUrl && (
-            <ModalImage src={item.coverImageUrl} alt={`Cover voor ${item.title}`} style={{ marginBottom: '1rem' }} />
-          )}
           {(item.category === 'poetry' || item.category === 'prosepoetry') && translation.content && (
-            <div style={{ marginTop: '1rem', whiteSpace: 'pre-wrap' }}>
-              <ReactMarkdown>{translation.content}</ReactMarkdown>
+            <div
+              style={{ marginTop: '1rem', whiteSpace: 'pre-wrap' }}
+              dangerouslySetInnerHTML={{ __html: translation.content }}
+            />
+          )}
+          {item.category === 'music' && translation.lyrics && (
+            <div style={{ marginTop: '1rem' }}>
+              <h3>Songtekst</h3>
+              <div dangerouslySetInnerHTML={{ __html: translation.lyrics }} />
             </div>
           )}
-          {/* Add more media rendering as needed */}
         </MediaContainer>
-
-        {hasSoundcloudTrackUrl(item) && item.soundcloudTrackUrl && (
-          <SoundCloudLinkButton
-            href={item.soundcloudTrackUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <FaSoundcloud size="1.5em" />
-            <span>Luister op SoundCloud</span>
-          </SoundCloudLinkButton>
-        )}
-
-        {hasLyrics(item) && item.lyrics && (
-          <LyricsChordsSection>
-            <h3>Songtekst / Extra Tekst</h3>
-            <ReactMarkdown>{item.lyrics}</ReactMarkdown>
-          </LyricsChordsSection>
-        )}
-        {hasChords(item) && (() => {
-          const musicItem = item as import("@/types").MusicArtwork;
-          if (!hasMediaType(musicItem) || musicItem.mediaType !== 'audio') {
-            return (
-              <LyricsChordsSection>
-                <h3>Akkoorden / Notities</h3>
-                <p>{musicItem.chords}</p>
-              </LyricsChordsSection>
-            );
-          }
-          return null;
-        })()}
-
-        {isAdmin && item.id && onEdit && (
-          <button
-            style={{
-              marginTop: 16,
-              alignSelf: 'flex-end',
-              background: '#E07A5F',
-              color: '#fff',
-              border: 'none',
-              borderRadius: 6,
-              padding: '0.5rem 1.2rem',
-              fontWeight: 600,
-              cursor: 'pointer',
-            }}
-            onClick={() => onEdit(item)}
-          >
-            Bewerken
-          </button>
-        )}
-        {/* Place the share button at the bottom left */}
-        <ShareButton onClick={handleShare} title="Deel deze kaart">
-          <FaShareAlt />
-        </ShareButton>
       </ModalContent>
     </ModalBackdrop>
   );
