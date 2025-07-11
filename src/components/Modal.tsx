@@ -279,7 +279,6 @@ const Modal: React.FC<ModalProps> = ({ item, onClose, onEdit, isAdmin }) => {
           </LanguageSwitcher>
         )}
 
-        <p style={{ marginTop: '1rem', fontStyle: 'italic' }}>{translation.description}</p>
         <StyledHr />
 
         <MediaContainer>
