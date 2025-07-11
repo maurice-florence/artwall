@@ -281,32 +281,72 @@ const Modal: React.FC<ModalProps> = ({ item, onClose, onEdit, isAdmin }) => {
 
         <StyledHr />
 
-        <MediaContainer>
+        <MediaTextContainer>
           {/* Display content for all categories */}
           {translation.content && (
-            <div
+            <TextContainer
               style={{ marginTop: '1rem', whiteSpace: 'pre-wrap' }}
               dangerouslySetInnerHTML={{ __html: parseContent(translation.content) }}
             />
           )}
 
-          {/* Display media for drawing and sculpture */}
-          {item.mediaUrls && item.mediaUrls.length > 0 && (
-            <div style={{ marginTop: '1rem' }}>
-              <h3>Media</h3>
-              {item.mediaUrls.map((url, index) => (
-                <div key={index} style={{ marginBottom: '1rem' }}>
-                  <a href={url} target="_blank" rel="noopener noreferrer">
-                    Bekijk media {index + 1}
-                  </a>
-                </div>
-              ))}
-            </div>
+          {/* Display lower-resolution cover image */}
+          {item.coverImageUrl && (
+            <ImageContainer>
+              <ResponsiveImage
+                src={item.coverImageUrl}
+                alt="Cover Image"
+                style={{ maxWidth: '300px', maxHeight: '300px' }} // Lower resolution for faster loading
+                onClick={() => window.open(item.coverImageUrl, '_blank')} // Open full resolution on click
+              />
+            </ImageContainer>
           )}
-        </MediaContainer>
+
+          {/* Display additional media */}
+          {item.mediaUrls && item.mediaUrls.length > 0 && (
+            <ImageContainer>
+              {item.mediaUrls.map((url, index) => (
+                <a href={url} target="_blank" rel="noopener noreferrer" key={index}>
+                  <ResponsiveImage src={url} alt={`Media ${index + 1}`} />
+                </a>
+              ))}
+            </ImageContainer>
+          )}
+        </MediaTextContainer>
       </ModalContent>
     </ModalBackdrop>
   );
 };
+
+// Styled components for layout
+const MediaTextContainer = styled.div`
+  display: flex;
+  gap: 1.5rem;
+  align-items: flex-start;
+`;
+
+const TextContainer = styled.div`
+  flex: 1;
+`;
+
+const ImageContainer = styled.div`
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+`;
+
+const ResponsiveImage = styled.img`
+  width: 100%;
+  max-height: 80vh;
+  object-fit: contain;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: transform 0.2s;
+
+  &:hover {
+    transform: scale(1.05);
+  }
+`;
 
 export default Modal;
