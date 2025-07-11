@@ -4,8 +4,9 @@ import React, { Suspense } from "react";
 import { CATEGORIES, CATEGORY_LABELS } from '@/constants';
 import { Artwork } from '@/types';
 import styled from 'styled-components';
-import { ref as dbRef, get, update, push } from "firebase/database";
+import { ref as dbRef, get, update, push, set } from "firebase/database";
 import Link from 'next/link';
+import { db } from "@/firebase";
 
 // Modal backdrop and content
 const ModalBackdrop = styled.div`
@@ -17,15 +18,19 @@ const ModalBackdrop = styled.div`
   align-items: center;
   justify-content: center;
 `;
+
 const ModalContent = styled.div`
   background: #fff;
   border-radius: 12px;
   box-shadow: 0 4px 24px rgba(0,0,0,0.12);
   padding: 2rem 2.5rem 2.5rem 2.5rem;
-  max-width: 600px;
+  max-width: 700px;
   width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
   position: relative;
 `;
+
 const CloseButton = styled.button`
   position: absolute;
   top: 1rem;
@@ -54,10 +59,68 @@ const Label = styled.label`
   font-weight: 600;
 `;
 
-const SectionTitle = styled.h2`
+const SectionTitle = styled.h3`
   font-family: 'Lora', serif;
-  color: ${({ theme }) => theme.accent};
-  margin-bottom: 1.5rem;
+  color: #E07A5F;
+  margin: 1.5rem 0 1rem 0;
+  border-bottom: 2px solid #E07A5F;
+  padding-bottom: 0.5rem;
+`;
+
+const Input = styled.input`
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 1rem;
+`;
+
+const Textarea = styled.textarea`
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 1rem;
+  min-height: 100px;
+  resize: vertical;
+`;
+
+const Select = styled.select`
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 1rem;
+`;
+
+const Button = styled.button`
+  padding: 0.75rem 1.5rem;
+  font-weight: 700;
+  background: #E07A5F;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 1.1rem;
+  cursor: pointer;
+  margin-top: 1rem;
+  
+  &:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+  }
+  
+  &:hover:not(:disabled) {
+    background: #d66a4a;
+  }
+`;
+
+const ErrorMessage = styled.div`
+  color: #e74c3c;
+  font-size: 0.9rem;
+  margin-top: 0.25rem;
+`;
+
+const SuccessMessage = styled.div`
+  color: #27ae60;
+  font-size: 0.9rem;
+  margin-top: 0.25rem;
 `;
 
 interface AdminModalProps {
@@ -67,6 +130,7 @@ interface AdminModalProps {
 }
 
 const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, artworkToEdit }) => {
+  // Basic fields
   const [title, setTitle] = React.useState("");
   const [year, setYear] = React.useState<number | null>(null);
   const [month, setMonth] = React.useState<number | null>(null);
@@ -74,28 +138,42 @@ const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, artworkToEdit 
   const [category, setCategory] = React.useState<Artwork["category"]>("poetry");
   const [description, setDescription] = React.useState("");
   const [content, setContent] = React.useState("");
+  const [isHidden, setIsHidden] = React.useState<boolean>(false);
+  
+  // New fields from Firebase sync
+  const [version, setVersion] = React.useState("01");
+  const [language, setLanguage] = React.useState("en");
+  const [language1, setLanguage1] = React.useState("");
+  const [language2, setLanguage2] = React.useState("");
+  const [language3, setLanguage3] = React.useState("");
+  const [location1, setLocation1] = React.useState("");
+  const [location2, setLocation2] = React.useState("");
+  const [tags, setTags] = React.useState("");
+  const [url1, setUrl1] = React.useState("");
+  const [url2, setUrl2] = React.useState("");
+  const [url3, setUrl3] = React.useState("");
+  
+  // Category-specific fields
   const [lyrics, setLyrics] = React.useState("");
   const [chords, setChords] = React.useState("");
   const [soundcloudEmbedUrl, setSoundcloudEmbedUrl] = React.useState("");
   const [soundcloudTrackUrl, setSoundcloudTrackUrl] = React.useState("");
-  const [isHidden, setIsHidden] = React.useState<boolean>(false);
   const [mediaType, setMediaType] = React.useState<string>("text");
+  const [coverImageUrl, setCoverImageUrl] = React.useState("");
+  const [audioUrl, setAudioUrl] = React.useState("");
+  const [pdfUrl, setPdfUrl] = React.useState("");
+  const [mediaUrl, setMediaUrl] = React.useState("");
+  const [mediaUrls, setMediaUrls] = React.useState("");
+  
+  // UI state
   const [file, setFile] = React.useState<File | null>(null);
   const [coverFile, setCoverFile] = React.useState<File | null>(null);
   const [isLoading, setIsLoading] = React.useState<boolean>(false);
   const [error, setError] = React.useState<string>("");
   const [success, setSuccess] = React.useState<string>("");
-
-  // Validation state
   const [validation, setValidation] = React.useState<Record<string, string>>({});
   const [coverPreview, setCoverPreview] = React.useState<string | null>(null);
   const [filePreview, setFilePreview] = React.useState<string | null>(null);
-
-  // Firebase imports
-  // @ts-ignore
-  const { db } = require("@/firebase");
-  // @ts-ignore
-  const { ref, push } = require("firebase/database");
 
   // Set initial date fields on client only to avoid hydration errors
   React.useEffect(() => {
@@ -105,49 +183,63 @@ const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, artworkToEdit 
       setMonth(now.getMonth() + 1);
       setDay(now.getDate());
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [year, month, day]);
 
-  // useEffect voor formulier vullen
+  // Fill form when editing
   React.useEffect(() => {
     if (artworkToEdit) {
-      // Only update if values are different
-      if (
-        title !== (artworkToEdit.title || "") ||
-        year !== (artworkToEdit.year || new Date().getFullYear()) ||
-        month !== (artworkToEdit.month || new Date().getMonth() + 1) ||
-        day !== (artworkToEdit.day || new Date().getDate()) ||
-        category !== (artworkToEdit.category || "poetry") ||
-        description !== (artworkToEdit.description || "") ||
-        content !== ("content" in artworkToEdit && artworkToEdit.content ? artworkToEdit.content : "") ||
-        lyrics !== ("lyrics" in artworkToEdit && artworkToEdit.lyrics ? artworkToEdit.lyrics : "") ||
-        chords !== ("chords" in artworkToEdit && artworkToEdit.chords ? artworkToEdit.chords : "") ||
-        soundcloudEmbedUrl !== ("soundcloudEmbedUrl" in artworkToEdit && artworkToEdit.soundcloudEmbedUrl ? artworkToEdit.soundcloudEmbedUrl : "") ||
-        soundcloudTrackUrl !== ("soundcloudTrackUrl" in artworkToEdit && artworkToEdit.soundcloudTrackUrl ? artworkToEdit.soundcloudTrackUrl : "") ||
-        mediaType !== ("mediaType" in artworkToEdit && artworkToEdit.mediaType ? artworkToEdit.mediaType : "text") ||
-        isHidden !== !!artworkToEdit.isHidden
-      ) {
-        setTitle(artworkToEdit.title || "");
-        setYear(artworkToEdit.year || new Date().getFullYear());
-        setMonth(artworkToEdit.month || new Date().getMonth() + 1);
-        setDay(artworkToEdit.day || new Date().getDate());
-        setCategory(artworkToEdit.category || "poetry");
-        setDescription(artworkToEdit.description || "");
-        if ('content' in artworkToEdit && artworkToEdit.content) setContent(artworkToEdit.content);
-        else setContent("");
-        if ('lyrics' in artworkToEdit && artworkToEdit.lyrics) setLyrics(artworkToEdit.lyrics);
-        else setLyrics("");
-        if ('chords' in artworkToEdit && artworkToEdit.chords) setChords(artworkToEdit.chords);
-        else setChords("");
-        if ('soundcloudEmbedUrl' in artworkToEdit && artworkToEdit.soundcloudEmbedUrl) setSoundcloudEmbedUrl(artworkToEdit.soundcloudEmbedUrl);
-        else setSoundcloudEmbedUrl("");
-        if ('soundcloudTrackUrl' in artworkToEdit && artworkToEdit.soundcloudTrackUrl) setSoundcloudTrackUrl(artworkToEdit.soundcloudTrackUrl);
-        else setSoundcloudTrackUrl("");
-        if ('mediaType' in artworkToEdit && artworkToEdit.mediaType) setMediaType(artworkToEdit.mediaType);
-        else setMediaType("text");
-        setIsHidden(!!artworkToEdit.isHidden);
+      setTitle(artworkToEdit.title || "");
+      setYear(artworkToEdit.year || new Date().getFullYear());
+      setMonth(artworkToEdit.month || new Date().getMonth() + 1);
+      setDay(artworkToEdit.day || new Date().getDate());
+      setCategory(artworkToEdit.category || "poetry");
+      setDescription(artworkToEdit.description || "");
+      setIsHidden(!!artworkToEdit.isHidden);
+      
+      // Cast to any for extended fields from Firebase sync
+      const artwork = artworkToEdit as any;
+      
+      // New fields from Firebase sync
+      setVersion(artwork.version || "01");
+      setLanguage(artwork.language || "en");
+      setLanguage1(artwork.language1 || "");
+      setLanguage2(artwork.language2 || "");
+      setLanguage3(artwork.language3 || "");
+      setLocation1(artwork.location1 || "");
+      setLocation2(artwork.location2 || "");
+      setUrl1(artwork.url1 || "");
+      setUrl2(artwork.url2 || "");
+      setUrl3(artwork.url3 || "");
+      
+      // Handle tags - convert array to string
+      if (Array.isArray(artwork.tags)) {
+        setTags(artwork.tags.join(', '));
+      } else {
+        setTags(artwork.tags || "");
+      }
+      
+      // Content
+      setContent(artwork.content || "");
+      
+      // Category-specific fields
+      setLyrics(artwork.lyrics || "");
+      setChords(artwork.chords || "");
+      setSoundcloudEmbedUrl(artwork.soundcloudEmbedUrl || "");
+      setSoundcloudTrackUrl(artwork.soundcloudTrackUrl || "");
+      setMediaType(artwork.mediaType || "text");
+      setCoverImageUrl(artwork.coverImageUrl || "");
+      setAudioUrl(artwork.audioUrl || "");
+      setPdfUrl(artwork.pdfUrl || "");
+      setMediaUrl(artwork.mediaUrl || "");
+      
+      // Handle mediaUrls - convert array to string
+      if (Array.isArray(artwork.mediaUrls)) {
+        setMediaUrls(artwork.mediaUrls.join('\n'));
+      } else {
+        setMediaUrls(artwork.mediaUrls || "");
       }
     } else {
+      // Reset form for new item
       setTitle("");
       setYear(new Date().getFullYear());
       setMonth(new Date().getMonth() + 1);
@@ -155,11 +247,34 @@ const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, artworkToEdit 
       setCategory("poetry");
       setDescription("");
       setContent("");
+      setIsHidden(false);
+      
+      // Reset new fields
+      setVersion("01");
+      setLanguage("en");
+      setLanguage1("");
+      setLanguage2("");
+      setLanguage3("");
+      setLocation1("");
+      setLocation2("");
+      setTags("");
+      setUrl1("");
+      setUrl2("");
+      setUrl3("");
+      
+      // Reset category-specific fields
       setLyrics("");
       setChords("");
       setSoundcloudEmbedUrl("");
       setSoundcloudTrackUrl("");
       setMediaType("text");
+      setCoverImageUrl("");
+      setAudioUrl("");
+      setPdfUrl("");
+      setMediaUrl("");
+      setMediaUrls("");
+      
+      // Reset files
       setCoverFile(null);
       setFile(null);
       setCoverPreview(null);
@@ -192,9 +307,9 @@ const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, artworkToEdit 
   // Helper: which fields to show for each category
   const categoryFields: Record<string, string[]> = {
     poetry: ["title", "year", "month", "day", "description", "content"],
-    prosepoëzie: ["title", "year", "month", "day", "description", "content"],
-    prose: ["title", "year", "month", "day", "description", "content", "coverImageUrl"],
-    music: ["title", "year", "month", "day", "description", "lyrics", "audioFile", "soundcloudUrl"],
+    prosepoetry: ["title", "year", "month", "day", "description", "content"],
+    prose: ["title", "year", "month", "day", "description", "content", "coverImageUrl", "pdfUrl"],
+    music: ["title", "year", "month", "day", "description", "lyrics", "chords", "audioUrl", "soundcloudUrl"],
     sculpture: ["title", "year", "month", "day", "description", "coverImageUrl"],
     drawing: ["title", "year", "month", "day", "description", "coverImageUrl"],
     image: ["title", "year", "month", "day", "description", "coverImageUrl"],
@@ -204,84 +319,108 @@ const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, artworkToEdit 
   const fieldsToShow = categoryFields[category] || [];
 
   // Validate fields on change
-  // Defensive validation: never assume .length on undefined
   React.useEffect(() => {
     const v: Record<string, string> = {};
     if (!title) v.title = 'Titel is verplicht.';
     if (!year || year < 1900 || year > new Date().getFullYear() + 1) v.year = 'Voer een geldig jaar in.';
     if (month && (month < 1 || month > 12)) v.month = 'Maand moet tussen 1 en 12 zijn.';
     if (day && (day < 1 || day > 31)) v.day = 'Dag moet tussen 1 en 31 zijn.';
-    if (fieldsToShow.includes('coverImageUrl') && !coverFile) v.coverImageUrl = 'Omslagafbeelding is verplicht.';
-    // Defensive: check for any field that might be undefined/null before using .length
-    if (fieldsToShow.includes('content')) {
-      if (typeof content !== 'string' || content.trim().length === 0) {
-        v.content = 'Inhoud is verplicht.';
-      }
-    }
+    
     setValidation(v);
-  }, [title, year, month, day, coverFile, fieldsToShow, content]);
+  }, [title, year, month, day, fieldsToShow, content]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError("");
     setSuccess("");
+    
     try {
+      // Create artwork object matching Firebase sync structure
       const newArtwork: any = {
-        title: typeof title === 'string' ? title : '',
-        year: typeof year === 'number' ? year : new Date().getFullYear(),
-        month: typeof month === 'number' ? month : new Date().getMonth() + 1,
-        day: typeof day === 'number' ? day : new Date().getDate(),
-        category: typeof category === 'string' ? category : 'poetry',
-        description: typeof description === 'string' ? description : '',
-        mediaType: typeof mediaType === 'string' ? mediaType : 'text',
-        content: typeof content === 'string' ? content : '',
-        lyrics: typeof lyrics === 'string' ? lyrics : '',
-        chords: typeof chords === 'string' ? chords : '',
-        soundcloudEmbedUrl: typeof soundcloudEmbedUrl === 'string' ? soundcloudEmbedUrl : '',
-        soundcloudTrackUrl: typeof soundcloudTrackUrl === 'string' ? soundcloudTrackUrl : '',
+        title: title.trim(),
+        year: year || new Date().getFullYear(),
+        month: month || new Date().getMonth() + 1,
+        day: day || new Date().getDate(),
+        category: category,
+        description: description.trim(),
         isHidden: !!isHidden,
-        createdAt: (artworkToEdit && 'recordCreationDate' in artworkToEdit && artworkToEdit.recordCreationDate) ? artworkToEdit.recordCreationDate : Date.now(),
+        
+        // New fields from Firebase sync
+        version: version.trim(),
+        language: language,
+        language1: language1.trim(),
+        language2: language2.trim(),
+        language3: language3.trim(),
+        location1: location1.trim(),
+        location2: location2.trim(),
+        url1: url1.trim(),
+        url2: url2.trim(),
+        url3: url3.trim(),
+        
+        // Convert tags string to array
+        tags: tags.trim() ? tags.split(',').map(tag => tag.trim()).filter(tag => tag) : [],
+        
+        // Content
+        content: content.trim(),
+        
+        // Category-specific fields
+        lyrics: lyrics.trim(),
+        chords: chords.trim(),
+        soundcloudEmbedUrl: soundcloudEmbedUrl.trim(),
+        soundcloudTrackUrl: soundcloudTrackUrl.trim(),
+        mediaType: mediaType,
+        coverImageUrl: coverImageUrl.trim(),
+        audioUrl: audioUrl.trim(),
+        pdfUrl: pdfUrl.trim(),
+        mediaUrl: mediaUrl.trim(),
+        
+        // Convert mediaUrls string to array
+        mediaUrls: mediaUrls.trim() ? mediaUrls.split('\n').map(url => url.trim()).filter(url => url) : [],
+        
+        // Timestamps
+        recordCreationDate: artworkToEdit && 'recordCreationDate' in artworkToEdit 
+          ? artworkToEdit.recordCreationDate 
+          : Date.now(),
+        recordLastUpdated: Date.now(),
       };
+
+      // Remove empty strings and convert to undefined for cleaner database
+      Object.keys(newArtwork).forEach(key => {
+        if (newArtwork[key] === "" || (Array.isArray(newArtwork[key]) && newArtwork[key].length === 0)) {
+          delete newArtwork[key];
+        }
+      });
+
       if (artworkToEdit && 'id' in artworkToEdit) {
+        // Update existing artwork
         await update(dbRef(db, `artworks/${artworkToEdit.id}`), newArtwork);
         setSuccess("Kunstwerk succesvol bijgewerkt!");
       } else {
-        await push(dbRef(db, "artworks"), newArtwork);
+        // Create new artwork - use timestamp as key to match Firebase sync pattern
+        // Fix: Ensure month and day are never null
+        const safeMonth = month || new Date().getMonth() + 1;
+        const safeDay = day || new Date().getDate();
+        const safeYear = year || new Date().getFullYear();
+        
+        const newKey = `${safeYear}${safeMonth.toString().padStart(2, '0')}${safeDay.toString().padStart(2, '0')}_${category}_${title.toLowerCase().replace(/[^a-z0-9]/g, '-')}_${language}`;
+        newArtwork.id = newKey;
+        await set(dbRef(db, `artworks/${newKey}`), newArtwork);
         setSuccess("Kunstwerk succesvol toegevoegd!");
       }
-      onClose(); // Modal sluiten na succes
+      
+      // Close modal after short delay to show success message
+      setTimeout(() => {
+        onClose();
+      }, 1500);
+      
     } catch (err: any) {
-      console.error("Opslaan error:", err, err?.stack); // <-- Add stack for debugging
-      let errorMsg = "Fout bij opslaan: ";
-      if (err && typeof err === 'object') {
-        if (err.message) {
-          errorMsg += err.message;
-        } else if (typeof err.toString === 'function') {
-          errorMsg += err.toString();
-        } else {
-          try {
-            errorMsg += JSON.stringify(err);
-          } catch (jsonErr) {
-            errorMsg += '[onbekende fout, niet te serialiseren]';
-          }
-        }
-      } else {
-        errorMsg += String(err);
-      }
-      setError(errorMsg);
+      console.error("Opslaan error:", err);
+      setError(`Fout bij opslaan: ${err.message || err.toString()}`);
     } finally {
       setIsLoading(false);
     }
   };
-
-  // Fix: calculate maxYear only on client to avoid hydration mismatch
-  const maxYear = React.useMemo(() => {
-    if (typeof window !== 'undefined') {
-      return new Date().getFullYear() + 1;
-    }
-    return 2100; // fallback for SSR, will be replaced on client
-  }, []);
 
   if (!isOpen) return null;
 
@@ -289,123 +428,284 @@ const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, artworkToEdit 
     <ModalBackdrop>
       <ModalContent>
         <CloseButton onClick={onClose} title="Sluiten">×</CloseButton>
+        
         <FormWrapper>
+          <h2 style={{ margin: 0, color: '#E07A5F', fontFamily: 'Lora, serif' }}>
+            {artworkToEdit ? 'Kunstwerk Bewerken' : 'Nieuw Kunstwerk'}
+          </h2>
+          
           <form onSubmit={handleSubmit}>
-            {fieldsToShow.includes("title") && (
-              <FieldGroup>
-                <Label>Titel</Label>
-                <input value={title} onChange={e => setTitle(e.target.value)} required />
-                {validation.title && <span style={{ color: 'red' }}>{validation.title}</span>}
+            {/* Basic Information */}
+            <SectionTitle>Basis Informatie</SectionTitle>
+            
+            <FieldGroup>
+              <Label>Titel *</Label>
+              <Input 
+                value={title} 
+                onChange={e => setTitle(e.target.value)} 
+                placeholder="Titel van het kunstwerk"
+                required 
+              />
+              {validation.title && <ErrorMessage>{validation.title}</ErrorMessage>}
+            </FieldGroup>
+
+            <FieldGroup>
+              <Label>Categorie *</Label>
+              <Select value={category} onChange={e => setCategory(e.target.value as Artwork["category"])}>
+                {Object.entries(CATEGORY_LABELS).map(([key, label]) => (
+                  <option key={key} value={key}>{label}</option>
+                ))}
+              </Select>
+            </FieldGroup>
+
+            <div style={{ display: 'flex', gap: '1rem' }}>
+              <FieldGroup style={{ flex: 1 }}>
+                <Label>Jaar *</Label>
+                <Input 
+                  type="number" 
+                  value={year ?? ""} 
+                  onChange={e => setYear(Number(e.target.value))} 
+                  min={1900} 
+                  max={new Date().getFullYear() + 1}
+                  required 
+                />
+                {validation.year && <ErrorMessage>{validation.year}</ErrorMessage>}
               </FieldGroup>
-            )}
-            {fieldsToShow.includes("year") && (
-              <FieldGroup>
-                <Label>Jaar</Label>
-                <input type="number" value={year ?? ""} onChange={e => setYear(Number(e.target.value))} required min={1900} max={new Date().getFullYear() + 1} />
-                {validation.year && <span style={{ color: 'red' }}>{validation.year}</span>}
-              </FieldGroup>
-            )}
-            {fieldsToShow.includes("month") && (
-              <FieldGroup>
+              
+              <FieldGroup style={{ flex: 1 }}>
                 <Label>Maand</Label>
-                <input type="number" min={1} max={12} value={month ?? ""} onChange={e => setMonth(Number(e.target.value))} />
-                {validation.month && <span style={{ color: 'red' }}>{validation.month}</span>}
+                <Input 
+                  type="number" 
+                  min={1} 
+                  max={12} 
+                  value={month ?? ""} 
+                  onChange={e => setMonth(Number(e.target.value))} 
+                />
+                {validation.month && <ErrorMessage>{validation.month}</ErrorMessage>}
               </FieldGroup>
-            )}
-            {fieldsToShow.includes("day") && (
-              <FieldGroup>
+              
+              <FieldGroup style={{ flex: 1 }}>
                 <Label>Dag</Label>
-                <input type="number" min={1} max={31} value={day ?? ""} onChange={e => setDay(Number(e.target.value))} />
-                {validation.day && <span style={{ color: 'red' }}>{validation.day}</span>}
+                <Input 
+                  type="number" 
+                  min={1} 
+                  max={31} 
+                  value={day ?? ""} 
+                  onChange={e => setDay(Number(e.target.value))} 
+                />
+                {validation.day && <ErrorMessage>{validation.day}</ErrorMessage>}
               </FieldGroup>
-            )}
-            {fieldsToShow.includes("description") && (
-              <FieldGroup>
-                <Label>Beschrijving</Label>
-                <textarea value={description} onChange={e => setDescription(e.target.value)} />
+            </div>
+
+            <FieldGroup>
+              <Label>Beschrijving</Label>
+              <Textarea 
+                value={description} 
+                onChange={e => setDescription(e.target.value)} 
+                placeholder="Korte beschrijving van het kunstwerk"
+              />
+            </FieldGroup>
+
+            {/* Metadata */}
+            <SectionTitle>Metadata</SectionTitle>
+            
+            <div style={{ display: 'flex', gap: '1rem' }}>
+              <FieldGroup style={{ flex: 1 }}>
+                <Label>Versie</Label>
+                <Input 
+                  value={version} 
+                  onChange={e => setVersion(e.target.value)} 
+                  placeholder="01"
+                />
               </FieldGroup>
-            )}
+              
+              <FieldGroup style={{ flex: 1 }}>
+                <Label>Taal</Label>
+                <Select value={language} onChange={e => setLanguage(e.target.value)}>
+                  <option value="en">Engels</option>
+                  <option value="nl">Nederlands</option>
+                </Select>
+              </FieldGroup>
+            </div>
+
+            <FieldGroup>
+              <Label>Tags (komma gescheiden)</Label>
+              <Input 
+                value={tags} 
+                onChange={e => setTags(e.target.value)} 
+                placeholder="tag1, tag2, tag3"
+              />
+            </FieldGroup>
+
+            <div style={{ display: 'flex', gap: '1rem' }}>
+              <FieldGroup style={{ flex: 1 }}>
+                <Label>Locatie 1</Label>
+                <Input 
+                  value={location1} 
+                  onChange={e => setLocation1(e.target.value)} 
+                  placeholder="Stad"
+                />
+              </FieldGroup>
+              
+              <FieldGroup style={{ flex: 1 }}>
+                <Label>Locatie 2</Label>
+                <Input 
+                  value={location2} 
+                  onChange={e => setLocation2(e.target.value)} 
+                  placeholder="Land"
+                />
+              </FieldGroup>
+            </div>
+
+            {/* Content */}
             {fieldsToShow.includes("content") && (
-              <FieldGroup>
-                <Label>Content</Label>
-                <textarea value={content} onChange={e => setContent(e.target.value)} />
-              </FieldGroup>
+              <>
+                <SectionTitle>Inhoud</SectionTitle>
+                <FieldGroup>
+                  <Label>Content</Label>
+                  <Textarea 
+                    value={content} 
+                    onChange={e => setContent(e.target.value)} 
+                    placeholder="Volledige inhoud van het kunstwerk"
+                    style={{ minHeight: '200px' }}
+                  />
+                </FieldGroup>
+              </>
             )}
+
+            {/* Music-specific fields */}
+            {category === 'music' && (
+              <>
+                <SectionTitle>Muziek</SectionTitle>
+                <FieldGroup>
+                  <Label>Songtekst</Label>
+                  <Textarea 
+                    value={lyrics} 
+                    onChange={e => setLyrics(e.target.value)} 
+                    placeholder="Songtekst"
+                    style={{ minHeight: '150px' }}
+                  />
+                </FieldGroup>
+                
+                <FieldGroup>
+                  <Label>Akkoorden</Label>
+                  <Textarea 
+                    value={chords} 
+                    onChange={e => setChords(e.target.value)} 
+                    placeholder="Akkoorden"
+                  />
+                </FieldGroup>
+                
+                <FieldGroup>
+                  <Label>Audio URL</Label>
+                  <Input 
+                    value={audioUrl} 
+                    onChange={e => setAudioUrl(e.target.value)} 
+                    placeholder="Direct link naar audio bestand"
+                  />
+                </FieldGroup>
+              </>
+            )}
+
+            {/* Media URLs */}
+            <SectionTitle>Media</SectionTitle>
+            
             {fieldsToShow.includes("coverImageUrl") && (
               <FieldGroup>
-                <Label>Omslagafbeelding</Label>
-                <input type="file" accept="image/*" onChange={e => setCoverFile(e.target.files?.[0] || null)} />
-                {coverPreview && <img src={coverPreview} alt="Preview" style={{ maxWidth: 200, marginTop: 8, borderRadius: 8 }} />}
+                <Label>Cover Afbeelding URL</Label>
+                <Input 
+                  value={coverImageUrl} 
+                  onChange={e => setCoverImageUrl(e.target.value)} 
+                  placeholder="Direct link naar cover afbeelding"
+                />
               </FieldGroup>
             )}
-            {fieldsToShow.includes("file") && (
+
+            {fieldsToShow.includes("pdfUrl") && (
               <FieldGroup>
-                <Label>Bestand uploaden</Label>
-                <input type="file" onChange={e => setFile(e.target.files?.[0] || null)} />
-                {filePreview && (
-                  <div style={{ marginTop: 8 }}>
-                    {file?.type.startsWith('image/') ? (
-                      <img src={filePreview} alt="Preview" style={{ maxWidth: 200, borderRadius: 8 }} />
-                    ) : file?.type === 'application/pdf' ? (
-                      <embed src={filePreview} type="application/pdf" width="200" height="150" />
-                    ) : file?.type.startsWith('audio/') ? (
-                      <audio controls src={filePreview} style={{ width: 200 }} />
-                    ) : (
-                      <span>Voorbeeld niet beschikbaar</span>
-                    )}
-                  </div>
-                )}
+                <Label>PDF URL</Label>
+                <Input 
+                  value={pdfUrl} 
+                  onChange={e => setPdfUrl(e.target.value)} 
+                  placeholder="Direct link naar PDF bestand"
+                />
               </FieldGroup>
             )}
-            {fieldsToShow.includes("mediaType") && (
+
+            {fieldsToShow.includes("mediaUrl") && (
               <FieldGroup>
-                <Label>Media Type</Label>
-                <select value={mediaType} onChange={e => setMediaType(e.target.value)}>
-                  <option value="text">Tekst</option>
-                  <option value="image">Afbeelding</option>
-                  <option value="audio">Audio</option>
-                  <option value="pdf">PDF</option>
-                </select>
-                <small>Kies het type media voor dit werk.</small>
+                <Label>Media URL</Label>
+                <Input 
+                  value={mediaUrl} 
+                  onChange={e => setMediaUrl(e.target.value)} 
+                  placeholder="Direct link naar media bestand"
+                />
               </FieldGroup>
             )}
-            {fieldsToShow.includes("lyrics") && (
-              <FieldGroup>
-                <Label>Songtekst (lyrics)</Label>
-                <textarea value={lyrics} onChange={e => setLyrics(e.target.value)} />
-                <small>Songtekst voor muziekwerken.</small>
-              </FieldGroup>
-            )}
-            {fieldsToShow.includes("chords") && (
-              <FieldGroup>
-                <Label>Akkoorden (chords)</Label>
-                <textarea value={chords} onChange={e => setChords(e.target.value)} />
-                <small>Akkoorden voor muziekwerken.</small>
-              </FieldGroup>
-            )}
-            {fieldsToShow.includes("soundcloudEmbedUrl") && (
-              <FieldGroup>
-                <Label>SoundCloud Embed URL</Label>
-                <input value={soundcloudEmbedUrl} onChange={e => setSoundcloudEmbedUrl(e.target.value)} />
-                <small>Plak hier de embed-URL van SoundCloud.</small>
-              </FieldGroup>
-            )}
-            {fieldsToShow.includes("soundcloudTrackUrl") && (
-              <FieldGroup>
-                <Label>SoundCloud Track URL</Label>
-                <input value={soundcloudTrackUrl} onChange={e => setSoundcloudTrackUrl(e.target.value)} />
-                <small>Plak hier de directe track-URL van SoundCloud.</small>
-              </FieldGroup>
-            )}
+
+            <FieldGroup>
+              <Label>Media URLs (één per regel)</Label>
+              <Textarea 
+                value={mediaUrls} 
+                onChange={e => setMediaUrls(e.target.value)} 
+                placeholder="https://example.com/file1.jpg&#10;https://example.com/file2.mp3"
+              />
+            </FieldGroup>
+
+            {/* URLs */}
+            <SectionTitle>Extra URLs</SectionTitle>
+            
+            <FieldGroup>
+              <Label>URL 1</Label>
+              <Input 
+                value={url1} 
+                onChange={e => setUrl1(e.target.value)} 
+                placeholder="Extra URL"
+              />
+            </FieldGroup>
+            
+            <FieldGroup>
+              <Label>URL 2</Label>
+              <Input 
+                value={url2} 
+                onChange={e => setUrl2(e.target.value)} 
+                placeholder="Extra URL"
+              />
+            </FieldGroup>
+            
+            <FieldGroup>
+              <Label>URL 3</Label>
+              <Input 
+                value={url3} 
+                onChange={e => setUrl3(e.target.value)} 
+                placeholder="Extra URL"
+              />
+            </FieldGroup>
+
+            {/* Settings */}
+            <SectionTitle>Instellingen</SectionTitle>
+            
             <FieldGroup>
               <Label>
-                Verborgen?
-                <input type="checkbox" checked={isHidden} onChange={e => setIsHidden(e.target.checked)} style={{ marginLeft: 8 }} />
+                <input 
+                  type="checkbox" 
+                  checked={isHidden} 
+                  onChange={e => setIsHidden(e.target.checked)} 
+                  style={{ marginRight: '0.5rem' }}
+                />
+                Verborgen (niet zichtbaar op de website)
               </Label>
             </FieldGroup>
-            <button type="submit" disabled={isLoading || Object.keys(validation).length > 0} style={{ marginTop: 16, padding: '0.75rem 0', fontWeight: 700, background: '#E07A5F', color: '#fff', border: 'none', borderRadius: 6, fontSize: '1.1rem', cursor: 'pointer' }}>{isLoading ? "Bezig..." : "Opslaan"}</button>
-            {error && <div style={{ color: 'red' }}>{error}</div>}
-            {success && <div style={{ color: 'green' }}>{success}</div>}
+
+            <Button 
+              type="submit" 
+              disabled={isLoading || Object.keys(validation).length > 0}
+            >
+              {isLoading ? "Bezig..." : artworkToEdit ? "Bijwerken" : "Aanmaken"}
+            </Button>
+            
+            {error && <ErrorMessage>{error}</ErrorMessage>}
+            {success && <SuccessMessage>{success}</SuccessMessage>}
           </form>
         </FormWrapper>
       </ModalContent>

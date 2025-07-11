@@ -3,12 +3,12 @@ import pathlib
 import re
 import json
 from firebase_admin import credentials, initialize_app, db, storage
-from typing import Dict, Any
+from typing import Dict, Any, List
 import xml.etree.ElementTree as ET
 
 # --- CONFIGURATIE ---
 # De bronmap met al uw categorie-submappen (poetry, music, etc.)
-SOURCE_MEDIA_FOLDER = pathlib.Path('G:/Mijn Drive/Creatief/Kunstmuur_testing')
+SOURCE_MEDIA_FOLDER = pathlib.Path('G:/Mijn Drive/Creatief/Kunstmuur')
 
 # Pad naar uw Firebase service account sleutel
 SERVICE_ACCOUNT_KEY_PATH = pathlib.Path(__file__).parent / 'serviceAccountKey.json'
@@ -151,6 +151,61 @@ def extract_content_flexible(html_content: str) -> str:
     content = re.sub(r'\s*</div>\s*$', '', content)     # Remove closing div
     
     return content.strip()
+
+def normalize_artwork_payload(artwork_payload: Dict[str, Any], media_urls: List[str], html_key: str) -> Dict[str, Any]:
+    """
+    Normalizes the artwork payload to match Next.js app expectations
+    """
+    category = artwork_payload.get('category', 'other')
+    
+    # Add required fields
+    artwork_payload['id'] = html_key
+    artwork_payload['isHidden'] = False
+    
+    # Convert tags string to array
+    if 'tags' in artwork_payload and artwork_payload['tags']:
+        artwork_payload['tags'] = [tag.strip() for tag in artwork_payload['tags'].split(',') if tag.strip()]
+    else:
+        artwork_payload['tags'] = []
+    
+    # Map media URLs to category-specific fields
+    if media_urls:
+        if category == 'prose':
+            # For prose: first image is coverImageUrl, first PDF is pdfUrl
+            for url in media_urls:
+                if any(ext in url.lower() for ext in ['.jpg', '.jpeg', '.png', '.gif']):
+                    artwork_payload['coverImageUrl'] = url
+                elif '.pdf' in url.lower():
+                    artwork_payload['pdfUrl'] = url
+        
+        elif category == 'music':
+            # For music: first audio file is audioUrl
+            for url in media_urls:
+                if any(ext in url.lower() for ext in ['.mp3', '.wav', '.m4a', '.flac']):
+                    artwork_payload['audioUrl'] = url
+                    break
+        
+        elif category in ['sculpture', 'drawing', 'image']:
+            # For visual art: first image is coverImageUrl
+            for url in media_urls:
+                if any(ext in url.lower() for ext in ['.jpg', '.jpeg', '.png', '.gif']):
+                    artwork_payload['coverImageUrl'] = url
+                    break
+        
+        elif category == 'video':
+            # For video: first video file is mediaUrl
+            for url in media_urls:
+                if any(ext in url.lower() for ext in ['.mp4', '.mov', '.avi', '.webm']):
+                    artwork_payload['mediaUrl'] = url
+                    break
+        
+        # Keep original mediaUrl/mediaUrls for backwards compatibility
+        if len(media_urls) > 1:
+            artwork_payload['mediaUrls'] = media_urls
+        elif len(media_urls) == 1:
+            artwork_payload['mediaUrl'] = media_urls[0]
+    
+    return artwork_payload
 
 def sync_to_firebase(force_update: bool = False):
     """
@@ -318,6 +373,9 @@ def sync_to_firebase(force_update: bool = False):
         artwork_payload = {**item_data['metadata']}
         media_urls = []
         
+        # Add this when creating the artwork payload
+        artwork_payload['id'] = html_key  # Use the HTML filename as ID
+        
         # Upload media files
         for file_path in item_data['files']:
             if file_path.suffix == '.html':
@@ -335,10 +393,7 @@ def sync_to_firebase(force_update: bool = False):
                 storage_operations['failed'].append(f"{file_path.name}: {e}")
         
         # Assign URLs to payload
-        if len(media_urls) > 1:
-            artwork_payload['mediaUrls'] = media_urls
-        elif len(media_urls) == 1:
-            artwork_payload['mediaUrl'] = media_urls[0]
+        artwork_payload = normalize_artwork_payload(artwork_payload, media_urls, html_key)
 
         # Set record creation/update date
         artwork_payload['recordCreationDate'] = local_modified

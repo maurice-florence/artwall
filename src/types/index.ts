@@ -3,20 +3,41 @@ export type ArtworkCategory = 'poetry' | 'prose' | 'sculpture' | 'drawing' | 'mu
 
 // De basis-interface met alle gedeelde eigenschappen
 interface BaseArtwork {
-    id: string;
-    title: string;
-    // De creatiedatum van het KUNSTWERK zelf
-    year: number;
-    month: number;
-    day: number;
-    description: string;
-    isHidden?: boolean;
-    
-    // Nieuwe velden voor organisatie en tracking
-    tags?: string[];
-    collectionId?: string;
-    recordCreationDate: number; // Timestamp van wanneer de *database entry* is gemaakt
-    recordLastUpdated?: number; // Timestamp van de laatste update
+  id: string;
+  title: string;
+  // De creatiedatum van het KUNSTWERK zelf
+  year: number;
+  month: number;
+  day: number;
+  description: string;
+  isHidden?: boolean;
+  
+  // Nieuwe velden voor organisatie en tracking
+  category: string;
+  version?: string;
+  language?: string;
+  language1?: string;
+  language2?: string;
+  language3?: string;
+  location1?: string;
+  location2?: string;
+  tags?: string[];
+  url1?: string;
+  url2?: string;
+  url3?: string;
+  content?: string;
+  
+  // Media fields
+  mediaUrl?: string;
+  mediaUrls?: string[];
+  coverImageUrl?: string;
+  pdfUrl?: string;
+  audioUrl?: string;
+  
+  // Timestamps
+  recordCreationDate: number;
+  recordLastUpdated?: number;
+  createdAt?: number; // For backwards compatibility
 }
 
 // Specifieke interfaces per categorie
