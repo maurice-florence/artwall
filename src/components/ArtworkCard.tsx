@@ -186,6 +186,23 @@ interface ArtworkCardProps {
     isAdmin?: boolean;
 }
 
+const LanguageIndicator = styled.div`
+  display: flex;
+  gap: 0.25rem;
+  font-size: 0.7rem;
+  opacity: 0.8;
+  margin-top: 0.25rem;
+`;
+
+const LanguageTag = styled.span`
+  background: ${({ theme }) => theme.accent};
+  color: ${({ theme }) => theme.accentText};
+  padding: 0.1rem 0.3rem;
+  border-radius: 3px;
+  font-size: 0.65rem;
+  font-weight: 500;
+`;
+
 const ArtworkCard = ({ artwork, onSelect, isAdmin }: ArtworkCardProps) => {
     const theme = useTheme();
 
@@ -241,15 +258,30 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin }: ArtworkCardProps) => {
       return null;
     }
 
+    // Get available languages
+    const availableLanguages = [];
+    if (artwork.language1) availableLanguages.push(artwork.language1);
+    if (artwork.language2) availableLanguages.push(artwork.language2);
+    if (artwork.language3) availableLanguages.push(artwork.language3);
+
     return (
       <CardContainer category={artwork.category} $rowSpan={rowSpan} onClick={onSelect}>
         <CardInner>
           <CardFront category={artwork.category}>
-            <CardTitle>{artwork.title}</CardTitle>
-            <CardFooter style={{ justifyContent: 'space-between' }}>
+            <div>
+              <CardTitle>{artwork.title}</CardTitle>
+              {availableLanguages.length > 1 && (
+                <LanguageIndicator>
+                  {availableLanguages.map(lang => (
+                    <LanguageTag key={lang}>{lang.toUpperCase()}</LanguageTag>
+                  ))}
+                </LanguageIndicator>
+              )}
+            </div>
+            <CardFooter>
               <span>{formattedDate}</span>
               <CardCategory>
-                 {getArtworkIcon(artwork)}
+                {getArtworkIcon(artwork)}
               </CardCategory>
             </CardFooter>
           </CardFront>

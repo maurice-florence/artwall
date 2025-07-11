@@ -23,28 +23,26 @@ export const ArtworksProvider: React.FC<{ children: ReactNode }> = ({ children }
       const loadedArtworks: Artwork[] = data
         ? Object.entries(data).map(([id, value]) => {
             const item = { id, ...(value as any) };
-            // Type assertion: ensure correct type for each category
-            switch (item.category) {
-              case 'poetry':
-              case 'prosepoetry':
-                return item as PoetryArtwork;
-              case 'prose':
-                return item as ProseArtwork;
-              case 'sculpture':
-              case 'drawing':
-              case 'image':
-                return item as VisualArtArtwork;
-              case 'music':
-                return item as MusicArtwork;
-              case 'video':
-                return item as VideoArtwork;
-              case 'other':
-                return item as OtherArtwork;
-              default:
-                return item as Artwork;
+            
+            // Ensure translations object exists
+            if (!item.translations) {
+              item.translations = {};
             }
+            
+            // Add primary language to translations if not present
+            if (item.language1 && !item.translations[item.language1]) {
+              item.translations[item.language1] = {
+                title: item.title,
+                description: item.description,
+                content: item.content || '',
+                lyrics: item.lyrics || ''
+              };
+            }
+            
+            return item as Artwork;
           })
         : [];
+    
       setArtworks(loadedArtworks);
       setIsLoading(false);
     });

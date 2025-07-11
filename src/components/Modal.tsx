@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import styled from 'styled-components';
 import { FaTimes, FaSoundcloud, FaShareAlt, FaTrash } from 'react-icons/fa';
 import ReactMarkdown from 'react-markdown';
@@ -149,6 +149,28 @@ const ShareButton = styled.button`
   }
 `;
 
+const LanguageSwitcher = styled.div`
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+`;
+
+const LanguageButton = styled.button<{ $active: boolean }>`
+  background: ${({ $active, theme }) => $active ? theme.accent : 'transparent'};
+  color: ${({ $active, theme }) => $active ? theme.accentText : theme.text};
+  border: 1px solid ${({ theme }) => theme.accent};
+  border-radius: 4px;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  
+  &:hover {
+    background: ${({ theme }) => theme.accent};
+    color: ${({ theme }) => theme.accentText};
+  }
+`;
+
 // Only use window in client-side code
 const isClient = typeof window !== 'undefined';
 const isMobile = isClient ? window.innerWidth < 768 : false;
@@ -179,6 +201,35 @@ const Modal: React.FC<ModalProps> = ({ item, onClose, onEdit, isAdmin }) => {
   const formattedDateStr = formatDate(dateObj);
   const router = useRouter();
 
+  const [currentLanguage, setCurrentLanguage] = useState(item.language1 || 'en');
+  
+  // Get available languages
+  const availableLanguages = [];
+  if (item.language1) availableLanguages.push(item.language1);
+  if (item.language2) availableLanguages.push(item.language2);
+  if (item.language3) availableLanguages.push(item.language3);
+  
+  // Get current translation
+  const getCurrentTranslation = () => {
+    if (currentLanguage === item.language1) {
+      return {
+        title: item.title,
+        description: item.description,
+        content: item.content || '',
+        lyrics: item.lyrics || ''
+      };
+    }
+    
+    return item.translations?.[currentLanguage] || {
+      title: item.title,
+      description: item.description,
+      content: item.content || '',
+      lyrics: item.lyrics || ''
+    };
+  };
+  
+  const translation = getCurrentTranslation();
+  
   const handleShare = () => {
     if (typeof window !== 'undefined' && navigator.share) {
       navigator.share({
@@ -192,24 +243,46 @@ const Modal: React.FC<ModalProps> = ({ item, onClose, onEdit, isAdmin }) => {
     }
   };
 
+  // Reset to primary language when closing
+  const handleClose = () => {
+    setCurrentLanguage(item.language1 || 'en');
+    onClose();
+  };
+  
   return (
-    <ModalBackdrop onClick={onClose}>
+    <ModalBackdrop onClick={handleClose}>
       <ModalContent onClick={(e) => e.stopPropagation()}>
-        <CloseButton onClick={onClose} aria-label="Sluit modal">
+        <CloseButton onClick={handleClose} aria-label="Sluit modal">
           <FaTimes />
         </CloseButton>
-        <h2>{item.title}</h2>
+        <h2>{translation.title}</h2>
         <p style={{ marginTop: '0.25rem', opacity: 0.8 }}>({formattedDateStr})</p>
-        <p style={{ marginTop: '1rem', fontStyle: 'italic' }}>{item.description}</p>
+        
+        {/* Language Switcher */}
+        {availableLanguages.length > 1 && (
+          <LanguageSwitcher>
+            {availableLanguages.map(lang => (
+              <LanguageButton
+                key={lang}
+                $active={currentLanguage === lang}
+                onClick={() => setCurrentLanguage(lang)}
+              >
+                {lang.toUpperCase()}
+              </LanguageButton>
+            ))}
+          </LanguageSwitcher>
+        )}
+        
+        <p style={{ marginTop: '1rem', fontStyle: 'italic' }}>{translation.description}</p>
         <StyledHr />
 
         <MediaContainer>
           {item.category === 'prose' && 'coverImageUrl' in item && item.coverImageUrl && (
             <ModalImage src={item.coverImageUrl} alt={`Cover voor ${item.title}`} style={{ marginBottom: '1rem' }} />
           )}
-          {(item.category === 'poetry' || item.category === 'prosepoetry') && 'content' in item && item.content && (
+          {(item.category === 'poetry' || item.category === 'prosepoetry') && translation.content && (
             <div style={{ marginTop: '1rem', whiteSpace: 'pre-wrap' }}>
-              <ReactMarkdown>{item.content}</ReactMarkdown>
+              <ReactMarkdown>{translation.content}</ReactMarkdown>
             </div>
           )}
           {/* Add more media rendering as needed */}

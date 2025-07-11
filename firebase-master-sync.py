@@ -207,6 +207,79 @@ def normalize_artwork_payload(artwork_payload: Dict[str, Any], media_urls: List[
     
     return artwork_payload
 
+def group_artworks_by_base_key(items_to_process: Dict[str, Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:
+    """
+    Groups artworks by their base key (without language suffix) and combines language versions
+    """
+    grouped_items = {}
+    
+    for html_key, item_data in items_to_process.items():
+        # Extract base key by removing language suffix
+        base_key = html_key
+        if re.search(r'_[a-z]{2}$', html_key):  # Ends with _xx (language code)
+            base_key = html_key[:-3]
+        
+        if base_key not in grouped_items:
+            grouped_items[base_key] = {
+                'metadata': item_data['metadata'].copy(),
+                'files': item_data['files'].copy(),
+                'last_modified': item_data.get('last_modified', 0),
+                'languages': {},
+                'primary_language': None  # Will be determined later
+            }
+        
+        # Determine language from filename
+        language = 'en'  # Default fallback
+        if html_key.endswith('_en'):
+            language = 'en'
+        elif html_key.endswith('_nl'):
+            language = 'nl'
+        elif html_key.endswith('_it'):
+            language = 'it'
+        elif html_key.endswith('_de'):
+            language = 'de'
+        elif html_key.endswith('_fr'):
+            language = 'fr'
+        elif html_key.endswith('_es'):
+            language = 'es'
+        # Add more language codes as needed
+        
+        # Store language-specific data
+        grouped_items[base_key]['languages'][language] = {
+            'title': item_data['metadata'].get('title', ''),
+            'description': item_data['metadata'].get('description', ''),
+            'content': item_data['metadata'].get('content', ''),
+            'lyrics': item_data['metadata'].get('lyrics', ''),
+            'html_key': html_key
+        }
+        
+        # 🔥 IMPORTANT: Check if this is the original language by looking at language1 field
+        original_language = item_data['metadata'].get('language1', item_data['metadata'].get('language', 'en'))
+        
+        # If this language matches the original language, or if we haven't set a primary yet
+        if (original_language == language) or (grouped_items[base_key]['primary_language'] is None):
+            if original_language == language:
+                # This is definitely the original language
+                grouped_items[base_key]['primary_language'] = language
+                grouped_items[base_key]['metadata'] = item_data['metadata'].copy()
+                grouped_items[base_key]['metadata']['language1'] = language
+                print(f"    🎯 Originele taal gevonden: {language} voor {base_key}")
+            elif grouped_items[base_key]['primary_language'] is None:
+                # Fallback: use first language encountered if no original found yet
+                grouped_items[base_key]['primary_language'] = language
+                grouped_items[base_key]['metadata']['language1'] = language
+    
+    # Final check: ensure all items have a primary language
+    for base_key, grouped_item in grouped_items.items():
+        if grouped_item['primary_language'] is None:
+            # Use the first available language as fallback
+            first_lang = list(grouped_item['languages'].keys())[0]
+            grouped_item['primary_language'] = first_lang
+            grouped_item['metadata']['language1'] = first_lang
+            print(f"    ⚠️ Geen originele taal gevonden, gebruik {first_lang} als primair voor {base_key}")
+    
+    return grouped_items
+
 def sync_to_firebase(force_update: bool = False):
     """
     Scant de lokale media map, leest metadata uit .html bestanden,
@@ -328,6 +401,11 @@ def sync_to_firebase(force_update: bool = False):
     print(f"  🎨 Totaal media bestanden: {total_media_files}")
     print(f"  🔗 Items om te verwerken: {len(items_to_process)}")
 
+    # **🔥 HERE'S THE KEY CHANGE: Group items by base key to combine languages**
+    print(f"\n🔄 Groeperen van taalversies...")
+    grouped_items = group_artworks_by_base_key(items_to_process)
+    print(f"📊 {len(items_to_process)} individuele items gecombineerd tot {len(grouped_items)} unieke kunstwerken")
+
     # Tracking variables
     database_operations = {
         'created': [],
@@ -341,43 +419,46 @@ def sync_to_firebase(force_update: bool = False):
         'failed': []
     }
 
-    print(f"\n🔄 Verwerken van items...")
+    print(f"\n🔄 Verwerken van gecombineerde items...")
     print("=" * 50)
     
-    for html_key, item_data in items_to_process.items():
-        title = item_data['metadata']['title']
-        language = item_data['metadata'].get('language', 'en')
-        local_modified = item_data.get('last_modified', 0)
+    # **🔥 PROCESS GROUPED ITEMS INSTEAD OF INDIVIDUAL ITEMS**
+    for base_key, grouped_item in grouped_items.items():
+        primary_lang = grouped_item['primary_language']
+        metadata = grouped_item['metadata']
+        title = metadata['title']
+        local_modified = grouped_item.get('last_modified', 0)
         
-        if html_key in existing_keys and not force_update:
-            existing_item = existing_artworks[html_key]
+        # Show which languages are being combined
+        available_languages = list(grouped_item['languages'].keys())
+        lang_display = f"({', '.join(available_languages)})"
+        
+        if base_key in existing_keys and not force_update:
+            existing_item = existing_artworks[base_key]
             firebase_modified = existing_item.get('recordCreationDate', 0)
             
             # Check if local files are newer than Firebase data
             if local_modified > firebase_modified:
-                print(f"🔄 {title} ({language}) - Lokale bestanden zijn nieuwer, bijwerken...")
+                print(f"🔄 {title} {lang_display} - Lokale bestanden zijn nieuwer, bijwerken...")
                 needs_update = True
             else:
-                print(f"⏭️  {title} ({language}) - Geen wijzigingen gedetecteerd")
-                database_operations['skipped'].append(f"{title} ({language})")
+                print(f"⏭️  {title} {lang_display} - Geen wijzigingen gedetecteerd")
+                database_operations['skipped'].append(f"{title} {lang_display}")
                 continue
         else:
-            if html_key in existing_keys:
-                print(f"🔄 {title} ({language}) - FORCE UPDATE actief, overschrijven...")
+            if base_key in existing_keys:
+                print(f"🔄 {title} {lang_display} - FORCE UPDATE actief, overschrijven...")
                 needs_update = True
             else:
-                print(f"🆕 {title} ({language}) - Nieuw item aanmaken...")
+                print(f"🆕 {title} {lang_display} - Nieuw gecombineerd item aanmaken...")
                 needs_update = False  # It's a new item
 
-        # Process the item (create new or update existing)
-        artwork_payload = {**item_data['metadata']}
+        # **🔥 CREATE COMBINED ARTWORK WITH TRANSLATIONS**
+        artwork_payload = create_combined_artwork(base_key, grouped_item)
         media_urls = []
         
-        # Add this when creating the artwork payload
-        artwork_payload['id'] = html_key  # Use the HTML filename as ID
-        
-        # Upload media files
-        for file_path in item_data['files']:
+        # Upload media files from all language versions
+        for file_path in grouped_item['files']:
             if file_path.suffix == '.html':
                 continue  # HTML bestanden niet uploaden naar storage
                 
@@ -392,24 +473,24 @@ def sync_to_firebase(force_update: bool = False):
                 print(f"  ❌ {file_path.name} - {e}")
                 storage_operations['failed'].append(f"{file_path.name}: {e}")
         
-        # Assign URLs to payload
-        artwork_payload = normalize_artwork_payload(artwork_payload, media_urls, html_key)
+        # Apply media URL normalization
+        artwork_payload = normalize_artwork_payload(artwork_payload, media_urls, base_key)
 
         # Set record creation/update date
         artwork_payload['recordCreationDate'] = local_modified
 
         # Save to Firebase
         try:
-            artworks_ref.child(html_key).set(artwork_payload)
+            artworks_ref.child(base_key).set(artwork_payload)
             if needs_update:
                 print(f"  ✅ Database bijgewerkt")
-                database_operations['updated'].append(f"{title} ({language})")
+                database_operations['updated'].append(f"{title} {lang_display}")
             else:
                 print(f"  ✅ Database entry aangemaakt")
-                database_operations['created'].append(f"{title} ({language})")
+                database_operations['created'].append(f"{title} {lang_display}")
         except Exception as e:
             print(f"  ❌ Database operatie mislukt: {e}")
-            database_operations['failed'].append(f"{title} ({language}): {e}")
+            database_operations['failed'].append(f"{title} {lang_display}: {e}")
             
         print()  # Empty line for spacing
 
@@ -455,6 +536,50 @@ def sync_to_firebase(force_update: bool = False):
         print(f"  ⚠️  Fouten: {len(database_operations['failed']) + len(storage_operations['failed'])}")
     else:
         print(f"  🎯 Geen fouten!")
+
+# In your sync function, modify the artwork creation
+def create_combined_artwork(base_key: str, grouped_item: Dict[str, Any]) -> Dict[str, Any]:
+    """Creates a combined artwork record with translations"""
+    primary_lang = grouped_item['primary_language']
+    metadata = grouped_item['metadata']
+    
+    # Get the original language content
+    original_content = grouped_item['languages'].get(primary_lang, {})
+    
+    # Create the base artwork with primary language content
+    artwork_payload = {
+        'id': base_key,
+        'title': original_content.get('title', metadata.get('title', '')),
+        'description': original_content.get('description', metadata.get('description', '')),
+        'content': original_content.get('content', metadata.get('content', '')),
+        'lyrics': original_content.get('lyrics', metadata.get('lyrics', '')),
+        'language1': primary_lang,
+        'translations': {},
+        'isHidden': False
+    }
+    
+    # Add all language versions to translations
+    for lang_code, lang_data in grouped_item['languages'].items():
+        artwork_payload['translations'][lang_code] = {
+            'title': lang_data['title'],
+            'description': lang_data['description'],
+            'content': lang_data.get('content', ''),
+            'lyrics': lang_data.get('lyrics', '')
+        }
+    
+    # Add secondary languages if available (excluding the primary language)
+    lang_codes = [lang for lang in grouped_item['languages'].keys() if lang != primary_lang]
+    if len(lang_codes) > 0:
+        artwork_payload['language2'] = lang_codes[0]
+    if len(lang_codes) > 1:
+        artwork_payload['language3'] = lang_codes[1]
+    
+    # Add other metadata (category, year, etc.)
+    for key, value in metadata.items():
+        if key not in ['title', 'description', 'content', 'lyrics']:
+            artwork_payload[key] = value
+    
+    return artwork_payload
 
 
 # --- SCRIPT UITVOEREN ---

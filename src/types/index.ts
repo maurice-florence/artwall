@@ -4,40 +4,51 @@ export type ArtworkCategory = 'poetry' | 'prose' | 'sculpture' | 'drawing' | 'mu
 // De basis-interface met alle gedeelde eigenschappen
 interface BaseArtwork {
   id: string;
-  title: string;
+  title: string; // Primary language title
   // De creatiedatum van het KUNSTWERK zelf
   year: number;
   month: number;
   day: number;
-  description: string;
+  description: string; // Primary language description
+  category: string;
   isHidden?: boolean;
   
+  // Language support
+  language1: string; // Primary language code
+  language2?: string; // Secondary language code
+  language3?: string; // Tertiary language code
+  
+  // Translations object
+  translations: {
+    [languageCode: string]: ArtworkTranslation;
+  };
+  
   // Nieuwe velden voor organisatie en tracking
-  category: string;
   version?: string;
-  language?: string;
-  language1?: string;
-  language2?: string;
-  language3?: string;
   location1?: string;
   location2?: string;
   tags?: string[];
   url1?: string;
   url2?: string;
   url3?: string;
-  content?: string;
+  content?: string; // Primary language content
   
-  // Media fields
+  // Category-specific media fields
+  coverImageUrl?: string;
+  audioUrl?: string;
+  pdfUrl?: string;
   mediaUrl?: string;
   mediaUrls?: string[];
-  coverImageUrl?: string;
-  pdfUrl?: string;
-  audioUrl?: string;
+  
+  // Music-specific fields
+  lyrics?: string; // Primary language lyrics
+  chords?: string;
+  soundcloudEmbedUrl?: string;
+  soundcloudTrackUrl?: string;
   
   // Timestamps
   recordCreationDate: number;
   recordLastUpdated?: number;
-  createdAt?: number; // For backwards compatibility
 }
 
 // Specifieke interfaces per categorie
@@ -98,3 +109,11 @@ export interface YearMarker {
 }
 
 export type TimelineItem = Artwork | YearMarker;
+
+// Vertalingen interface
+export interface ArtworkTranslation {
+  title: string;
+  description: string;
+  content?: string;
+  lyrics?: string;
+}
