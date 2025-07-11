@@ -235,6 +235,26 @@ const Modal: React.FC<ModalProps> = ({ item, onClose, onEdit, isAdmin }) => {
     onClose();
   };
 
+  // Function to replace <en-media> tags with <img> tags
+  const parseContent = (htmlContent: string) => {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(htmlContent, 'text/html');
+
+    // Replace <en-media> tags with <img> tags
+    const mediaTags = doc.querySelectorAll('en-media');
+    mediaTags.forEach((tag) => {
+      const hash = tag.getAttribute('hash');
+      const type = tag.getAttribute('type');
+      const img = document.createElement('img');
+      img.src = `https://firebasestorage.googleapis.com/v0/b/creatieve-tijdlijn.appspot.com/o/${hash}?alt=media`;
+      img.alt = 'Media';
+      img.style.maxWidth = '100%';
+      tag.replaceWith(img);
+    });
+
+    return doc.body.innerHTML;
+  };
+
   return (
     <ModalBackdrop onClick={handleClose}>
       <ModalContent onClick={(e) => e.stopPropagation()}>
@@ -263,16 +283,25 @@ const Modal: React.FC<ModalProps> = ({ item, onClose, onEdit, isAdmin }) => {
         <StyledHr />
 
         <MediaContainer>
-          {(item.category === 'poetry' || item.category === 'prosepoetry') && translation.content && (
+          {/* Display content for all categories */}
+          {translation.content && (
             <div
               style={{ marginTop: '1rem', whiteSpace: 'pre-wrap' }}
-              dangerouslySetInnerHTML={{ __html: translation.content }}
+              dangerouslySetInnerHTML={{ __html: parseContent(translation.content) }}
             />
           )}
-          {item.category === 'music' && translation.lyrics && (
+
+          {/* Display media for drawing and sculpture */}
+          {item.mediaUrls && item.mediaUrls.length > 0 && (
             <div style={{ marginTop: '1rem' }}>
-              <h3>Songtekst</h3>
-              <div dangerouslySetInnerHTML={{ __html: translation.lyrics }} />
+              <h3>Media</h3>
+              {item.mediaUrls.map((url, index) => (
+                <div key={index} style={{ marginBottom: '1rem' }}>
+                  <a href={url} target="_blank" rel="noopener noreferrer">
+                    Bekijk media {index + 1}
+                  </a>
+                </div>
+              ))}
             </div>
           )}
         </MediaContainer>
