@@ -11,9 +11,9 @@ import xml.etree.ElementTree as ET
 SOURCE_MEDIA_FOLDER = pathlib.Path('G:/Mijn Drive/Creatief/Kunstmuur')
 
 # Pad naar uw Firebase service account sleutel
-SERVICE_ACCOUNT_KEY_PATH = pathlib.Path(__file__).parent / 'serviceAccountKey.json'
-DATABASE_URL = "https://creatieve-tijdlijn-default-rtdb.europe-west1.firebasedatabase.app/"
-STORAGE_BUCKET = "creatieve-tijdlijn.firebasestorage.app"  # Remove the gs:// prefix
+SERVICE_ACCOUNT_KEY_PATH = pathlib.Path(__file__).parent / 'serviceAccountKey_artwall.json'
+DATABASE_URL = "https://artwall-by-jr-default-rtdb.europe-west1.firebasedatabase.app/"
+STORAGE_BUCKET = "artwall-by-jr.firebasestorage.app"  # Remove the gs:// prefix
 
 # --- SCRIPT LOGICA ---
 

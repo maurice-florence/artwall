@@ -138,7 +138,7 @@ const Sidebar = ({ isOpen, allArtworks }: SidebarProps) => {
         <SidebarContainer $isOpen={isOpen}>
             <SectionTitle>Over Deze Site</SectionTitle>
             <IntroText>
-                Welkom op mijn creatieve tijdlijn. Een persoonlijk archief van hersenspinsels, probeersels en creaties door de jaren heen.
+                Welkom op mijn Kunstmuur. Een persoonlijk archief van hersenspinsels, probeersels en creaties door de jaren heen.
             </IntroText>
             
             <SectionTitle>Filters</SectionTitle>

@@ -110,7 +110,7 @@ const Header = ({ onToggleSidebar, selectedCategories = [], onCategoryToggle, av
         </IconsWrapper>
       </div>
       <CenteredTitleWrapper>
-        <Title>Mijn Creatieve Tijdlijn</Title>
+        <Title>Kunstmuur</Title>
       </CenteredTitleWrapper>
       <RightSection>
         <ThemeSwitcher />

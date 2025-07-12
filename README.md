@@ -1,4 +1,4 @@
-# Creatieve Tijdlijn
+# Artwall
 
 A modern, interactive timeline and archive for creative works, built with Next.js, TypeScript, Firebase, and styled-components.
 
@@ -6,7 +6,7 @@ A modern, interactive timeline and archive for creative works, built with Next.j
 
 ## Purpose
 
-**Creatieve Tijdlijn** is a personal digital archive and timeline for creative works (art, music, writing, etc.). It allows you to:
+**Artwall** is a personal digital archive and timeline for creative works (art, music, writing, etc.). It allows you to:
 
 - Organize and browse your creative output by year and category.
 - Upload, edit, and manage works with rich metadata and media.

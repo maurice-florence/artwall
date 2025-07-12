@@ -246,7 +246,7 @@ const Modal: React.FC<ModalProps> = ({ item, onClose, onEdit, isAdmin }) => {
       const hash = tag.getAttribute('hash');
       const type = tag.getAttribute('type');
       const img = document.createElement('img');
-      img.src = `https://firebasestorage.googleapis.com/v0/b/creatieve-tijdlijn.appspot.com/o/${hash}?alt=media`;
+      img.src = `https://firebasestorage.googleapis.com/v0/b/artwall-by-jr.appspot.com/o/${hash}?alt=media`;
       img.alt = 'Media';
       img.style.maxWidth = '100%';
       tag.replaceWith(img);

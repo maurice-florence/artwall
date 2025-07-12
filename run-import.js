@@ -12,8 +12,8 @@ import { fileURLToPath } from 'url';
 
 // --- CONFIGURATIE ---
 // Pas deze twee waarden aan naar uw specifieke Firebase project details.
-const DATABASE_URL = "https://creatieve-tijdlijn-default-rtdb.europe-west1.firebasedatabase.app/";
-const STORAGE_BUCKET = "https://console.firebase.google.com/project/creatieve-tijdlijn/storage/creatieve-tijdlijn.firebasestorage.app";
+const DATABASE_URL = "https://artwall-by-jr-default-rtdb.europe-west1.firebasedatabase.app/";
+const STORAGE_BUCKET = "https://console.firebase.google.com/project/artwall-by-jr/storage/artwall-by-jr.firebasestorage.app";
 const CSV_FILENAME = "20250704_kunstmuur_import_01.csv"; // De naam van uw CSV-bestand
 // --------------------
 
@@ -23,7 +23,7 @@ const __dirname = path.dirname(__filename);
 
 // Bouw de volledige paden naar de benodigde bestanden
 const csvFilePath = path.join(__dirname, CSV_FILENAME);
-const serviceAccountPath = path.join(__dirname, 'serviceAccountKey.json');
+const serviceAccountPath = path.join(__dirname, 'serviceAccountKey_artwall.json');
 
 // Laad de geheime service account sleutel van het correcte pad
 const serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, 'utf8'));

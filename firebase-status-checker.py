@@ -4,9 +4,9 @@ from collections import defaultdict
 from firebase_admin import credentials, initialize_app, db, storage
 
 # --- CONFIGURATION ---
-SERVICE_ACCOUNT_KEY_PATH = pathlib.Path(__file__).parent / 'serviceAccountKey.json'
-DATABASE_URL = "https://creatieve-tijdlijn-default-rtdb.europe-west1.firebasedatabase.app/"
-STORAGE_BUCKET = "creatieve-tijdlijn.firebasestorage.app"
+SERVICE_ACCOUNT_KEY_PATH = pathlib.Path(__file__).parent / 'serviceAccountKey_artwall.json'
+DATABASE_URL = "https://artwall-by-jr-default-rtdb.europe-west1.firebasedatabase.app/"
+STORAGE_BUCKET = "artwall-by-jr.firebasestorage.app"
 LOCAL_FOLDER = pathlib.Path('G:/Mijn Drive/Creatief/Kunstmuur')
 
 # --- INITIALIZE FIREBASE ---
