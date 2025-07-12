@@ -20,7 +20,9 @@ import { Artwork, TimelineItem } from '@/types';
 import { CATEGORIES } from '@/constants';
 import { useFilterContext } from '@/context/FilterContext';
 import { useArtworks } from '@/context/ArtworksContext';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 
+// Lazy load heavy components
 const AdminModal = lazy(() => import('@/components/AdminModal'));
 const NewEntryModal = lazy(() => import('@/components/NewEntryModal'));
 
@@ -191,25 +193,28 @@ export default function HomePage() {
 
             {selectedItem && (
                 <Modal
-                  item={selectedItem}
-                  onClose={() => setSelectedItem(null)}
-                  isAdmin={isAdmin}
-                  onEdit={(item) => {
-                    setEditItem(item);
-                    setShowNewEntryModal(true);
-                    setSelectedItem(null);
-                  }}
+                    item={selectedItem}
+                    onClose={() => setSelectedItem(null)}
+                    isAdmin={isAdmin}
+                    onEdit={(item) => {
+                        setEditItem(item);
+                        setShowNewEntryModal(true);
+                        setSelectedItem(null);
+                    }}
+                    isOpen={!!selectedItem}  // Add this missing prop
                 />
             )}
-            <Suspense fallback={<div>Loading...</div>}>
-              {isAdminModalOpen && (
-                <AdminModal 
-                    isOpen={isAdminModalOpen}
-                    onClose={() => setIsAdminModalOpen(false)}
-                    artworkToEdit={artworkToEdit}
-                />
-              )}
-            </Suspense>
+            <ErrorBoundary>
+              <Suspense fallback={<div>Loading admin panel...</div>}>
+                {isAdminModalOpen && (
+                  <AdminModal 
+                      isOpen={isAdminModalOpen}
+                      onClose={() => setIsAdminModalOpen(false)}
+                      artworkToEdit={artworkToEdit}
+                  />
+                )}
+              </Suspense>
+            </ErrorBoundary>
             <NewEntryModal
                 isOpen={showNewEntryModal}
                 onClose={() => {

@@ -1,5 +1,5 @@
 // De mogelijke categorieën, nu als een expliciet type
-export type ArtworkCategory = 'poetry' | 'prose' | 'sculpture' | 'drawing' | 'music' | 'video' | 'prosepoetry' | 'image' | 'other';
+export type ArtworkCategory = 'poetry' | 'prosepoetry' | 'prose' | 'music' | 'sculpture' | 'drawing' | 'image' | 'video' | 'other';
 
 // De basis-interface met alle gedeelde eigenschappen
 interface BaseArtwork {
@@ -126,5 +126,35 @@ export interface ArtworkFormData {
   day?: number;
   category: ArtworkCategory;
   description?: string;
-  // ... other fields with proper types
+  content?: string;
+  isHidden?: boolean;
+  version?: string;
+  language?: string;
+  tags?: string[];
+  
+  // Music specific
+  lyrics?: string;
+  chords?: string;
+  soundcloudEmbedUrl?: string;
+  soundcloudTrackUrl?: string;
+  
+  // Media URLs
+  mediaUrl?: string;
+  coverImageUrl?: string;
+  pdfUrl?: string;
+  audioUrl?: string;
+  
+  // Additional fields
+  mediaUrls?: string[];
+  location1?: string;
+  location2?: string;
+  language1?: string;
+  language2?: string;
+  language3?: string;
+  url1?: string;
+  url2?: string;
+  url3?: string;
+  
+  // For file uploads
+  uploadedFile?: File;
 }

@@ -6,6 +6,8 @@ import { Artwork, PoetryArtwork, ProseArtwork, VisualArtArtwork, MusicArtwork, V
 interface ArtworksContextType {
   artworks: Artwork[];
   isLoading: boolean;
+  error?: string | null;
+  refetch?: () => void;
 }
 
 const ArtworksContext = createContext<ArtworksContextType>({ artworks: [], isLoading: true });

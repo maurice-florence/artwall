@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import { FaTimes, FaSoundcloud, FaShareAlt, FaTrash } from 'react-icons/fa';
 import ReactMarkdown from 'react-markdown';
 import { formatDate } from '@/utils';
 import { Artwork } from '@/types';
 import { useRouter } from 'next/navigation';
+import { createPortal } from 'react-dom';
 
 const ModalBackdrop = styled.div.attrs({
   role: 'dialog',
@@ -194,9 +195,16 @@ type ModalProps = {
   onClose: () => void;
   onEdit?: (item: Artwork) => void;
   isAdmin?: boolean;
+  isOpen?: boolean; // Make this optional
 };
 
-const Modal: React.FC<ModalProps> = ({ item, onClose, onEdit, isAdmin }) => {
+const Modal: React.FC<ModalProps> = ({ 
+  item, 
+  onClose, 
+  onEdit, 
+  isAdmin, 
+  isOpen = true // Default to true since if Modal is rendered, it should be open
+}) => {
   const dateObj = new Date(item.year, (item.month ?? 1) - 1, item.day ?? 1);
   const formattedDateStr = formatDate(dateObj);
   const router = useRouter();
@@ -255,9 +263,48 @@ const Modal: React.FC<ModalProps> = ({ item, onClose, onEdit, isAdmin }) => {
     return doc.body.innerHTML;
   };
 
-  return (
+  useEffect(() => {
+    if (isOpen) {
+      // Trap focus within modal
+      const modal = document.getElementById('modal-root');
+      const focusableElements = modal?.querySelectorAll(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      
+      const firstElement = focusableElements?.[0] as HTMLElement;
+      const lastElement = focusableElements?.[focusableElements.length - 1] as HTMLElement;
+      
+      const handleTabKey = (e: KeyboardEvent) => {
+        if (e.key === 'Tab') {
+          if (e.shiftKey) {
+            if (document.activeElement === firstElement) {
+              lastElement?.focus();
+              e.preventDefault();
+            }
+          } else {
+            if (document.activeElement === lastElement) {
+              firstElement?.focus();
+              e.preventDefault();
+            }
+          }
+        }
+      };
+      
+      document.addEventListener('keydown', handleTabKey);
+      firstElement?.focus();
+      
+      return () => {
+        document.removeEventListener('keydown', handleTabKey);
+      };
+    }
+  }, [isOpen]);
+
+  // Only render if isOpen is true
+  if (!isOpen) return null;
+
+  return createPortal(
     <ModalBackdrop onClick={handleClose}>
-      <ModalContent onClick={(e) => e.stopPropagation()}>
+      <ModalContent onClick={(e) => e.stopPropagation()} id="modal-root">
         <CloseButton onClick={handleClose} aria-label="Sluit modal">
           <FaTimes />
         </CloseButton>
@@ -314,7 +361,8 @@ const Modal: React.FC<ModalProps> = ({ item, onClose, onEdit, isAdmin }) => {
           )}
         </MediaTextContainer>
       </ModalContent>
-    </ModalBackdrop>
+    </ModalBackdrop>,
+    document.body
   );
 };
 

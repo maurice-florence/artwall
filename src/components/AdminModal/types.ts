@@ -1,39 +1,6 @@
-// Types for the timeline app
-export interface Artwork {
-  id: string;
-  title: string;
-  year: number;
-  month?: number;
-  day?: number;
-  category: string;
-  mediaType: string;
-  description?: string;
-  content?: string;
-  lyrics?: string;
-  chords?: string;
-  soundcloudEmbedUrl?: string;
-  soundcloudTrackUrl?: string;
-  isHidden?: boolean;
-  mediaUrl?: string;
-  coverImageUrl?: string;
-}
-
-export interface FilterOptions {
-  category: string;
-  year: string;
-}
-
-export interface ViewOptions {
-  spacing: 'compact' | 'comfortabel';
-  layout: 'alternerend' | 'enkelzijdig';
-  details: 'volledig' | 'titels';
-  animations: boolean;
-  theme: string;
-}
-
 // src/components/AdminModal/types.ts
 // filepath: c:\Users\friem\OneDrive\Documenten\GitHub\artwall\src\components\AdminModal\types.ts
-import { ArtworkFormData } from '@/types';
+import { Artwork, ArtworkFormData } from '@/types';
 
 export interface AdminModalProps {
   isOpen: boolean;
