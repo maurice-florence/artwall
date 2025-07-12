@@ -82,7 +82,7 @@ Firebase is used for:
 
 #### **1. Service Account Key**
 
-Create a `serviceAccountKey.json` file with the following fields:
+Create a `serviceAccountKey_artwall.json` file with the following fields:
 
 ```json
 {

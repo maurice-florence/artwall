@@ -42,5 +42,5 @@ yarn-error.log*
 next-env.d.ts
 
 # firebase key
-serviceAccountKey.json
+serviceAccountKey_old.json
 serviceAccountKey_artwall.json

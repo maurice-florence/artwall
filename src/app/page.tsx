@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, lazy, Suspense } from 'react';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { db } from '@/firebase';
 import { ref, onValue, remove, update, push } from 'firebase/database';
@@ -18,10 +18,11 @@ import YearMarkerCard from '@/components/YearMarker';
 import toast from 'react-hot-toast';
 import { Artwork, TimelineItem } from '@/types';
 import { CATEGORIES } from '@/constants';
-import NewEntryModal from '@/components/NewEntryModal';
 import { useFilterContext } from '@/context/FilterContext';
 import { useArtworks } from '@/context/ArtworksContext';
-import AdminModal from '@/components/AdminModal';
+
+const AdminModal = lazy(() => import('@/components/AdminModal'));
+const NewEntryModal = lazy(() => import('@/components/NewEntryModal'));
 
 export interface FilterOptions {
     category: string;
@@ -200,6 +201,15 @@ export default function HomePage() {
                   }}
                 />
             )}
+            <Suspense fallback={<div>Loading...</div>}>
+              {isAdminModalOpen && (
+                <AdminModal 
+                    isOpen={isAdminModalOpen}
+                    onClose={() => setIsAdminModalOpen(false)}
+                    artworkToEdit={artworkToEdit}
+                />
+              )}
+            </Suspense>
             <NewEntryModal
                 isOpen={showNewEntryModal}
                 onClose={() => {
@@ -209,14 +219,6 @@ export default function HomePage() {
                 onSave={handleSaveNewEntry}
                 editItem={editItem}
             />
-            {/* AdminModal rendering */}
-            {isAdminModalOpen && (
-                <AdminModal 
-                    isOpen={isAdminModalOpen}
-                    onClose={() => setIsAdminModalOpen(false)}
-                    artworkToEdit={artworkToEdit}
-                />
-            )}
         </PageLayout>
     );
 };

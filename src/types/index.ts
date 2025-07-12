@@ -117,3 +117,14 @@ export interface ArtworkTranslation {
   content?: string;
   lyrics?: string;
 }
+
+// Formulier gegevens interface
+export interface ArtworkFormData {
+  title: string;
+  year: number;
+  month?: number;
+  day?: number;
+  category: ArtworkCategory;
+  description?: string;
+  // ... other fields with proper types
+}
