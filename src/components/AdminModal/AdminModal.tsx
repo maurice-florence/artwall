@@ -7,8 +7,8 @@ import { AdminModalProps } from './types';
 import { useAdminModal } from './hooks/useAdminModal';
 import { BasicInfoForm } from './components/BasicInfoForm';
 import { CategorySpecificFields } from './components/CategorySpecificFields';
-import { MediaUploadSection } from './components/MediaUploadSection';
-import { MetadataSection } from './components/MetadataSection';
+import { MediaUploadSection } from './components/MediaUploadSection'; // ✅ This should work
+import { MetadataSection } from './components/MetadataSection'; // ✅ This should work
 import {
   ModalBackdrop,
   ModalContent,
