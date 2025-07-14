@@ -1,102 +1,104 @@
 // src/components/AdminModal/utils/firebaseOperations.ts
 // filepath: c:\Users\friem\OneDrive\Documenten\GitHub\artwall\src\components\AdminModal\utils\firebaseOperations.ts
-import { ref as dbRef, update, set } from 'firebase/database';
 import { db } from '@/firebase';
-import { Artwork } from '@/types';
-import { ArtworkFormData } from '../types';
+import { ref, push, update, get } from 'firebase/database';
+import { ArtworkFormData } from '@/types';
 
-export interface SaveResult {
+export interface OperationResult {
   success: boolean;
+  data?: any;
   error?: string;
 }
 
-export const saveArtwork = async (
-  formData: ArtworkFormData,
-  artworkToEdit?: Artwork | null
-): Promise<SaveResult> => {
+const processTags = (tags: string[] | string | undefined): string[] => {
+  if (Array.isArray(tags)) {
+    return tags;
+  }
+  if (typeof tags === 'string' && tags.trim()) {
+    return tags.split(',').map((tag: string) => tag.trim()).filter((tag: string) => tag);
+  }
+  return [];
+};
+
+const processMediaUrls = (mediaUrls: string[] | string | undefined): string[] => {
+  if (Array.isArray(mediaUrls)) {
+    return mediaUrls;
+  }
+  if (typeof mediaUrls === 'string' && mediaUrls.trim()) {
+    return mediaUrls.split('\n').map((url: string) => url.trim()).filter((url: string) => url);
+  }
+  return [];
+};
+
+export const createArtwork = async (formData: ArtworkFormData): Promise<OperationResult> => {
   try {
-    const artworkData = prepareArtworkData(formData, artworkToEdit);
+    const artworksRef = ref(db, 'artworks');
     
-    if (artworkToEdit && 'id' in artworkToEdit) {
-      // Update existing artwork
-      await update(dbRef(db, `artworks/${artworkToEdit.id}`), artworkData);
-    } else {
-      // Create new artwork
-      const newKey = generateArtworkKey(formData);
-      artworkData.id = newKey;
-      await set(dbRef(db, `artworks/${newKey}`), artworkData);
-    }
+    // Process form data
+    const processedData = {
+      ...formData,
+      tags: processTags(formData.tags),
+      mediaUrls: processMediaUrls(formData.mediaUrls),
+      createdAt: Date.now(),
+      recordLastUpdated: Date.now()
+    };
+
+    // Remove uploadedFile before saving to Firebase
+    const { uploadedFile, ...dataToSave } = processedData;
     
-    return { success: true };
+    const result = await push(artworksRef, dataToSave);
+    
+    return { success: true, data: { id: result.key } };
   } catch (error) {
-    console.error('Save artwork error:', error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error occurred'
+    console.error('Failed to create artwork:', error);
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Unknown error occurred' 
     };
   }
 };
 
-const prepareArtworkData = (formData: ArtworkFormData, artworkToEdit?: Artwork | null) => {
-  const artworkData: any = {
-    title: formData.title.trim(),
-    year: formData.year,
-    month: formData.month,
-    day: formData.day,
-    category: formData.category,
-    description: formData.description.trim(),
-    isHidden: formData.isHidden,
+export const updateArtwork = async (id: string, formData: Partial<ArtworkFormData>): Promise<OperationResult> => {
+  try {
+    const artworkRef = ref(db, `artworks/${id}`);
     
-    version: formData.version.trim(),
-    language: formData.language,
-    language1: formData.language1.trim(),
-    language2: formData.language2.trim(),
-    language3: formData.language3.trim(),
-    location1: formData.location1.trim(),
-    location2: formData.location2.trim(),
-    url1: formData.url1.trim(),
-    url2: formData.url2.trim(),
-    url3: formData.url3.trim(),
-    
-    tags: formData.tags.trim() 
-      ? formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag) 
-      : [],
-    
-    content: formData.content.trim(),
-    lyrics: formData.lyrics.trim(),
-    chords: formData.chords.trim(),
-    soundcloudEmbedUrl: formData.soundcloudEmbedUrl.trim(),
-    soundcloudTrackUrl: formData.soundcloudTrackUrl.trim(),
-    mediaType: formData.mediaType,
-    coverImageUrl: formData.coverImageUrl.trim(),
-    audioUrl: formData.audioUrl.trim(),
-    pdfUrl: formData.pdfUrl.trim(),
-    mediaUrl: formData.mediaUrl.trim(),
-    
-    mediaUrls: formData.mediaUrls.trim() 
-      ? formData.mediaUrls.split('\n').map(url => url.trim()).filter(url => url) 
-      : [],
-    
-    recordCreationDate: artworkToEdit && 'recordCreationDate' in artworkToEdit 
-      ? artworkToEdit.recordCreationDate 
-      : Date.now(),
-    recordLastUpdated: Date.now(),
-  };
+    // Process form data
+    const processedData = {
+      ...formData,
+      tags: processTags(formData.tags),
+      recordLastUpdated: Date.now()
+    };
 
-  // Remove empty values
-  Object.keys(artworkData).forEach(key => {
-    if (artworkData[key] === '' || (Array.isArray(artworkData[key]) && artworkData[key].length === 0)) {
-      delete artworkData[key];
-    }
-  });
-
-  return artworkData;
+    // Remove uploadedFile before saving to Firebase
+    const { uploadedFile, ...dataToSave } = processedData;
+    
+    await update(artworkRef, dataToSave);
+    
+    return { success: true };
+  } catch (error) {
+    console.error('Failed to update artwork:', error);
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Update failed' 
+    };
+  }
 };
 
-const generateArtworkKey = (formData: ArtworkFormData): string => {
-  const safeMonth = (formData.month || new Date().getMonth() + 1).toString().padStart(2, '0');
-  const safeDay = (formData.day || new Date().getDate()).toString().padStart(2, '0');
-  const safeYear = formData.year || new Date().getFullYear();
-  
-  return `${safeYear}${safeMonth}${safeDay}_${formData.category}_${formData.title.toLowerCase().replace(/[^a-z0-9]/g, '-')}_${formData.language}`;
+export const fetchArtwork = async (id: string): Promise<OperationResult> => {
+  try {
+    const artworkRef = ref(db, `artworks/${id}`);
+    const snapshot = await get(artworkRef);
+    
+    if (snapshot.exists()) {
+      return { success: true, data: snapshot.val() };
+    } else {
+      return { success: false, error: 'Artwork not found' };
+    }
+  } catch (error) {
+    console.error('Failed to fetch artwork:', error);
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Fetch failed' 
+    };
+  }
 };

@@ -27,3 +27,13 @@ export interface UseAdminModalReturn {
   handleSubmit: () => Promise<boolean>;
   resetForm: () => void;
 }
+
+export interface FormState {
+  isLoading: boolean;
+  error: string;
+  success: string;
+  validation: ValidationErrors;
+}
+
+// Re-export ArtworkFormData for convenience
+export type { ArtworkFormData };

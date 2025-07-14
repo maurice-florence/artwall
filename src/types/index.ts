@@ -143,6 +143,7 @@ export interface ArtworkFormData {
   coverImageUrl?: string;
   pdfUrl?: string;
   audioUrl?: string;
+  mediaType?: string;  // ← Add this missing field
   
   // Additional fields
   mediaUrls?: string[];

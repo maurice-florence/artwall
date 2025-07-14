@@ -1,7 +1,7 @@
 // src/components/AdminModal/components/CategorySpecificFields.tsx
 // filepath: c:\Users\friem\OneDrive\Documenten\GitHub\artwall\src\components\AdminModal\components\CategorySpecificFields.tsx
 import React from 'react';
-import { FormComponentProps } from '../types';
+import { ArtworkFormData } from '@/types';
 import {
   SectionTitle,
   FieldGroup,
@@ -12,7 +12,14 @@ import {
   ErrorMessage
 } from '../styles';
 
-export const CategorySpecificFields: React.FC<FormComponentProps> = ({
+// Define the props inline to avoid import issues
+interface CategorySpecificFieldsProps {
+  formData: ArtworkFormData;
+  errors: { [key: string]: string };
+  updateField: (field: keyof ArtworkFormData, value: any) => void;
+}
+
+export const CategorySpecificFields: React.FC<CategorySpecificFieldsProps> = ({
   formData,
   errors,
   updateField
@@ -97,7 +104,7 @@ export const CategorySpecificFields: React.FC<FormComponentProps> = ({
         <Label htmlFor="mediaUrls">Extra Media URLs</Label>
         <Textarea
           id="mediaUrls"
-          value={formData.mediaUrls || ''}
+          value={Array.isArray(formData.mediaUrls) ? formData.mediaUrls.join('\n') : (formData.mediaUrls || '')}
           onChange={(e) => updateField('mediaUrls', e.target.value)}
           placeholder="Een URL per regel"
           rows={3}

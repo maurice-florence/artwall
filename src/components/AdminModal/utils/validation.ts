@@ -1,6 +1,7 @@
 // src/components/AdminModal/utils/validation.ts
 // filepath: c:\Users\friem\OneDrive\Documenten\GitHub\artwall\src\components\AdminModal\utils\validation.ts
-import { ArtworkFormData, ValidationErrors } from '../types';
+import { ArtworkFormData } from '@/types';
+import { ValidationErrors } from '../types';
 
 export const validateArtworkForm = (data: ArtworkFormData): ValidationErrors => {
   const errors: ValidationErrors = {};
@@ -24,31 +25,34 @@ export const validateArtworkForm = (data: ArtworkFormData): ValidationErrors => 
   return errors;
 };
 
+export const getCategoryFields = (category: string): string[] => {
+  const categoryFields: Record<string, string[]> = {
+    poetry: ["title", "year", "month", "day", "description", "content"],
+    prosepoetry: ["title", "year", "month", "day", "description", "content"],
+    prose: ["title", "year", "month", "day", "description", "content", "coverImageUrl", "pdfUrl"],
+    music: ["title", "year", "month", "day", "description", "lyrics", "chords", "soundcloudEmbedUrl", "soundcloudTrackUrl", "audioUrl"],
+    sculpture: ["title", "year", "month", "day", "description", "coverImageUrl"],
+    drawing: ["title", "year", "month", "day", "description", "coverImageUrl"],
+    image: ["title", "year", "month", "day", "description", "coverImageUrl"],
+    video: ["title", "year", "month", "day", "description", "mediaUrl"],
+    other: ["title", "year", "month", "day", "description", "content", "mediaUrl"],
+  };
+  return categoryFields[category] || [];
+};
+
 export const getInitialFormData = (): ArtworkFormData => {
-  const now = new Date();
-  
   return {
     title: '',
-    year: now.getFullYear(),
-    month: now.getMonth() + 1,
-    day: now.getDate(),
+    year: new Date().getFullYear(),
+    month: new Date().getMonth() + 1,
+    day: new Date().getDate(),
     category: 'poetry',
     description: '',
     content: '',
     isHidden: false,
-    
     version: '01',
-    language: 'en',
-    language1: '',
-    language2: '',
-    language3: '',
-    location1: '',
-    location2: '',
-    tags: '',
-    url1: '',
-    url2: '',
-    url3: '',
-    
+    language: 'nl',
+    tags: [],
     lyrics: '',
     chords: '',
     soundcloudEmbedUrl: '',
@@ -58,22 +62,14 @@ export const getInitialFormData = (): ArtworkFormData => {
     audioUrl: '',
     pdfUrl: '',
     mediaUrl: '',
-    mediaUrls: ''
+    mediaUrls: [],
+    location1: '',
+    location2: '',
+    language1: '',
+    language2: '',
+    language3: '',
+    url1: '',
+    url2: '',
+    url3: ''
   };
-};
-
-export const getCategoryFields = (category: string): string[] => {
-  const categoryFields: Record<string, string[]> = {
-    poetry: ['title', 'year', 'month', 'day', 'description', 'content'],
-    prosepoetry: ['title', 'year', 'month', 'day', 'description', 'content'],
-    prose: ['title', 'year', 'month', 'day', 'description', 'content', 'coverImageUrl', 'pdfUrl'],
-    music: ['title', 'year', 'month', 'day', 'description', 'lyrics', 'chords', 'audioUrl', 'soundcloudUrl'],
-    sculpture: ['title', 'year', 'month', 'day', 'description', 'coverImageUrl'],
-    drawing: ['title', 'year', 'month', 'day', 'description', 'coverImageUrl'],
-    image: ['title', 'year', 'month', 'day', 'description', 'coverImageUrl'],
-    video: ['title', 'year', 'month', 'day', 'description', 'mediaUrl'],
-    other: ['title', 'year', 'month', 'day', 'description', 'content', 'mediaUrl'],
-  };
-  
-  return categoryFields[category] || [];
 };

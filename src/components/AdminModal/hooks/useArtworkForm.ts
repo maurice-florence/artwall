@@ -1,9 +1,44 @@
 // src/components/AdminModal/hooks/useArtworkForm.ts
 // filepath: c:\Users\friem\OneDrive\Documenten\GitHub\artwall\src\components\AdminModal\hooks\useArtworkForm.ts
 import { useState, useEffect } from 'react';
-import { Artwork } from '@/types';
-import { ArtworkFormData, FormState, ValidationErrors } from '../types';
-import { validateArtworkForm, getInitialFormData } from '../utils/validation';
+import { Artwork, ArtworkFormData } from '@/types';
+import { FormState, ValidationErrors } from '../types';
+import { validateArtworkForm } from '../utils/validation';
+
+// Define initial form data locally to avoid import conflict
+const getInitialFormData = (): ArtworkFormData => {
+  return {
+    title: '',
+    year: new Date().getFullYear(),
+    month: new Date().getMonth() + 1,
+    day: new Date().getDate(),
+    category: 'poetry',
+    description: '',
+    content: '',
+    isHidden: false,
+    version: '01',
+    language: 'nl',
+    tags: [],
+    lyrics: '',
+    chords: '',
+    soundcloudEmbedUrl: '',
+    soundcloudTrackUrl: '',
+    mediaType: 'text',
+    coverImageUrl: '',
+    audioUrl: '',
+    pdfUrl: '',
+    mediaUrl: '',
+    mediaUrls: [],
+    location1: '',
+    location2: '',
+    language1: '',
+    language2: '',
+    language3: '',
+    url1: '',
+    url2: '',
+    url3: ''
+  };
+};
 
 export const useArtworkForm = (artworkToEdit?: Artwork | null) => {
   const [formData, setFormData] = useState<ArtworkFormData>(getInitialFormData());
@@ -26,26 +61,26 @@ export const useArtworkForm = (artworkToEdit?: Artwork | null) => {
   // Validate form on data change
   useEffect(() => {
     const validation = validateArtworkForm(formData);
-    setFormState(prev => ({ ...prev, validation }));
+    setFormState((prev: FormState) => ({ ...prev, validation }));
   }, [formData]);
 
   const updateField = <K extends keyof ArtworkFormData>(
     field: K,
     value: ArtworkFormData[K]
   ) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev: ArtworkFormData) => ({ ...prev, [field]: value }));
   };
 
   const setError = (error: string) => {
-    setFormState(prev => ({ ...prev, error, success: '' }));
+    setFormState((prev: FormState) => ({ ...prev, error, success: '' }));
   };
 
   const setSuccess = (success: string) => {
-    setFormState(prev => ({ ...prev, success, error: '' }));
+    setFormState((prev: FormState) => ({ ...prev, success, error: '' }));
   };
 
   const setLoading = (isLoading: boolean) => {
-    setFormState(prev => ({ ...prev, isLoading }));
+    setFormState((prev: FormState) => ({ ...prev, isLoading }));
   };
 
   const resetForm = () => {
@@ -91,8 +126,8 @@ const mapArtworkToFormData = (artwork: Artwork): ArtworkFormData => {
     location1: extendedArtwork.location1 || '',
     location2: extendedArtwork.location2 || '',
     tags: Array.isArray(extendedArtwork.tags) 
-      ? extendedArtwork.tags.join(', ') 
-      : extendedArtwork.tags || '',
+      ? extendedArtwork.tags
+      : extendedArtwork.tags ? [extendedArtwork.tags] : [],
     url1: extendedArtwork.url1 || '',
     url2: extendedArtwork.url2 || '',
     url3: extendedArtwork.url3 || '',
@@ -107,7 +142,7 @@ const mapArtworkToFormData = (artwork: Artwork): ArtworkFormData => {
     pdfUrl: extendedArtwork.pdfUrl || '',
     mediaUrl: extendedArtwork.mediaUrl || '',
     mediaUrls: Array.isArray(extendedArtwork.mediaUrls)
-      ? extendedArtwork.mediaUrls.join('\n')
-      : extendedArtwork.mediaUrls || ''
+      ? extendedArtwork.mediaUrls
+      : extendedArtwork.mediaUrls ? [extendedArtwork.mediaUrls] : []
   };
 };
