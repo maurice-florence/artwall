@@ -8,7 +8,7 @@ import { getStorage, ref as storageRef, deleteObject } from "firebase/storage";
 import { 
     PageLayout, MainContent, CollageContainer, 
     SkeletonCard, NoResultsMessage
-} from '@/app/HomePage.styles'; // Haal page.module.css hier weg
+} from '@/app/HomePage.styles';
 import Modal from '@/components/Modal';
 import Footer from '@/components/Footer';
 import Sidebar from '@/components/Sidebar';
@@ -21,10 +21,8 @@ import { CATEGORIES } from '@/constants';
 import { useFilterContext } from '@/context/FilterContext';
 import { useArtworks } from '@/context/ArtworksContext';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
-
-// Lazy load heavy components
-const AdminModal = lazy(() => import('@/components/AdminModal'));
-const NewEntryModal = lazy(() => import('@/components/NewEntryModal'));
+import AdminModal from '@/components/AdminModal';
+import NewEntryModal from '@/components/NewEntryModal';
 
 export interface FilterOptions {
     category: string;
@@ -46,7 +44,6 @@ export default function HomePage() {
     const [isAdmin, setIsAdmin] = useState(false);
     const [isSidebarOpen, setSidebarOpen] = useState(false);
     const [showNewEntryModal, setShowNewEntryModal] = useState(false);
-    // New admin modal state
     const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
     const [artworkToEdit, setArtworkToEdit] = useState<Artwork | null>(null);
     
@@ -61,18 +58,15 @@ export default function HomePage() {
         onAuthStateChanged(auth, (user) => setIsAdmin(!!user));
     }, []);
 
-    // Compute available categories from artworks
     const availableCategories = useMemo(() => {
         const cats = new Set(allArtworks.map(a => a.category));
         return Array.from(cats).filter(cat => typeof cat === 'string');
     }, [allArtworks]);
 
-    // Link header category filter to sidebar filter
     const handleCategoryToggle = (cat: string) => {
         setFilters(prev => ({ ...prev, category: prev.category === cat ? 'all' : cat }));
     };
 
-    // Use filters.category for filtering
     const timelineItems = useMemo(() => {
         const filtered = allArtworks.filter(artwork => {
             if (!isAdmin && artwork.isHidden) return false;
@@ -108,12 +102,10 @@ export default function HomePage() {
         return itemsWithYearMarkers;
     }, [allArtworks, filters, isAdmin, searchTerm]);
 
-    // Add new entry to database or delete if _delete is set
     const handleSaveNewEntry = async (entry: any) => {
         if (entry && entry._delete && entry.id) {
-            // Remove from Firebase only (context will update automatically)
             await remove(ref(db, `artworks/${entry.id}`));
-            setSelectedItem(null); // Close modal after delete
+            setSelectedItem(null);
             return;
         }
         const newEntry = {
@@ -127,14 +119,11 @@ export default function HomePage() {
         await push(ref(db, 'artworks'), newEntry);
     };
 
-    // New handlers
     const handleEdit = useCallback((artwork: Artwork) => {
         setArtworkToEdit(prev => {
-            // Only update if the id is different or the object reference is different
             if (!prev || prev.id !== artwork.id) {
                 return artwork;
             }
-            // Optionally, do a deep compare if needed
             return prev;
         });
         setIsAdminModalOpen(true);
@@ -144,7 +133,6 @@ export default function HomePage() {
         setIsAdminModalOpen(true);
     };
 
-    // Type guard for Artwork
     function isArtwork(item: TimelineItem): item is Artwork {
         return (item as Artwork).category !== undefined;
     }
@@ -170,11 +158,9 @@ export default function HomePage() {
                   availableCategories={availableCategories}
                 />
                 <CollageContainer>
-                    {/* Plus card at the top left */}
                     <CardContainer category="poetry" onClick={handleAdd} style={{ border: '2px dashed #E07A5F', background: '#fff', color: '#E07A5F', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 64 }} title="Voeg een nieuwe kaart toe" key="plus-card">
                         +
                     </CardContainer>
-                    {/* Timeline items */}
                     {timelineItems.map(item => {
                         if ('type' in item && item.type === 'year-marker') {
                             return <YearMarkerCard key={item.id} year={item.year} />;
@@ -201,7 +187,7 @@ export default function HomePage() {
                         setShowNewEntryModal(true);
                         setSelectedItem(null);
                     }}
-                    isOpen={!!selectedItem}  // Add this missing prop
+                    isOpen={!!selectedItem}
                 />
             )}
             <ErrorBoundary>
@@ -227,3 +213,4 @@ export default function HomePage() {
         </PageLayout>
     );
 };
+

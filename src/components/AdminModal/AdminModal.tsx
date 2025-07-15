@@ -5,10 +5,12 @@
 import React from "react";
 import { AdminModalProps } from './types';
 import { useAdminModal } from './hooks/useAdminModal';
-import { BasicInfoForm } from './components/BasicInfoForm';
-import { CategorySpecificFields } from './components/CategorySpecificFields';
-import { MediaUploadSection } from './components/MediaUploadSection'; // ✅ This should work
-import { MetadataSection } from './components/MetadataSection'; // ✅ This should work
+import { 
+  BasicInfoForm, 
+  CategorySpecificFields, 
+  MediaUploadSection, 
+  MetadataSection 
+} from './components'; // ✅ Import from index file
 import {
   ModalBackdrop,
   ModalContent,
