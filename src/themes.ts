@@ -26,6 +26,8 @@ export const atelierTheme = {
   primary: '#3D405B',
   cardHeight: 280,
   gridGap: 24,
+  border: '#d1d5db',
+  textSecondary: '#6b7280',
 };
 
 export const blueprintTheme = {
@@ -56,6 +58,8 @@ export const blueprintTheme = {
   primary: '#2E86C1',
   cardHeight: 280,
   gridGap: 24,
+  border: '#d1d5db',
+  textSecondary: '#6b7280',
 };
 
 export const darkModeTheme = {
@@ -86,6 +90,8 @@ export const darkModeTheme = {
   primary: '#BB86FC',
   cardHeight: 280,
   gridGap: 24,
+  border: '#d1d5db',
+  textSecondary: '#6b7280',
 };
 
 export const natureTheme = {
@@ -117,6 +123,8 @@ export const natureTheme = {
   primary: '#7FB77E',
   cardHeight: 280,
   gridGap: 24,
+  border: '#d1d5db',
+  textSecondary: '#6b7280',
 };
 
 export const earthTheme = {
@@ -148,6 +156,8 @@ export const earthTheme = {
   primary: '#795548',
   cardHeight: 280,
   gridGap: 24,
+  border: '#d1d5db',
+  textSecondary: '#6b7280',
 };
 
 export const themes = {

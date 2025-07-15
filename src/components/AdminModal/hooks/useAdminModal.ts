@@ -2,32 +2,33 @@
 // filepath: c:\Users\friem\OneDrive\Documenten\GitHub\artwall\src\components\AdminModal\hooks\useAdminModal.ts
 import { useState, useEffect } from 'react';
 import { Artwork, ArtworkFormData } from '@/types';
-import { validateArtworkForm, ValidationErrors } from '@/utils/validation';
-import { createArtwork, updateArtwork } from '@/utils/firebase-operations';
+import { validateArtworkForm } from '../utils/validation';
+import { ValidationErrors } from '../types';
+import { createArtwork, updateArtwork } from '../utils/firebaseOperations';
 
 const initialFormData: ArtworkFormData = {
   title: '',
-  year: new Date().getFullYear(), // Changed from null to number
-  month: undefined, // Changed from null to undefined
-  day: undefined, // Changed from null to undefined
+  year: new Date().getFullYear(),
+  month: undefined,
+  day: undefined,
   category: 'poetry',
   description: '',
   content: '',
   isHidden: false,
   version: '01',
   language: 'nl',
-  tags: [], // Changed from string to array
+  tags: [],
   
-  // Initialize other fields
   lyrics: '',
   chords: '',
   soundcloudEmbedUrl: '',
   soundcloudTrackUrl: '',
   mediaUrl: '',
-  coverImageUrl: '',
-  pdfUrl: '',
-  audioUrl: '',
   mediaUrls: [],
+  mediaType: 'text',
+  coverImageUrl: '',
+  audioUrl: '',
+  pdfUrl: '',
   location1: '',
   location2: '',
   language1: '',
@@ -44,18 +45,50 @@ export const useAdminModal = (artworkToEdit?: Artwork | null) => {
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState('');
 
-  // Load artwork data when editing
+  // Initialize form data when artwork changes
   useEffect(() => {
     if (artworkToEdit) {
-      setFormData({
-        ...initialFormData,
-        ...artworkToEdit,
-        tags: Array.isArray(artworkToEdit.tags) ? artworkToEdit.tags : []
-      });
+      setFormData(mapArtworkToFormData(artworkToEdit));
     } else {
       setFormData(initialFormData);
     }
   }, [artworkToEdit]);
+
+  const mapArtworkToFormData = (artwork: Artwork): ArtworkFormData => {
+    const extendedArtwork = artwork as any;
+    
+    return {
+      title: artwork.title || '',
+      year: artwork.year || new Date().getFullYear(),
+      month: artwork.month,
+      day: artwork.day,
+      category: artwork.category || 'poetry',
+      description: artwork.description || '',
+      content: extendedArtwork.content || '',
+      isHidden: !!artwork.isHidden,
+      version: extendedArtwork.version || '01',
+      language: extendedArtwork.language || 'nl',
+      tags: Array.isArray(extendedArtwork.tags) ? extendedArtwork.tags : [],
+      lyrics: extendedArtwork.lyrics || '',
+      chords: extendedArtwork.chords || '',
+      soundcloudEmbedUrl: extendedArtwork.soundcloudEmbedUrl || '',
+      soundcloudTrackUrl: extendedArtwork.soundcloudTrackUrl || '',
+      mediaUrl: extendedArtwork.mediaUrl || '',
+      mediaUrls: Array.isArray(extendedArtwork.mediaUrls) ? extendedArtwork.mediaUrls : [],
+      mediaType: extendedArtwork.mediaType || 'text',
+      coverImageUrl: extendedArtwork.coverImageUrl || '',
+      audioUrl: extendedArtwork.audioUrl || '',
+      pdfUrl: extendedArtwork.pdfUrl || '',
+      location1: extendedArtwork.location1 || '',
+      location2: extendedArtwork.location2 || '',
+      language1: extendedArtwork.language1 || '',
+      language2: extendedArtwork.language2 || '',
+      language3: extendedArtwork.language3 || '',
+      url1: extendedArtwork.url1 || '',
+      url2: extendedArtwork.url2 || '',
+      url3: extendedArtwork.url3 || ''
+    };
+  };
 
   const updateField = (field: keyof ArtworkFormData, value: any) => {
     setFormData(prev => ({
@@ -84,8 +117,9 @@ export const useAdminModal = (artworkToEdit?: Artwork | null) => {
     setMessage('');
 
     try {
-      // Validate form
+      // ✅ validateArtworkForm now returns ValidationErrors directly
       const validationErrors = validateArtworkForm(formData);
+      
       if (Object.keys(validationErrors).length > 0) {
         setErrors(validationErrors);
         return false;

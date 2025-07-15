@@ -60,8 +60,9 @@ export const useArtworkForm = (artworkToEdit?: Artwork | null) => {
 
   // Validate form on data change
   useEffect(() => {
-    const validation = validateArtworkForm(formData);
-    setFormState((prev: FormState) => ({ ...prev, validation }));
+    // ✅ validateArtworkForm now returns ValidationErrors directly
+    const validationErrors = validateArtworkForm(formData);
+    setFormState((prev: FormState) => ({ ...prev, validation: validationErrors }));
   }, [formData]);
 
   const updateField = <K extends keyof ArtworkFormData>(
@@ -125,6 +126,7 @@ const mapArtworkToFormData = (artwork: Artwork): ArtworkFormData => {
     language3: extendedArtwork.language3 || '',
     location1: extendedArtwork.location1 || '',
     location2: extendedArtwork.location2 || '',
+    
     tags: Array.isArray(extendedArtwork.tags) 
       ? extendedArtwork.tags
       : extendedArtwork.tags ? [extendedArtwork.tags] : [],
