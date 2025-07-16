@@ -14,32 +14,38 @@ const initialFormData: ArtworkFormData = {
   year: new Date().getFullYear(),
   month: undefined,
   day: undefined,
-  category: 'poetry',
+  medium: 'drawing',
+  subtype: 'marker',
+  category: 'drawing', // For backwards compatibility
   description: '',
   content: '',
   isHidden: false,
-  version: '01',
-  language: 'nl',
+  version: '1',
+  language1: 'nl',
+  language2: '',
+  language3: '',
+  location1: '',
+  location2: '',
   tags: [],
+  url1: '',
+  url2: '',
+  url3: '',
+  evaluation: '',
+  rating: '',
   
+  // Music-specific fields
   lyrics: '',
   chords: '',
   soundcloudEmbedUrl: '',
   soundcloudTrackUrl: '',
+  audioUrl: '',
+  
+  // Media fields
   mediaUrl: '',
   mediaUrls: [],
   mediaType: 'text',
   coverImageUrl: '',
-  audioUrl: '',
-  pdfUrl: '',
-  location1: '',
-  location2: '',
-  language1: '',
-  language2: '',
-  language3: '',
-  url1: '',
-  url2: '',
-  url3: ''
+  pdfUrl: ''
 };
 
 export const useAdminModal = (artworkToEdit?: Artwork | null) => {
@@ -94,31 +100,38 @@ export const useAdminModal = (artworkToEdit?: Artwork | null) => {
       year: artwork.year || new Date().getFullYear(),
       month: artwork.month,
       day: artwork.day,
-      category: artwork.category || 'poetry',
+      medium: extendedArtwork.medium || 'drawing',
+      subtype: extendedArtwork.subtype || 'marker',
+      category: artwork.category || 'drawing',
       description: artwork.description || '',
       content: extendedArtwork.content || '',
       isHidden: !!artwork.isHidden,
-      version: extendedArtwork.version || '01',
-      language: extendedArtwork.language || 'nl',
+      version: extendedArtwork.version || '1',
+      language1: extendedArtwork.language1 || extendedArtwork.language || 'nl',
+      language2: extendedArtwork.language2 || '',
+      language3: extendedArtwork.language3 || '',
+      location1: extendedArtwork.location1 || '',
+      location2: extendedArtwork.location2 || '',
       tags: Array.isArray(extendedArtwork.tags) ? extendedArtwork.tags : [],
+      url1: extendedArtwork.url1 || '',
+      url2: extendedArtwork.url2 || '',
+      url3: extendedArtwork.url3 || '',
+      evaluation: extendedArtwork.evaluation || '',
+      rating: extendedArtwork.rating || '',
+      
+      // Music-specific fields
       lyrics: extendedArtwork.lyrics || '',
       chords: extendedArtwork.chords || '',
       soundcloudEmbedUrl: extendedArtwork.soundcloudEmbedUrl || '',
       soundcloudTrackUrl: extendedArtwork.soundcloudTrackUrl || '',
+      audioUrl: extendedArtwork.audioUrl || '',
+      
+      // Media fields
       mediaUrl: extendedArtwork.mediaUrl || '',
       mediaUrls: Array.isArray(extendedArtwork.mediaUrls) ? extendedArtwork.mediaUrls : [],
       mediaType: extendedArtwork.mediaType || 'text',
       coverImageUrl: extendedArtwork.coverImageUrl || '',
-      audioUrl: extendedArtwork.audioUrl || '',
-      pdfUrl: extendedArtwork.pdfUrl || '',
-      location1: extendedArtwork.location1 || '',
-      location2: extendedArtwork.location2 || '',
-      language1: extendedArtwork.language1 || '',
-      language2: extendedArtwork.language2 || '',
-      language3: extendedArtwork.language3 || '',
-      url1: extendedArtwork.url1 || '',
-      url2: extendedArtwork.url2 || '',
-      url3: extendedArtwork.url3 || ''
+      pdfUrl: extendedArtwork.pdfUrl || ''
     };
   };
 

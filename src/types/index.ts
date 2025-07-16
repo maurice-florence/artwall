@@ -1,6 +1,19 @@
 // De mogelijke categorieën, nu als een expliciet type
 export type ArtworkCategory = 'poetry' | 'prosepoetry' | 'prose' | 'music' | 'sculpture' | 'drawing' | 'image' | 'video' | 'other';
 
+// New: Medium types based on the new metadata structure
+export type ArtworkMedium = 'drawing' | 'writing' | 'music' | 'sculpture' | 'photography' | 'video' | 'other';
+
+// New: Subtype mappings per medium
+export type DrawingSubtype = 'marker' | 'pencil' | 'digital' | 'ink' | 'charcoal' | 'other';
+export type WritingSubtype = 'poem' | 'prose' | 'story' | 'essay' | 'other';
+export type MusicSubtype = 'instrumental' | 'vocal' | 'electronic' | 'acoustic' | 'other';
+export type SculptureSubtype = 'clay' | 'wood' | 'metal' | 'stone' | 'other';
+export type PhotographySubtype = 'portrait' | 'landscape' | 'street' | 'abstract' | 'other';
+export type VideoSubtype = 'documentary' | 'narrative' | 'experimental' | 'animation' | 'other';
+
+export type ArtworkSubtype = DrawingSubtype | WritingSubtype | MusicSubtype | SculptureSubtype | PhotographySubtype | VideoSubtype | 'other';
+
 // De basis-interface met alle gedeelde eigenschappen
 interface BaseArtwork {
   id: string;
@@ -10,6 +23,12 @@ interface BaseArtwork {
   month: number;
   day: number;
   description: string; // Primary language description
+  
+  // NEW: Updated to use medium/subtype structure
+  medium: ArtworkMedium;
+  subtype: ArtworkSubtype;
+  
+  // Legacy: keeping category for backwards compatibility
   category: string;
   isHidden?: boolean;
   
@@ -32,6 +51,10 @@ interface BaseArtwork {
   url2?: string;
   url3?: string;
   content?: string; // Primary language content
+  
+  // NEW: Evaluation and rating fields
+  evaluation?: string; // Personal assessment (1-5)
+  rating?: string; // Audience or public rating
   
   // Category-specific media fields
   coverImageUrl?: string;
@@ -124,13 +147,39 @@ export interface ArtworkFormData {
   year: number;
   month?: number;
   day?: number;
+  
+  // NEW: Medium-based structure
+  medium: ArtworkMedium;
+  subtype: ArtworkSubtype;
+  
+  // Legacy: keeping category for backwards compatibility
   category: ArtworkCategory;
+  
   description?: string;
   content?: string;
   isHidden?: boolean;
   version?: string;
-  language?: string;
+  
+  // Language fields
+  language1: string;
+  language2?: string;
+  language3?: string;
+  
+  // Location fields
+  location1?: string;
+  location2?: string;
+  
+  // Tags (comma-separated string that gets converted to array)
   tags?: string[];
+  
+  // URL fields
+  url1?: string;
+  url2?: string;
+  url3?: string;
+  
+  // NEW: Evaluation and rating fields
+  evaluation?: string; // Personal assessment (1-5)
+  rating?: string; // Audience or public rating
   
   // Music specific
   lyrics?: string;
@@ -143,18 +192,10 @@ export interface ArtworkFormData {
   coverImageUrl?: string;
   pdfUrl?: string;
   audioUrl?: string;
-  mediaType?: string;  // ← Add this missing field
+  mediaType?: string;  // Keep for backwards compatibility
   
   // Additional fields
   mediaUrls?: string[];
-  location1?: string;
-  location2?: string;
-  language1?: string;
-  language2?: string;
-  language3?: string;
-  url1?: string;
-  url2?: string;
-  url3?: string;
   
   // For file uploads
   uploadedFile?: File;

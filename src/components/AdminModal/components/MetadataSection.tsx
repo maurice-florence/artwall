@@ -219,6 +219,47 @@ export const MetadataSection: React.FC<FormComponentProps> = ({
         />
       )}
 
+      {shouldShowField?.('evaluation') && (
+        <SmartFormField
+          label="Evaluatie (1-5)"
+          field="evaluation"
+          value={formData.evaluation || ''}
+          formData={formData}
+          onChange={updateField}
+          placeholder="Selecteer score"
+          type="select"
+          options={[
+            { value: '', label: 'Geen' },
+            { value: '1', label: '1 - Slecht' },
+            { value: '2', label: '2 - Matig' },
+            { value: '3', label: '3 - Goed' },
+            { value: '4', label: '4 - Zeer goed' },
+            { value: '5', label: '5 - Uitstekend' }
+          ]}
+          loading={isFieldLoading?.('evaluation')}
+          helpText={getContextualHelpText?.('evaluation') || "Jouw persoonlijke beoordeling van dit werk"}
+          required={isFieldRequired?.('evaluation')}
+          animate={shouldAnimateField?.('evaluation')}
+        />
+      )}
+
+      {shouldShowField?.('rating') && (
+        <SmartFormField
+          label="Publieke Rating"
+          field="rating"
+          value={formData.rating || ''}
+          formData={formData}
+          onChange={updateField}
+          placeholder="Externe beoordeling"
+          type="text"
+          maxLength={10}
+          loading={isFieldLoading?.('rating')}
+          helpText={getContextualHelpText?.('rating') || "Externe of publieke beoordeling"}
+          required={isFieldRequired?.('rating')}
+          animate={shouldAnimateField?.('rating')}
+        />
+      )}
+
       {shouldShowField?.('isHidden') && (
         <CheckboxGroup>
           <Checkbox

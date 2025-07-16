@@ -1,6 +1,6 @@
 // src/components/AdminModal/utils/formLogic.ts
 // filepath: c:\Users\friem\OneDrive\Documenten\GitHub\artwall\src\components\AdminModal\utils\formLogic.ts
-import { ArtworkFormData, ArtworkCategory } from '@/types';
+import { ArtworkFormData, ArtworkCategory, ArtworkMedium } from '@/types';
 
 export interface ConditionalRule {
   field: keyof ArtworkFormData;
@@ -22,59 +22,61 @@ export interface SmartDefault {
 
 // Conditional field rules - when to show/hide fields
 export const CONDITIONAL_RULES: ConditionalRule[] = [
-  // Music category rules
+  // Music medium rules
   {
     field: 'lyrics',
-    condition: (data) => data.category === 'music',
+    condition: (data) => data.medium === 'music',
     action: 'show'
   },
   {
     field: 'chords',
-    condition: (data) => data.category === 'music',
+    condition: (data) => data.medium === 'music',
     action: 'show'
   },
   {
     field: 'soundcloudEmbedUrl',
-    condition: (data) => data.category === 'music',
+    condition: (data) => data.medium === 'music',
     action: 'show'
   },
   {
     field: 'soundcloudTrackUrl',
-    condition: (data) => data.category === 'music',
+    condition: (data) => data.medium === 'music',
     action: 'show'
   },
   {
     field: 'audioUrl',
-    condition: (data) => data.category === 'music',
+    condition: (data) => data.medium === 'music',
     action: 'show'
   },
   
-  // Visual arts rules
-  {
-    field: 'mediaType',
-    condition: (data) => ['image', 'video', 'sculpture', 'drawing'].includes(data.category),
-    action: 'show'
-  },
+  // Visual arts rules (drawing, photography, video)
   {
     field: 'mediaUrl',
-    condition: (data) => ['image', 'video', 'sculpture', 'drawing'].includes(data.category),
+    condition: (data) => ['drawing', 'photography', 'video', 'sculpture'].includes(data.medium),
     action: 'show'
   },
   {
     field: 'coverImageUrl',
-    condition: (data) => ['prose', 'image', 'sculpture', 'drawing'].includes(data.category),
+    condition: (data) => ['writing', 'sculpture'].includes(data.medium),
     action: 'show'
   },
   
-  // Literature rules
+  // Writing rules
   {
     field: 'pdfUrl',
-    condition: (data) => ['prose', 'poetry', 'prosepoetry'].includes(data.category),
+    condition: (data) => data.medium === 'writing',
     action: 'show'
   },
   {
     field: 'content',
-    condition: (data) => ['poetry', 'prosepoetry', 'prose'].includes(data.category),
+    condition: (data) => data.medium === 'writing',
+    action: 'show'
+  },
+  
+  // Subtype field - always show but dependent on medium
+  {
+    field: 'subtype',
+    condition: (data) => !!data.medium,
     action: 'show'
   },
   
@@ -114,53 +116,80 @@ export const CONDITIONAL_RULES: ConditionalRule[] = [
     field: 'location2',
     condition: (data) => !!data.location1,
     action: 'show'
+  },
+  
+  // Evaluation and rating fields
+  {
+    field: 'evaluation',
+    condition: (data) => true, // Always show
+    action: 'show'
+  },
+  {
+    field: 'rating',
+    condition: (data) => true, // Always show
+    action: 'show'
   }
 ];
 
 // Field dependencies - auto-populate based on other fields
 export const DEPENDENCY_RULES: DependencyRule[] = [
-  // Auto-generate title suggestions based on category
+  // Auto-generate title suggestions based on medium
   {
-    sourceField: 'category',
+    sourceField: 'medium',
     targetField: 'title',
-    transform: (category: ArtworkCategory, formData) => {
+    transform: (medium: ArtworkMedium, formData) => {
       if (formData.title) return formData.title; // Don't override existing title
       
       const year = formData.year || new Date().getFullYear();
       const suggestions = {
-        poetry: `Gedicht ${year}`,
-        prosepoetry: `Proza-poëzie ${year}`,
-        prose: `Verhaal ${year}`,
+        drawing: `Tekening ${year}`,
+        writing: `Tekst ${year}`,
         music: `Compositie ${year}`,
         sculpture: `Sculptuur ${year}`,
-        drawing: `Tekening ${year}`,
-        image: `Afbeelding ${year}`,
+        photography: `Foto ${year}`,
         video: `Video ${year}`,
         other: `Kunstwerk ${year}`
       };
       
-      return suggestions[category] || `Kunstwerk ${year}`;
+      return suggestions[medium] || `Kunstwerk ${year}`;
     }
   },
   
-  // Auto-set media type based on category
+  // Auto-set category based on medium for backwards compatibility
   {
-    sourceField: 'category',
+    sourceField: 'medium',
+    targetField: 'category',
+    transform: (medium: ArtworkMedium) => {
+      const categoryMap = {
+        drawing: 'drawing',
+        writing: 'poetry', // Default to poetry for writing
+        music: 'music',
+        sculpture: 'sculpture',
+        photography: 'image',
+        video: 'video',
+        other: 'other'
+      };
+      
+      return categoryMap[medium] || 'other';
+    }
+  },
+  
+  // Auto-set media type based on medium
+  {
+    sourceField: 'medium',
     targetField: 'mediaType',
-    transform: (category: ArtworkCategory) => {
+    transform: (medium: ArtworkMedium) => {
       const mediaTypeMap = {
-        poetry: 'text',
-        prosepoetry: 'text',
-        prose: 'text',
+        drawing: 'image',
+        writing: 'text',
         music: 'audio',
         sculpture: 'image',
-        drawing: 'image',
-        image: 'image',
+        photography: 'image',
         video: 'video',
         other: 'text'
       };
       
-      return mediaTypeMap[category] || 'text';
+      return mediaTypeMap[medium] || 'text';
     }
   },
   
@@ -169,8 +198,8 @@ export const DEPENDENCY_RULES: DependencyRule[] = [
     sourceField: 'year',
     targetField: 'version',
     transform: (year: number, formData) => {
-      if (formData.version && formData.version !== '01') return formData.version;
-      return '01'; // Default version
+      if (formData.version && formData.version !== '1') return formData.version;
+      return '1'; // Default version
     }
   },
   
@@ -217,24 +246,45 @@ export const SMART_DEFAULTS: SmartDefault[] = [
   },
   {
     field: 'version',
-    getValue: () => '01'
+    getValue: () => '1'
+  },
+  {
+    field: 'medium',
+    getValue: () => 'drawing' // Default to drawing
+  },
+  {
+    field: 'subtype',
+    getValue: (data) => {
+      const subtypeMap = {
+        drawing: 'marker',
+        writing: 'poem',
+        music: 'instrumental',
+        sculpture: 'clay',
+        photography: 'portrait',
+        video: 'documentary',
+        other: 'other'
+      };
+      return subtypeMap[data.medium] || 'other';
+    }
   },
   {
     field: 'mediaType',
     getValue: (data) => {
       const typeMap = {
-        poetry: 'text',
-        prosepoetry: 'text',
-        prose: 'text',
+        drawing: 'image',
+        writing: 'text',
         music: 'audio',
         sculpture: 'image',
-        drawing: 'image',
-        image: 'image',
+        photography: 'image',
         video: 'video',
         other: 'text'
       };
-      return typeMap[data.category] || 'text';
+      return typeMap[data.medium] || 'text';
     }
+  },
+  {
+    field: 'evaluation',
+    getValue: () => '3' // Default to middle rating
   }
 ];
 
@@ -249,15 +299,19 @@ export const shouldShowField = (field: keyof ArtworkFormData, formData: ArtworkF
 
 export const isFieldRequired = (field: keyof ArtworkFormData, formData: ArtworkFormData): boolean => {
   // Base required fields
-  const baseRequiredFields: Array<keyof ArtworkFormData> = ['title', 'category', 'year'];
+  const baseRequiredFields: Array<keyof ArtworkFormData> = ['title', 'medium', 'year'];
   if (baseRequiredFields.includes(field)) return true;
   
   // Conditional requirements
   const rule = CONDITIONAL_RULES.find(r => r.field === field && r.action === 'require');
   if (rule) return rule.condition(formData);
   
-  // Category-specific requirements
-  if (field === 'content' && ['poetry', 'prosepoetry', 'prose'].includes(formData.category)) {
+  // Medium-specific requirements
+  if (field === 'content' && formData.medium === 'writing') {
+    return true;
+  }
+  
+  if (field === 'subtype' && formData.medium) {
     return true;
   }
   
@@ -298,12 +352,12 @@ export const applySmartDefaults = (formData: ArtworkFormData): Partial<ArtworkFo
 
 export const getVisibleFields = (formData: ArtworkFormData): Array<keyof ArtworkFormData> => {
   const allFields: Array<keyof ArtworkFormData> = [
-    'title', 'category', 'year', 'month', 'day', 'description', 'content',
+    'title', 'medium', 'subtype', 'category', 'year', 'month', 'day', 'description', 'content',
     'lyrics', 'chords', 'soundcloudEmbedUrl', 'soundcloudTrackUrl', 'audioUrl',
     'mediaType', 'mediaUrl', 'mediaUrls', 'coverImageUrl', 'pdfUrl',
     'version', 'language1', 'language2', 'language3',
     'location1', 'location2', 'tags',
-    'url1', 'url2', 'url3', 'isHidden'
+    'url1', 'url2', 'url3', 'evaluation', 'rating', 'isHidden'
   ];
   
   return allFields.filter(field => shouldShowField(field, formData));
@@ -321,22 +375,31 @@ export const validateWithSmartLogic = (formData: ArtworkFormData): { errors: str
     if (isFieldRequired(field, formData)) {
       const value = formData[field];
       if (!value || (typeof value === 'string' && value.trim() === '')) {
-        errors.push(`${field} is required for category ${formData.category}`);
+        errors.push(`${field} is required for medium ${formData.medium}`);
       }
     }
   });
   
-  // Smart warnings
-  if (formData.category === 'music' && !formData.lyrics && !formData.audioUrl) {
-    warnings.push('Consider adding lyrics or audio URL for music category');
+  // Smart warnings based on medium
+  if (formData.medium === 'music' && !formData.lyrics && !formData.audioUrl) {
+    warnings.push('Consider adding lyrics or audio URL for music medium');
   }
   
-  if (formData.category === 'prose' && !formData.content && !formData.pdfUrl) {
-    warnings.push('Prose works typically need content or PDF URL');
+  if (formData.medium === 'writing' && !formData.content && !formData.pdfUrl) {
+    warnings.push('Writing works typically need content or PDF URL');
+  }
+  
+  if (formData.medium === 'drawing' && !formData.mediaUrl) {
+    warnings.push('Drawing works typically need a media URL for the image');
   }
   
   if (formData.year && formData.year > new Date().getFullYear()) {
     warnings.push('Future date detected - is this correct?');
+  }
+  
+  // Evaluation validation
+  if (formData.evaluation && !['1', '2', '3', '4', '5'].includes(formData.evaluation)) {
+    errors.push('Evaluation must be between 1 and 5');
   }
   
   return { errors, warnings };

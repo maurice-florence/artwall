@@ -2,6 +2,7 @@
 // filepath: c:\Users\friem\OneDrive\Documenten\GitHub\artwall\src\components\AdminModal\components\BasicInfoForm.tsx
 import React from 'react';
 import { CATEGORIES, CATEGORY_LABELS } from '@/constants';
+import { MEDIUMS, MEDIUM_LABELS, getSubtypesForMedium, SUBTYPE_LABELS } from '@/constants/medium';
 import { FormComponentProps } from '../types';
 import {
   SectionTitle,
@@ -48,7 +49,43 @@ export const BasicInfoForm: React.FC<FormComponentProps> = ({
       />
 
       <FieldGroup>
-        <Label htmlFor="category">Categorie *</Label>
+        <Label htmlFor="medium">Medium *</Label>
+        <Select
+          id="medium"
+          value={formData.medium}
+          onChange={(e) => updateField('medium', e.target.value)}
+          aria-invalid={!!errors.medium}
+        >
+          {MEDIUMS.map((medium) => (
+            <option key={medium} value={medium}>
+              {MEDIUM_LABELS[medium]}
+            </option>
+          ))}
+        </Select>
+        {errors.medium && <ErrorMessage>{errors.medium}</ErrorMessage>}
+      </FieldGroup>
+
+      {shouldShowField?.('subtype') && (
+        <FieldGroup>
+          <Label htmlFor="subtype">Subtype *</Label>
+          <Select
+            id="subtype"
+            value={formData.subtype}
+            onChange={(e) => updateField('subtype', e.target.value)}
+            aria-invalid={!!errors.subtype}
+          >
+            {getSubtypesForMedium(formData.medium).map((subtype) => (
+              <option key={subtype} value={subtype}>
+                {SUBTYPE_LABELS[subtype]}
+              </option>
+            ))}
+          </Select>
+          {errors.subtype && <ErrorMessage>{errors.subtype}</ErrorMessage>}
+        </FieldGroup>
+      )}
+
+      <FieldGroup>
+        <Label htmlFor="category">Categorie (Legacy)</Label>
         <Select
           id="category"
           value={formData.category}
