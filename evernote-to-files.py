@@ -7,11 +7,10 @@ CATEGORY_TO_MEDIUM_SUBTYPE = {
     'poetry': ('writing', 'poem'),
     'prosepoetry': ('writing', 'prosepoetry'),
     'prose': ('writing', 'story'),
-    'music': ('music', 'vocal'),
+    'music': ('music', 'song'),
     'drawing': ('drawing', 'marker'),
     'sculpture': ('sculpture', 'clay'),
-    'image': ('drawing', 'digital'),  # Map image to drawing/digital
-    'video': ('other', 'other'),      # Map video to other
+    'image': ('drawing', 'digital'),
     'other': ('other', 'other')
 }: ['marker', 'pencil', 'digital', 'ink', 'charcoal', 'other'],
     'writing': ['poem', 'prose', 'prosepoetry', 'story', 'essay', 'other'],
@@ -90,7 +89,7 @@ LEGACY CATEGORIEËN (voor backwards compatibility):
 - poetry: gedichten (tekst met vertalingen) → writing/poem
 - prosepoetry: proza-poëzie (tekst met vertalingen) → writing/prose
 - prose: proza/verhalen (media + metadata) → writing/story
-- music: muziek/songteksten (tekst met vertalingen) → music/vocal
+- music: muziek/songteksten (tekst met vertalingen) → music/song
 - drawing: tekeningen (media + metadata) → drawing/marker
 - sculpture: beeldhouwwerk (media + metadata) → sculpture/clay
 - image: fotografie (media + metadata) → photography/portrait
@@ -135,13 +134,14 @@ CATEGORY_TO_MEDIUM_SUBTYPE = {
     'drawing': ('drawing', 'marker'),
     'sculpture': ('sculpture', 'clay'),
     'image': ('drawing', 'digital'),
+    'writing': ('writing', 'poem'),  # New system: writing category maps to writing medium with poem subtype as default
     'other': ('other', 'other')
 }
 
 # Backwards compatibility: medium to category mapping
 MEDIUM_TO_CATEGORY = {
     'drawing': 'drawing',
-    'writing': 'poetry',  # Default to poetry for writing
+    'writing': 'writing',  # New system: writing medium maps to writing category
     'music': 'music',
     'sculpture': 'sculpture',
     'other': 'other'
@@ -150,12 +150,6 @@ MEDIUM_TO_CATEGORY = {
 def get_medium_subtype_from_category(category: str) -> tuple:
     """Convert legacy category to medium/subtype pair."""
     return CATEGORY_TO_MEDIUM_SUBTYPE.get(category, ('other', 'other'))
-
-def normalize_subtype(medium: str, subtype: str) -> str:
-    """Normalize subtypes to match the app's expected values."""
-    if medium == 'music' and subtype == 'song':
-        return 'vocal'  # Map song to vocal for consistency
-    return subtype
 
 def validate_medium_subtype(medium: str, subtype: str) -> bool:
     """Validate that subtype is valid for the given medium."""
@@ -167,9 +161,8 @@ def validate_medium_subtype(medium: str, subtype: str) -> bool:
 
 def normalize_subtype(medium: str, subtype: str) -> str:
     """Normalize subtype values, handling common aliases."""
-    # Handle common aliases
+    # Handle common aliases but keep song as song
     subtype_aliases = {
-        'song': 'vocal',
         'poem': 'poem',
         'poetry': 'poem',
         'prose': 'prose',
@@ -196,7 +189,7 @@ def auto_detect_medium_subtype_from_content(content: str, resources: list = None
     
     # Check for music-related keywords
     if any(keyword in content_lower for keyword in ['akkoord', 'chord', 'vers', 'refrein', 'lied', 'muziek', 'melody', 'beat']):
-        return ('music', 'vocal')
+        return ('music', 'song')
     
     # Check for poetry-related formatting (short lines, stanzas)
     lines = [line.strip() for line in content.split('\n') if line.strip()]
@@ -513,7 +506,7 @@ def extract_auto_description(content_html: str, max_length: int = 100, category:
         return ""
     
     # For poetry and music: combine first two lines
-    if category in ['poetry', 'music'] and len(available_lines) >= 2:
+    if category in ['poetry', 'music', 'writing'] and len(available_lines) >= 2:
         description_text = f"{available_lines[0]} {available_lines[1]}"
     else:
         # For other categories or when only one line available: use first line
@@ -646,7 +639,7 @@ def process_enex_files(source_dir: pathlib.Path, dest_dir: pathlib.Path):
                 created_files_log = []
 
                 # --- Logica voor vertalingen en tekstbestanden ---
-                if category in ['poetry', 'prosepoetry', 'music']:
+                if category in ['poetry', 'prosepoetry', 'music', 'writing']:
                     translation_delimiter = r'---TRANSLATION_([a-z]{2})---'
                     split_result = re.split(translation_delimiter, main_content_html, flags=re.IGNORECASE)
                     
@@ -822,9 +815,10 @@ def validate_note_metadata(meta: Dict[str, Any], category: str, has_translations
     errors = []
     
     # Define allowed categories and required fields
-    ALLOWED_CATEGORIES = ['poetry', 'prosepoetry', 'music', 'drawing', 'sculpture', 'prose', 'image', 'video', 'other']
+    # Include both legacy categories and new medium names
+    ALLOWED_CATEGORIES = ['poetry', 'prosepoetry', 'music', 'drawing', 'sculpture', 'prose', 'image', 'video', 'other', 'writing']
     REQUIRED_FIELDS = ['title', 'year', 'month', 'day', 'category', 'medium', 'subtype', 'version']
-    TEXT_CATEGORIES = ['poetry', 'prosepoetry', 'music']
+    TEXT_CATEGORIES = ['poetry', 'prosepoetry', 'music', 'writing']  # Added 'writing' for new medium system
     MEDIA_CATEGORIES = ['drawing', 'sculpture', 'prose', 'image', 'video']
     
     # Check required fields exist and are not empty
@@ -849,9 +843,16 @@ def validate_note_metadata(meta: Dict[str, Any], category: str, has_translations
     
     # Validate medium/category consistency
     if medium and category:
-        expected_medium, _ = get_medium_subtype_from_category(category)
-        if medium != expected_medium:
-            errors.append(f"Medium '{medium}' komt niet overeen met verwachte medium '{expected_medium}' voor categorie '{category}'")
+        # Handle new medium system where category can be the same as medium
+        if category in MEDIUMS:
+            # New system: category is the medium name
+            if medium != category:
+                errors.append(f"Medium '{medium}' komt niet overeen met categorie '{category}' in het nieuwe medium systeem")
+        else:
+            # Legacy system: category maps to medium/subtype
+            expected_medium, _ = get_medium_subtype_from_category(category)
+            if medium != expected_medium:
+                errors.append(f"Medium '{medium}' komt niet overeen met verwachte medium '{expected_medium}' voor categorie '{category}'")
     
     # Validate year (should be 4 digits)
     try:
