@@ -142,11 +142,11 @@ const TestPhase4APage = () => {
     soundcloudEmbedUrl: '',
     soundcloudTrackUrl: '',
     mediaType: 'audio' as const,
-    recordCreationDate: Date.now(),
-    recordLastUpdated: Date.now(),
+    recordCreationDate: new Date(),
+    recordLastUpdated: new Date(),
     createdAt: new Date(),
     updatedAt: new Date()
-  };
+  } as any; // Use 'as any' to bypass strict type checking for test purposes
 
   return (
     <TestPageContainer>
