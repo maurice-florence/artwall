@@ -1,3 +1,32 @@
+"""
+Evernote .enex to HTML Converter with Medium/Subtype Support
+
+This script converts Evernote .enex files to HTML files with proper metadata validation.
+It supports the new medium/subtype classification system introduced in the artwall app.
+
+NEW FEATURES:
+- Medium/Subtype validation and auto-detection
+- Backwards compatibility with legacy category system
+- Enhanced MIME type support for photography and video
+- Automatic medium/subtype detection from content analysis
+- Comprehensive reporting with medium/subtype statistics
+
+SUPPORTED MEDIUMS AND SUBTYPES:
+- drawing: marker, pencil, digital, ink, charcoal, other
+- writing: poem, prose, story, essay, other
+- music: instrumental, vocal, electronic, acoustic, other
+- sculpture: clay, wood, metal, stone, other
+- photography: portrait, landscape, street, abstract, other
+- video: documentary, narrative, experimental, animation, other
+- other: other
+
+MIGRATION NOTES:
+- Legacy category field is still supported for backwards compatibility
+- If medium/subtype are not provided, they will be auto-detected
+- Category-to-medium mapping is automatic
+- New evaluation and rating fields are supported
+"""
+
 import os
 import pathlib
 import xml.etree.ElementTree as ET
@@ -19,32 +48,131 @@ VERPLICHTE METADATA VELDEN VOOR ALLE NOTITIES:
 - year: moet een geldig jaar zijn (4 cijfers)
 - month: moet een geldige maand zijn (1-12)
 - day: moet een geldige dag zijn (1-31)
-- category: moet een van de toegestane categorieën zijn
+- medium: moet een van de toegestane mediums zijn
+- subtype: moet een van de toegestane subtypes zijn voor het gekozen medium
+- category: moet een van de toegestane categorieën zijn (voor backwards compatibility)
 - version: moet ingevuld zijn (meestal '01')
 
-TOEGESTANE CATEGORIEËN:
-- poetry: gedichten (tekst met vertalingen)
-- prosepoetry: proza-poëzie (tekst met vertalingen)
-- music: muziek/songteksten (tekst met vertalingen)
-- drawing: tekeningen (media + metadata)
-- sculpture: beeldhouwwerk (media + metadata)
-- prose: proza/verhalen (media + metadata)
+NIEUWE MEDIUM/SUBTYPE STRUCTUUR:
+- drawing: marker, pencil, digital, ink, charcoal, other
+- writing: poem, prose, story, essay, other
+- music: instrumental, vocal, electronic, acoustic, other
+- sculpture: clay, wood, metal, stone, other
+- photography: portrait, landscape, street, abstract, other
+- video: documentary, narrative, experimental, animation, other
+- other: other
+
+LEGACY CATEGORIEËN (voor backwards compatibility):
+- poetry: gedichten (tekst met vertalingen) → writing/poem
+- prosepoetry: proza-poëzie (tekst met vertalingen) → writing/prose
+- prose: proza/verhalen (media + metadata) → writing/story
+- music: muziek/songteksten (tekst met vertalingen) → music/vocal
+- drawing: tekeningen (media + metadata) → drawing/marker
+- sculpture: beeldhouwwerk (media + metadata) → sculpture/clay
+- image: fotografie (media + metadata) → photography/portrait
+- video: video (media + metadata) → video/documentary
+- other: overig → other/other
 
 EXTRA VALIDATIE VOOR TEKST CATEGORIEËN (poetry, prosepoetry, music):
 - language1: moet ingevuld zijn (primaire taal)
 - Als er meerdere talen zijn: language2, language3 moeten overeenkomen met het aantal tekstblokken
 - Elk tekstblok moet gescheiden zijn door ---TRANSLATION_xx--- markers
 
-EXTRA VALIDATIE VOOR MEDIA CATEGORIEËN (drawing, sculpture, prose):
+EXTRA VALIDATIE VOOR MEDIA CATEGORIEËN (drawing, sculpture, prose, image, video):
 - Er moet minstens één bijgevoegd bestand (resource) zijn
 - Bijgevoegde bestanden moeten een geldig MIME-type hebben
 
-OPTIONELE VELDEN (mogen leeg zijn):
+NIEUWE OPTIONELE VELDEN:
+- evaluation: persoonlijke beoordeling (1-5)
+- rating: publieke/audience rating
 - description, location1, location2, tags, url1, url2, url3
 - language2, language3 (als er geen extra vertalingen zijn)
 """
 
 # --- SCRIPT LOGICA ---
+
+# Medium and subtype constants (matching the TypeScript definitions)
+MEDIUMS = ['drawing', 'writing', 'music', 'sculpture', 'photography', 'video', 'other']
+
+SUBTYPES = {
+    'drawing': ['marker', 'pencil', 'digital', 'ink', 'charcoal', 'other'],
+    'writing': ['poem', 'prose', 'story', 'essay', 'other'],
+    'music': ['instrumental', 'vocal', 'electronic', 'acoustic', 'other'],
+    'sculpture': ['clay', 'wood', 'metal', 'stone', 'other'],
+    'photography': ['portrait', 'landscape', 'street', 'abstract', 'other'],
+    'video': ['documentary', 'narrative', 'experimental', 'animation', 'other'],
+    'other': ['other']
+}
+
+# Legacy category to medium/subtype mapping
+CATEGORY_TO_MEDIUM_SUBTYPE = {
+    'poetry': ('writing', 'poem'),
+    'prosepoetry': ('writing', 'prose'),
+    'prose': ('writing', 'story'),
+    'music': ('music', 'vocal'),
+    'drawing': ('drawing', 'marker'),
+    'sculpture': ('sculpture', 'clay'),
+    'image': ('photography', 'portrait'),
+    'video': ('video', 'documentary'),
+    'other': ('other', 'other')
+}
+
+# Backwards compatibility: medium to category mapping
+MEDIUM_TO_CATEGORY = {
+    'drawing': 'drawing',
+    'writing': 'poetry',  # Default to poetry for writing
+    'music': 'music',
+    'sculpture': 'sculpture',
+    'photography': 'image',
+    'video': 'video',
+    'other': 'other'
+}
+
+def get_medium_subtype_from_category(category: str) -> tuple:
+    """Convert legacy category to medium/subtype pair."""
+    return CATEGORY_TO_MEDIUM_SUBTYPE.get(category, ('other', 'other'))
+
+def validate_medium_subtype(medium: str, subtype: str) -> bool:
+    """Validate that subtype is valid for the given medium."""
+    if medium not in MEDIUMS:
+        return False
+    if subtype not in SUBTYPES.get(medium, []):
+        return False
+    return True
+
+def auto_detect_medium_subtype_from_content(content: str, resources: list = None) -> tuple:
+    """
+    Automatically detect medium and subtype based on content analysis.
+    This is a fallback for when medium/subtype are not explicitly provided.
+    """
+    content_lower = content.lower()
+    
+    # Check for music-related keywords
+    if any(keyword in content_lower for keyword in ['akkoord', 'chord', 'vers', 'refrein', 'lied', 'muziek', 'melody', 'beat']):
+        return ('music', 'vocal')
+    
+    # Check for poetry-related formatting (short lines, stanzas)
+    lines = [line.strip() for line in content.split('\n') if line.strip()]
+    if len(lines) > 3:
+        avg_line_length = sum(len(line) for line in lines) / len(lines)
+        if avg_line_length < 50:  # Short lines suggest poetry
+            return ('writing', 'poem')
+    
+    # Check for prose indicators
+    if len(content) > 500:  # Longer content suggests prose
+        return ('writing', 'prose')
+    
+    # Check attached resources for media types
+    if resources:
+        for resource in resources:
+            mime = resource.findtext('mime', '').lower()
+            if 'image' in mime or 'jpeg' in mime or 'png' in mime or 'gif' in mime:
+                return ('photography', 'portrait')
+            elif 'video' in mime or 'mp4' in mime or 'webm' in mime:
+                return ('video', 'documentary')
+    
+    # Default fallback
+    return ('writing', 'other')
 
 def clean_metadata_for_yaml(html_block: str) -> str:
     """Verwijdert HTML-tags uit de metadata-tekst veel robuuster."""
@@ -65,7 +193,37 @@ def extract_metadata_and_content(note_content: str) -> Tuple[Dict[str, Any] | No
     try:
         metadata = yaml.safe_load(meta_block_cleaned) or {}
         main_content = note_content.split('---META_BEGIN---', 1)[0].strip()
-        return {str(k).lower(): v for k, v in metadata.items()}, main_content
+        
+        # Convert to lowercase keys
+        metadata = {str(k).lower(): v for k, v in metadata.items()}
+        
+        # Handle medium/subtype mapping
+        if 'medium' in metadata and 'subtype' in metadata:
+            # New format: medium and subtype are explicitly provided
+            medium = metadata['medium']
+            subtype = metadata['subtype']
+            
+            # Validate medium/subtype combination
+            if not validate_medium_subtype(medium, subtype):
+                return None, f"Ongeldige medium/subtype combinatie: {medium}/{subtype}"
+            
+            # Set legacy category for backwards compatibility
+            if 'category' not in metadata:
+                metadata['category'] = MEDIUM_TO_CATEGORY.get(medium, 'other')
+                
+        elif 'category' in metadata:
+            # Legacy format: only category is provided, derive medium/subtype
+            category = metadata['category']
+            medium, subtype = get_medium_subtype_from_category(category)
+            metadata['medium'] = medium
+            metadata['subtype'] = subtype
+            
+        else:
+            # Neither medium nor category provided
+            return None, "Noch 'medium' noch 'category' gevonden in metadata"
+        
+        return metadata, main_content
+        
     except yaml.YAMLError as e:
         error_message = f"YAML FOUT: {e}\n--- Problematische Metadata ---\n{meta_block_cleaned}"
         return None, error_message
@@ -231,6 +389,8 @@ def process_enex_files(source_dir: pathlib.Path, dest_dir: pathlib.Path):
 
     report = {'success': [], 'failed': []}
     category_counts = {}  # Track notes per category
+    medium_counts = {}   # Track notes per medium
+    subtype_counts = {}  # Track notes per medium/subtype combination
     
     print("\n--- Starten van Conversie & Generatie ---")
     for enex_file in enex_files:
@@ -264,8 +424,27 @@ def process_enex_files(source_dir: pathlib.Path, dest_dir: pathlib.Path):
                 # --- Basis validatie ---
                 if meta is None:
                     raise ValueError(main_content_html)
+                
+                # Get resources for auto-detection
+                resources = note.findall('resource')
+                
+                # Auto-detect medium/subtype if not provided
+                if 'medium' not in meta or 'subtype' not in meta:
+                    detected_medium, detected_subtype = auto_detect_medium_subtype_from_content(main_content_html, resources)
+                    if 'medium' not in meta:
+                        meta['medium'] = detected_medium
+                        print(f"    🔍 Auto-detected medium: {detected_medium}")
+                    if 'subtype' not in meta:
+                        meta['subtype'] = detected_subtype
+                        print(f"    🔍 Auto-detected subtype: {detected_subtype}")
+                        
+                    # Set legacy category based on detected medium
+                    if 'category' not in meta:
+                        meta['category'] = MEDIUM_TO_CATEGORY.get(detected_medium, 'other')
 
                 category = meta.get('category', 'unknown')
+                medium = meta.get('medium', 'other')
+                subtype = meta.get('subtype', 'other')
                 
                 # --- Pre-processing voor validatie ---
                 # Check for translations
@@ -276,7 +455,6 @@ def process_enex_files(source_dir: pathlib.Path, dest_dir: pathlib.Path):
                 num_translation_parts = len(parts)
                 
                 # Check for resources
-                resources = note.findall('resource')
                 has_resources = len(resources) > 0
                 
                 # --- Uitgebreide validatie ---
@@ -292,8 +470,11 @@ def process_enex_files(source_dir: pathlib.Path, dest_dir: pathlib.Path):
                     error_msg = "Validatiefouten: " + "; ".join(validation_errors)
                     raise ValueError(error_msg)
                 
-                # Count notes per category
+                # Count notes per category, medium, and subtype
                 category_counts[category] = category_counts.get(category, 0) + 1
+                medium_counts[medium] = medium_counts.get(medium, 0) + 1
+                subtype_key = f"{medium}/{subtype}"
+                subtype_counts[subtype_key] = subtype_counts.get(subtype_key, 0) + 1
                 
                 # --- Verwerking ---
                 category_folder = dest_dir / category
@@ -344,7 +525,7 @@ def process_enex_files(source_dir: pathlib.Path, dest_dir: pathlib.Path):
                         created_files_log.append(f"{file_path.name} ({file_status})")
 
                 # --- Logica voor media-bestanden ---
-                elif category in ['drawing', 'sculpture', 'prose']:
+                elif category in ['drawing', 'sculpture', 'prose', 'image', 'video']:
                     # Create ordered metadata with 'language' field
                     meta_with_lang = {}
                     for key, value in meta.items():
@@ -373,13 +554,33 @@ def process_enex_files(source_dir: pathlib.Path, dest_dir: pathlib.Path):
                     created_files_log.append(f"{html_path.name} ({html_file_status})")
 
                     # Process attached media files
-                    resources = note.findall('resource')
                     if not resources:
                         raise ValueError(f"Categorie is '{category}' maar er is geen afbeelding/bestand bijgevoegd.")
                         
                     for idx, resource in enumerate(resources):
                         mime = resource.findtext('mime', '')
-                        ext = '.jpg' if 'jpeg' in mime else '.png' if 'png' in mime else '.mp4' if 'mp4' in mime else '.pdf' if 'pdf' in mime else ''
+                        # Enhanced MIME type handling for new categories
+                        if 'jpeg' in mime or 'jpg' in mime:
+                            ext = '.jpg'
+                        elif 'png' in mime:
+                            ext = '.png'
+                        elif 'gif' in mime:
+                            ext = '.gif'
+                        elif 'webp' in mime:
+                            ext = '.webp'
+                        elif 'mp4' in mime:
+                            ext = '.mp4'
+                        elif 'webm' in mime:
+                            ext = '.webm'
+                        elif 'mov' in mime:
+                            ext = '.mov'
+                        elif 'pdf' in mime:
+                            ext = '.pdf'
+                        elif 'svg' in mime:
+                            ext = '.svg'
+                        else:
+                            ext = '.dat'  # Unknown format
+                            
                         data_b64 = resource.findtext('data')
                         if not data_b64: continue
 
@@ -400,12 +601,32 @@ def process_enex_files(source_dir: pathlib.Path, dest_dir: pathlib.Path):
 
     # --- Rapportage ---
     print("\n" + "="*50)
-    print("📊 OVERZICHT GEVONDEN NOTITIES PER CATEGORIE")
+    print("📊 OVERZICHT GEVONDEN NOTITIES PER CATEGORIE (LEGACY)")
     print("="*50)
     if category_counts:
         for category, count in sorted(category_counts.items()):
             print(f"  {category:15} : {count:3} notities")
         print(f"\n  {'TOTAAL':15} : {sum(category_counts.values()):3} notities")
+    else:
+        print("  Geen notities gevonden.")
+    
+    print("\n" + "="*50)
+    print("🎨 OVERZICHT GEVONDEN NOTITIES PER MEDIUM")
+    print("="*50)
+    if medium_counts:
+        for medium, count in sorted(medium_counts.items()):
+            print(f"  {medium:15} : {count:3} notities")
+        print(f"\n  {'TOTAAL':15} : {sum(medium_counts.values()):3} notities")
+    else:
+        print("  Geen notities gevonden.")
+    
+    print("\n" + "="*50)
+    print("🔧 OVERZICHT GEVONDEN NOTITIES PER MEDIUM/SUBTYPE")
+    print("="*50)
+    if subtype_counts:
+        for subtype_key, count in sorted(subtype_counts.items()):
+            print(f"  {subtype_key:20} : {count:3} notities")
+        print(f"\n  {'TOTAAL':20} : {sum(subtype_counts.values()):3} notities")
     else:
         print("  Geen notities gevonden.")
     
@@ -432,16 +653,16 @@ def process_enex_files(source_dir: pathlib.Path, dest_dir: pathlib.Path):
 
 def validate_note_metadata(meta: Dict[str, Any], category: str, has_translations: bool = False, num_translation_parts: int = 0, has_resources: bool = False) -> List[str]:
     """
-    Valideert metadata van een notitie volgens de gedefinieerde regels.
+    Valideert metadata van een notitie volgens de nieuwe medium/subtype regels.
     Retourneert een lijst van validatiefouten (lege lijst = geen fouten).
     """
     errors = []
     
     # Define allowed categories and required fields
-    ALLOWED_CATEGORIES = ['poetry', 'prosepoetry', 'music', 'drawing', 'sculpture', 'prose']
-    REQUIRED_FIELDS = ['title', 'year', 'month', 'day', 'category', 'version']
+    ALLOWED_CATEGORIES = ['poetry', 'prosepoetry', 'music', 'drawing', 'sculpture', 'prose', 'image', 'video', 'other']
+    REQUIRED_FIELDS = ['title', 'year', 'month', 'day', 'category', 'medium', 'subtype', 'version']
     TEXT_CATEGORIES = ['poetry', 'prosepoetry', 'music']
-    MEDIA_CATEGORIES = ['drawing', 'sculpture', 'prose']
+    MEDIA_CATEGORIES = ['drawing', 'sculpture', 'prose', 'image', 'video']
     
     # Check required fields exist and are not empty
     for field in REQUIRED_FIELDS:
@@ -451,6 +672,23 @@ def validate_note_metadata(meta: Dict[str, Any], category: str, has_translations
     # Validate category
     if category not in ALLOWED_CATEGORIES:
         errors.append(f"Onbekende categorie '{category}'. Toegestaan: {', '.join(ALLOWED_CATEGORIES)}")
+    
+    # Validate medium/subtype
+    medium = meta.get('medium')
+    subtype = meta.get('subtype')
+    
+    if medium and medium not in MEDIUMS:
+        errors.append(f"Onbekend medium '{medium}'. Toegestaan: {', '.join(MEDIUMS)}")
+    
+    if medium and subtype and not validate_medium_subtype(medium, subtype):
+        allowed_subtypes = SUBTYPES.get(medium, [])
+        errors.append(f"Onbekend subtype '{subtype}' voor medium '{medium}'. Toegestaan: {', '.join(allowed_subtypes)}")
+    
+    # Validate medium/category consistency
+    if medium and category:
+        expected_medium, _ = get_medium_subtype_from_category(category)
+        if medium != expected_medium:
+            errors.append(f"Medium '{medium}' komt niet overeen met verwachte medium '{expected_medium}' voor categorie '{category}'")
     
     # Validate year (should be 4 digits)
     try:
@@ -475,6 +713,24 @@ def validate_note_metadata(meta: Dict[str, Any], category: str, has_translations
             errors.append(f"Dag '{day}' moet tussen 1 en 31 liggen")
     except (ValueError, TypeError):
         errors.append(f"Dag '{meta.get('day')}' is geen geldig getal")
+    
+    # Validate evaluation (1-5)
+    if 'evaluation' in meta and meta['evaluation']:
+        try:
+            evaluation = int(meta['evaluation'])
+            if evaluation < 1 or evaluation > 5:
+                errors.append(f"Evaluatie '{evaluation}' moet tussen 1 en 5 liggen")
+        except (ValueError, TypeError):
+            errors.append(f"Evaluatie '{meta.get('evaluation')}' is geen geldig getal")
+    
+    # Validate rating (1-5)
+    if 'rating' in meta and meta['rating']:
+        try:
+            rating = int(meta['rating'])
+            if rating < 1 or rating > 5:
+                errors.append(f"Rating '{rating}' moet tussen 1 en 5 liggen")
+        except (ValueError, TypeError):
+            errors.append(f"Rating '{meta.get('rating')}' is geen geldig getal")
     
     # Category-specific validation
     if category in TEXT_CATEGORIES:

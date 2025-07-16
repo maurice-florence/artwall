@@ -1,7 +1,9 @@
 import os
 import pathlib
+import re
 from collections import defaultdict
 from firebase_admin import credentials, initialize_app, db, storage
+import firebase_admin
 
 # --- CONFIGURATION ---
 SERVICE_ACCOUNT_KEY_PATH = pathlib.Path(__file__).parent / 'serviceAccountKey_artwall.json'
@@ -31,10 +33,73 @@ def check_database():
         artworks_ref = db.reference('artworks')
         artworks = artworks_ref.get() or {}
         print(f"📊 Total artworks in database: {len(artworks)}")
+        
+        # Analyze metadata structure
+        analyze_metadata_structure(artworks)
+        
         return artworks
     except Exception as e:
         print(f"❌ Error accessing database: {e}")
         return {}
+
+# --- ANALYZE METADATA STRUCTURE ---
+def analyze_metadata_structure(artworks):
+    """Analyze the metadata structure of artworks in the database"""
+    print("\n📊 Analyzing Metadata Structure...")
+    
+    category_counts = defaultdict(int)
+    medium_counts = defaultdict(int)
+    subtype_counts = defaultdict(int)
+    
+    has_medium_field = 0
+    has_subtype_field = 0
+    has_evaluation_field = 0
+    has_rating_field = 0
+    has_translations = 0
+    
+    for artwork_id, artwork in artworks.items():
+        # Count categories (legacy)
+        category = artwork.get('category', 'unknown')
+        category_counts[category] += 1
+        
+        # Count mediums (new)
+        if 'medium' in artwork:
+            has_medium_field += 1
+            medium = artwork['medium']
+            medium_counts[medium] += 1
+        
+        # Count subtypes (new)
+        if 'subtype' in artwork:
+            has_subtype_field += 1
+            subtype = artwork['subtype']
+            subtype_counts[f"{artwork.get('medium', 'unknown')}/{subtype}"] += 1
+        
+        # Count new fields
+        if 'evaluation' in artwork and artwork['evaluation']:
+            has_evaluation_field += 1
+        if 'rating' in artwork and artwork['rating']:
+            has_rating_field += 1
+        if 'translations' in artwork and artwork['translations']:
+            has_translations += 1
+    
+    print(f"\n📈 Legacy Categories:")
+    for category, count in sorted(category_counts.items()):
+        print(f"  {category:15} : {count:3} artworks")
+    
+    print(f"\n🎨 New Mediums:")
+    for medium, count in sorted(medium_counts.items()):
+        print(f"  {medium:15} : {count:3} artworks")
+    
+    print(f"\n🔧 Medium/Subtype Combinations:")
+    for subtype, count in sorted(subtype_counts.items()):
+        print(f"  {subtype:20} : {count:3} artworks")
+    
+    print(f"\n📊 Field Coverage:")
+    print(f"  Medium field      : {has_medium_field:3}/{len(artworks)} artworks ({has_medium_field/len(artworks)*100:.1f}%)")
+    print(f"  Subtype field     : {has_subtype_field:3}/{len(artworks)} artworks ({has_subtype_field/len(artworks)*100:.1f}%)")
+    print(f"  Evaluation field  : {has_evaluation_field:3}/{len(artworks)} artworks ({has_evaluation_field/len(artworks)*100:.1f}%)")
+    print(f"  Rating field      : {has_rating_field:3}/{len(artworks)} artworks ({has_rating_field/len(artworks)*100:.1f}%)")
+    print(f"  Translations      : {has_translations:3}/{len(artworks)} artworks ({has_translations/len(artworks)*100:.1f}%)")
 
 # --- CHECK STORAGE STATUS ---
 def check_storage():
@@ -113,11 +178,11 @@ def compare_contents(database_artworks, storage_files, local_artworks, local_med
 
 # --- MAIN FUNCTION ---
 if __name__ == "__main__":
-    print("\n🚀 Firebase and Local Folder Comparison")
-    print("=" * 50)
+    print("\n🚀 Firebase and Local Folder Comparison with Medium/Subtype Analysis")
+    print("=" * 70)
     initialize_firebase()
     database_artworks = check_database()
     storage_files = check_storage()
     local_artworks, local_media_files = check_local_folder()
     compare_contents(database_artworks, storage_files, local_artworks, local_media_files)
-    print("\n🎉 Comparison complete!")
+    print("\n🎉 Analysis complete!")

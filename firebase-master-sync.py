@@ -2,6 +2,13 @@ import os
 import pathlib
 import re
 import json
+import os
+import pathlib
+import re
+import sys
+import time
+import base64
+import firebase_admin
 from firebase_admin import credentials, initialize_app, db, storage
 from typing import Dict, Any, List
 import xml.etree.ElementTree as ET
@@ -16,6 +23,104 @@ DATABASE_URL = "https://artwall-by-jr-default-rtdb.europe-west1.firebasedatabase
 STORAGE_BUCKET = "artwall-by-jr.firebasestorage.app"  # Remove the gs:// prefix
 
 # --- SCRIPT LOGICA ---
+
+# Medium and subtype constants (matching the TypeScript definitions)
+MEDIUMS = ['drawing', 'writing', 'music', 'sculpture', 'photography', 'video', 'other']
+
+SUBTYPES = {
+    'drawing': ['marker', 'pencil', 'digital', 'ink', 'charcoal', 'other'],
+    'writing': ['poem', 'prose', 'story', 'essay', 'other'],
+    'music': ['instrumental', 'vocal', 'electronic', 'acoustic', 'other'],
+    'sculpture': ['clay', 'wood', 'metal', 'stone', 'other'],
+    'photography': ['portrait', 'landscape', 'street', 'abstract', 'other'],
+    'video': ['documentary', 'narrative', 'experimental', 'animation', 'other'],
+    'other': ['other']
+}
+
+# Legacy category to medium/subtype mapping
+CATEGORY_TO_MEDIUM_SUBTYPE = {
+    'poetry': ('writing', 'poem'),
+    'prosepoetry': ('writing', 'prose'),
+    'prose': ('writing', 'story'),
+    'music': ('music', 'vocal'),
+    'drawing': ('drawing', 'marker'),
+    'sculpture': ('sculpture', 'clay'),
+    'image': ('photography', 'portrait'),
+    'video': ('video', 'documentary'),
+    'other': ('other', 'other')
+}
+
+# Backwards compatibility: medium to category mapping
+MEDIUM_TO_CATEGORY = {
+    'drawing': 'drawing',
+    'writing': 'poetry',  # Default to poetry for writing
+    'music': 'music',
+    'sculpture': 'sculpture',
+    'photography': 'image',
+    'video': 'video',
+    'other': 'other'
+}
+
+def get_medium_subtype_from_category(category: str) -> tuple:
+    """Convert legacy category to medium/subtype pair."""
+    return CATEGORY_TO_MEDIUM_SUBTYPE.get(category, ('other', 'other'))
+
+def validate_medium_subtype(medium: str, subtype: str) -> bool:
+    """Validate that subtype is valid for the given medium."""
+    if medium not in MEDIUMS:
+        return False
+    if subtype not in SUBTYPES.get(medium, []):
+        return False
+    return True
+
+def normalize_metadata_fields(metadata: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Normalize metadata to include both legacy and new fields.
+    Handles medium/subtype mapping and backwards compatibility.
+    """
+    # Handle medium/subtype mapping
+    if 'medium' in metadata and 'subtype' in metadata:
+        # New format: medium and subtype are explicitly provided
+        medium = metadata['medium']
+        subtype = metadata['subtype']
+        
+        # Validate medium/subtype combination
+        if not validate_medium_subtype(medium, subtype):
+            print(f"    ⚠️ Invalid medium/subtype combination: {medium}/{subtype}, using defaults")
+            medium, subtype = ('other', 'other')
+            metadata['medium'] = medium
+            metadata['subtype'] = subtype
+        
+        # Set legacy category for backwards compatibility
+        if 'category' not in metadata:
+            metadata['category'] = MEDIUM_TO_CATEGORY.get(medium, 'other')
+            
+    elif 'category' in metadata:
+        # Legacy format: only category is provided, derive medium/subtype
+        category = metadata['category']
+        medium, subtype = get_medium_subtype_from_category(category)
+        metadata['medium'] = medium
+        metadata['subtype'] = subtype
+        
+    else:
+        # Neither medium nor category provided, use defaults
+        metadata['medium'] = 'other'
+        metadata['subtype'] = 'other'
+        metadata['category'] = 'other'
+    
+    # Validate evaluation and rating fields
+    for field in ['evaluation', 'rating']:
+        if field in metadata and metadata[field]:
+            try:
+                value = int(metadata[field])
+                if value < 1 or value > 5:
+                    print(f"    ⚠️ {field} '{value}' out of range (1-5), removing field")
+                    del metadata[field]
+            except (ValueError, TypeError):
+                print(f"    ⚠️ {field} '{metadata[field]}' is not a number, removing field")
+                del metadata[field]
+    
+    return metadata
 
 def parse_metadata_from_filename(filename: str) -> Dict[str, Any]:
     """
@@ -92,7 +197,7 @@ def parse_html_metadata(html_content: str) -> Dict[str, Any]:
                             value = value[1:-1]
                         
                         # Convert numeric values (flexible - any field that looks numeric)
-                        if key in ['year', 'month', 'day'] or (value.isdigit() and len(value) == 4 and key.endswith('year')):
+                        if key in ['year', 'month', 'day', 'evaluation', 'rating'] or (value.isdigit() and len(value) == 4 and key.endswith('year')):
                             try:
                                 metadata[key] = int(value)
                             except ValueError:
@@ -108,6 +213,9 @@ def parse_html_metadata(html_content: str) -> Dict[str, Any]:
         # Extract content (flexible content extraction)
         content = extract_content_flexible(html_content)
         metadata['content'] = content
+        
+        # Normalize metadata fields (handle medium/subtype mapping)
+        metadata = normalize_metadata_fields(metadata)
         
     except Exception as e:
         print(f"⚠️ Fout bij parsen van HTML metadata: {e}")
@@ -157,6 +265,7 @@ def normalize_artwork_payload(artwork_payload: Dict[str, Any], media_urls: List[
     Normalizes the artwork payload to match Next.js app expectations
     """
     category = artwork_payload.get('category', 'other')
+    medium = artwork_payload.get('medium', 'other')
     
     # Add required fields
     artwork_payload['id'] = html_key
@@ -168,34 +277,41 @@ def normalize_artwork_payload(artwork_payload: Dict[str, Any], media_urls: List[
     else:
         artwork_payload['tags'] = []
     
-    # Map media URLs to category-specific fields
+    # Map media URLs to category-specific fields (enhanced for new mediums)
     if media_urls:
-        if category == 'prose':
-            # For prose: first image is coverImageUrl, first PDF is pdfUrl
+        if category == 'prose' or (medium == 'writing' and artwork_payload.get('subtype') == 'story'):
+            # For prose/stories: first image is coverImageUrl, first PDF is pdfUrl
             for url in media_urls:
-                if any(ext in url.lower() for ext in ['.jpg', '.jpeg', '.png', '.gif']):
+                if any(ext in url.lower() for ext in ['.jpg', '.jpeg', '.png', '.gif', '.webp']):
                     artwork_payload['coverImageUrl'] = url
                 elif '.pdf' in url.lower():
                     artwork_payload['pdfUrl'] = url
         
-        elif category == 'music':
+        elif category == 'music' or medium == 'music':
             # For music: first audio file is audioUrl
             for url in media_urls:
-                if any(ext in url.lower() for ext in ['.mp3', '.wav', '.m4a', '.flac']):
+                if any(ext in url.lower() for ext in ['.mp3', '.wav', '.m4a', '.flac', '.ogg']):
                     artwork_payload['audioUrl'] = url
                     break
         
-        elif category in ['sculpture', 'drawing', 'image']:
+        elif category in ['sculpture', 'drawing'] or medium in ['sculpture', 'drawing']:
             # For visual art: first image is coverImageUrl
             for url in media_urls:
-                if any(ext in url.lower() for ext in ['.jpg', '.jpeg', '.png', '.gif']):
+                if any(ext in url.lower() for ext in ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg']):
                     artwork_payload['coverImageUrl'] = url
                     break
         
-        elif category == 'video':
+        elif category == 'image' or medium == 'photography':
+            # For photography: first image is coverImageUrl
+            for url in media_urls:
+                if any(ext in url.lower() for ext in ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.raw']):
+                    artwork_payload['coverImageUrl'] = url
+                    break
+        
+        elif category == 'video' or medium == 'video':
             # For video: first video file is mediaUrl
             for url in media_urls:
-                if any(ext in url.lower() for ext in ['.mp4', '.mov', '.avi', '.webm']):
+                if any(ext in url.lower() for ext in ['.mp4', '.mov', '.avi', '.webm', '.mkv']):
                     artwork_payload['mediaUrl'] = url
                     break
         
@@ -539,7 +655,7 @@ def sync_to_firebase(force_update: bool = False):
 
 # In your sync function, modify the artwork creation
 def create_combined_artwork(base_key: str, grouped_item: Dict[str, Any]) -> Dict[str, Any]:
-    """Creates a combined artwork record with translations"""
+    """Creates a combined artwork record with translations and new metadata fields"""
     primary_lang = grouped_item['primary_language']
     metadata = grouped_item['metadata']
     
@@ -555,7 +671,13 @@ def create_combined_artwork(base_key: str, grouped_item: Dict[str, Any]) -> Dict
         'lyrics': original_content.get('lyrics', metadata.get('lyrics', '')),
         'language1': primary_lang,
         'translations': {},
-        'isHidden': False
+        'isHidden': False,
+        # NEW: Include medium and subtype fields
+        'medium': metadata.get('medium', 'other'),
+        'subtype': metadata.get('subtype', 'other'),
+        # NEW: Include evaluation and rating fields
+        'evaluation': metadata.get('evaluation', ''),
+        'rating': metadata.get('rating', ''),
     }
     
     # Add all language versions to translations
@@ -576,7 +698,7 @@ def create_combined_artwork(base_key: str, grouped_item: Dict[str, Any]) -> Dict
     
     # Add other metadata (category, year, etc.)
     for key, value in metadata.items():
-        if key not in ['title', 'description', 'content', 'lyrics']:
+        if key not in ['title', 'description', 'content', 'lyrics', 'medium', 'subtype', 'evaluation', 'rating']:
             artwork_payload[key] = value
     
     return artwork_payload
