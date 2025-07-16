@@ -1,7 +1,15 @@
 """
 Evernote .enex to HTML Converter with Medium/Subtype Support
 
-This script converts Evernote .enex files to HTML files with proper metadata validation.
+This script converts EvernoSUBTYPES = {
+    'drawing': ['marker', 'pencil', 'digital', 'ink', 'charcoal', 'other'],
+    'writing': ['poem', 'prose', 'prosepoetry', 'story', 'essay', 'other'],
+    'music': ['instrumental', 'vocal', 'song', 'electronic', 'acoustic', 'other'],
+    'sculpture': ['clay', 'wood', 'metal', 'stone', 'other'],
+    'photography': ['portrait', 'landscape', 'street', 'abstract', 'other'],
+    'video': ['documentary', 'narrative', 'experimental', 'animation', 'other'],
+    'other': ['other']
+}files to HTML files with proper metadata validation.
 It supports the new medium/subtype classification system introduced in the artwall app.
 
 NEW FEATURES:
@@ -96,7 +104,7 @@ MEDIUMS = ['drawing', 'writing', 'music', 'sculpture', 'photography', 'video', '
 
 SUBTYPES = {
     'drawing': ['marker', 'pencil', 'digital', 'ink', 'charcoal', 'other'],
-    'writing': ['poem', 'prose', 'story', 'essay', 'other'],
+    'writing': ['poem', 'prose', 'story', 'essay', 'prosepoetry', 'other'],
     'music': ['instrumental', 'vocal', 'electronic', 'acoustic', 'other'],
     'sculpture': ['clay', 'wood', 'metal', 'stone', 'other'],
     'photography': ['portrait', 'landscape', 'street', 'abstract', 'other'],
@@ -107,7 +115,7 @@ SUBTYPES = {
 # Legacy category to medium/subtype mapping
 CATEGORY_TO_MEDIUM_SUBTYPE = {
     'poetry': ('writing', 'poem'),
-    'prosepoetry': ('writing', 'prose'),
+    'prosepoetry': ('writing', 'prosepoetry'),
     'prose': ('writing', 'story'),
     'music': ('music', 'vocal'),
     'drawing': ('drawing', 'marker'),
@@ -132,6 +140,12 @@ def get_medium_subtype_from_category(category: str) -> tuple:
     """Convert legacy category to medium/subtype pair."""
     return CATEGORY_TO_MEDIUM_SUBTYPE.get(category, ('other', 'other'))
 
+def normalize_subtype(medium: str, subtype: str) -> str:
+    """Normalize subtypes to match the app's expected values."""
+    if medium == 'music' and subtype == 'song':
+        return 'vocal'  # Map song to vocal for consistency
+    return subtype
+
 def validate_medium_subtype(medium: str, subtype: str) -> bool:
     """Validate that subtype is valid for the given medium."""
     if medium not in MEDIUMS:
@@ -139,6 +153,28 @@ def validate_medium_subtype(medium: str, subtype: str) -> bool:
     if subtype not in SUBTYPES.get(medium, []):
         return False
     return True
+
+def normalize_subtype(medium: str, subtype: str) -> str:
+    """Normalize subtype values, handling common aliases."""
+    # Handle common aliases
+    subtype_aliases = {
+        'song': 'vocal',
+        'poem': 'poem',
+        'poetry': 'poem',
+        'prose': 'prose',
+        'prosepoetry': 'prosepoetry',
+        'story': 'story',
+        'essay': 'essay'
+    }
+    
+    normalized = subtype_aliases.get(subtype, subtype)
+    
+    # Validate the normalized subtype
+    if validate_medium_subtype(medium, normalized):
+        return normalized
+    else:
+        # Fall back to 'other' if not valid
+        return 'other'
 
 def auto_detect_medium_subtype_from_content(content: str, resources: list = None) -> tuple:
     """
@@ -178,8 +214,38 @@ def clean_metadata_for_yaml(html_block: str) -> str:
     """Verwijdert HTML-tags uit de metadata-tekst veel robuuster."""
     text_with_newlines = re.sub(r'</div>', '\n', html_block, flags=re.IGNORECASE)
     cleaned_text = re.sub(r'<[^>]+>', '', text_with_newlines)
+    
+    # Clean problematic characters that can cause YAML parsing issues
+    # Remove backticks that are often used incorrectly
+    cleaned_text = re.sub(r'`(\d+)', r'\1', cleaned_text)  # Remove backticks before numbers
+    cleaned_text = cleaned_text.replace('`', '')  # Remove any remaining backticks
+    
     lines = [line.strip() for line in cleaned_text.split('\n') if line.strip()]
     return '\n'.join(lines)
+
+def safe_yaml_value(value: str) -> str:
+    """Safely format a value for YAML, handling apostrophes and special characters."""
+    if not value:
+        return ""
+    
+    # Convert to string if not already
+    value = str(value)
+    
+    # Clean problematic characters that might cause YAML issues
+    value = value.replace('`', '').replace('?', '').replace('~', '')
+    
+    # Don't wrap simple values in quotes - let YAML handle it naturally
+    # Only wrap if there are special characters that need escaping
+    if any(char in value for char in [':', '[', ']', '{', '}', '#', '&', '*', '!', '|', '>', '%', '@']):
+        # Use double quotes for values with apostrophes
+        if "'" in value:
+            escaped = value.replace('"', '\\"')
+            return f'"{escaped}"'
+        else:
+            return f"'{value}'"
+    else:
+        # Let YAML handle simple values naturally
+        return value
 
 def extract_metadata_and_content(note_content: str) -> Tuple[Dict[str, Any] | None, str]:
     """Extraheert metadata en de hoofdcontent (alles voor de metadata)."""
@@ -191,6 +257,7 @@ def extract_metadata_and_content(note_content: str) -> Tuple[Dict[str, Any] | No
     meta_block_cleaned = clean_metadata_for_yaml(meta_block_html)
     
     try:
+        # Try to parse as YAML first
         metadata = yaml.safe_load(meta_block_cleaned) or {}
         main_content = note_content.split('---META_BEGIN---', 1)[0].strip()
         
@@ -201,11 +268,15 @@ def extract_metadata_and_content(note_content: str) -> Tuple[Dict[str, Any] | No
         if 'medium' in metadata and 'subtype' in metadata:
             # New format: medium and subtype are explicitly provided
             medium = metadata['medium']
-            subtype = metadata['subtype']
+            subtype = normalize_subtype(medium, metadata['subtype'])
+            metadata['subtype'] = subtype
             
             # Validate medium/subtype combination
             if not validate_medium_subtype(medium, subtype):
-                return None, f"Ongeldige medium/subtype combinatie: {medium}/{subtype}"
+                print(f"    ⚠️ Invalid medium/subtype combination: {medium}/{subtype}, using defaults")
+                medium, subtype = ('other', 'other')
+                metadata['medium'] = medium
+                metadata['subtype'] = subtype
             
             # Set legacy category for backwards compatibility
             if 'category' not in metadata:
@@ -225,8 +296,86 @@ def extract_metadata_and_content(note_content: str) -> Tuple[Dict[str, Any] | No
         return metadata, main_content
         
     except yaml.YAMLError as e:
-        error_message = f"YAML FOUT: {e}\n--- Problematische Metadata ---\n{meta_block_cleaned}"
-        return None, error_message
+        # If YAML parsing fails, try to manually parse key-value pairs
+        try:
+            print(f"    ⚠️ YAML parsing failed, trying manual parsing: {e}")
+            metadata = {}
+            main_content = note_content.split('---META_BEGIN---', 1)[0].strip()
+            
+            # Parse each line as key: value
+            for line in meta_block_cleaned.split('\n'):
+                line = line.strip()
+                if ':' in line and not line.startswith('#'):
+                    key, value = line.split(':', 1)
+                    key = key.strip()
+                    value = value.strip()
+                    
+                    # Remove quotes from values
+                    if value.startswith("'") and value.endswith("'"):
+                        value = value[1:-1]
+                    elif value.startswith('"') and value.endswith('"'):
+                        value = value[1:-1]
+                    
+                    # Convert numeric values
+                    if key in ['year', 'month', 'day', 'evaluation', 'rating']:
+                        try:
+                            # Handle backtick errors and special characters
+                            if isinstance(value, str):
+                                # Clean problematic characters from numeric strings
+                                clean_value = value.strip().replace('`', '').replace('?', '').replace('~', '')
+                                # Extract just the number using regex
+                                match = re.search(r'\d+', clean_value)
+                                if match:
+                                    value = int(match.group())
+                                else:
+                                    if key == 'day':
+                                        value = 1  # Default fallback for day
+                                    else:
+                                        value = 0  # Default fallback for other numeric fields
+                            else:
+                                value = int(value)
+                            metadata[key] = value
+                        except (ValueError, TypeError):
+                            if key == 'day':
+                                metadata[key] = 1  # Default fallback for day
+                            elif key in ['year', 'month']:
+                                metadata[key] = 0  # Will be caught by validation
+                            else:
+                                metadata[key] = ''  # For evaluation/rating, empty is okay
+                    else:
+                        # For string values, apply safe YAML formatting
+                        if isinstance(value, str):
+                            metadata[key] = value  # Don't apply safe_yaml_value here, do it during HTML generation
+                        else:
+                            metadata[key] = value
+            
+            # Apply medium/subtype normalization
+            if 'medium' in metadata and 'subtype' in metadata:
+                medium = metadata['medium']
+                subtype = normalize_subtype(medium, metadata['subtype'])
+                metadata['subtype'] = subtype
+                
+                # Validate medium/subtype combination
+                if not validate_medium_subtype(medium, subtype):
+                    print(f"    ⚠️ Invalid medium/subtype combination: {medium}/{subtype}, using defaults")
+                    medium, subtype = ('other', 'other')
+                    metadata['medium'] = medium
+                    metadata['subtype'] = subtype
+                
+                if 'category' not in metadata:
+                    metadata['category'] = MEDIUM_TO_CATEGORY.get(medium, 'other')
+                    
+            elif 'category' in metadata:
+                category = metadata['category']
+                medium, subtype = get_medium_subtype_from_category(category)
+                metadata['medium'] = medium
+                metadata['subtype'] = subtype
+            
+            return metadata, main_content
+            
+        except Exception as manual_error:
+            error_message = f"YAML FOUT: {e}\nManual parsing error: {manual_error}\n--- Problematische Metadata ---\n{meta_block_cleaned}"
+            return None, error_message
 
 def clean_html_content(html: str) -> str:
     """Cleans up Evernote HTML content for display."""
@@ -266,7 +415,9 @@ def clean_html_content(html: str) -> str:
 
 def generate_html_file(meta: Dict[str, Any], content_html: str, file_path: pathlib.Path) -> None:
     """Generates an HTML file with metadata and content."""
-    yaml_content = yaml.dump(meta, allow_unicode=True, default_flow_style=False, sort_keys=False)
+    # Generate clean YAML without excessive quote wrapping
+    yaml_content = yaml.dump(meta, allow_unicode=True, default_flow_style=False, sort_keys=False, default_style=None)
+    clean_html = clean_html_content(content_html)
     clean_html = clean_html_content(content_html)
     
     html_content = f"""<!DOCTYPE html>
@@ -708,7 +859,19 @@ def validate_note_metadata(meta: Dict[str, Any], category: str, has_translations
     
     # Validate day (1-31, basic check)
     try:
-        day = int(meta.get('day', 0))
+        day_value = meta.get('day', 0)
+        if isinstance(day_value, str):
+            # Clean problematic characters from day string
+            day_str = day_value.strip().replace('`', '').replace('?', '').replace('~', '')
+            # Extract just the number
+            match = re.search(r'\d+', day_str)
+            if match:
+                day = int(match.group())
+            else:
+                day = 0
+        else:
+            day = int(day_value)
+        
         if day < 1 or day > 31:
             errors.append(f"Dag '{day}' moet tussen 1 en 31 liggen")
     except (ValueError, TypeError):
