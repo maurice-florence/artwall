@@ -6,9 +6,7 @@ import {
   DrawingSubtype, 
   WritingSubtype, 
   MusicSubtype, 
-  SculptureSubtype, 
-  PhotographySubtype, 
-  VideoSubtype 
+  SculptureSubtype 
 } from '@/types';
 
 export const MEDIUMS: ArtworkMedium[] = [
@@ -16,8 +14,6 @@ export const MEDIUMS: ArtworkMedium[] = [
   'writing', 
   'music',
   'sculpture',
-  'photography',
-  'video',
   'other'
 ];
 
@@ -26,8 +22,6 @@ export const MEDIUM_LABELS: Record<ArtworkMedium, string> = {
   writing: 'Schrijven',
   music: 'Muziek',
   sculpture: 'Beeldhouwen',
-  photography: 'Fotografie',
-  video: 'Video',
   other: 'Overig'
 };
 
@@ -44,12 +38,14 @@ export const DRAWING_SUBTYPES: DrawingSubtype[] = [
 export const WRITING_SUBTYPES: WritingSubtype[] = [
   'poem',
   'prose',
+  'prosepoetry',
   'story',
   'essay',
   'other'
 ];
 
 export const MUSIC_SUBTYPES: MusicSubtype[] = [
+  'song',
   'instrumental',
   'vocal',
   'electronic',
@@ -65,22 +61,6 @@ export const SCULPTURE_SUBTYPES: SculptureSubtype[] = [
   'other'
 ];
 
-export const PHOTOGRAPHY_SUBTYPES: PhotographySubtype[] = [
-  'portrait',
-  'landscape',
-  'street',
-  'abstract',
-  'other'
-];
-
-export const VIDEO_SUBTYPES: VideoSubtype[] = [
-  'documentary',
-  'narrative',
-  'experimental',
-  'animation',
-  'other'
-];
-
 export const SUBTYPE_LABELS: Record<string, string> = {
   // Drawing
   marker: 'Marker',
@@ -92,10 +72,12 @@ export const SUBTYPE_LABELS: Record<string, string> = {
   // Writing
   poem: 'Gedicht',
   prose: 'Proza',
+  prosepoetry: 'Proza-poëzie',
   story: 'Verhaal',
   essay: 'Essay',
   
   // Music
+  song: 'Lied',
   instrumental: 'Instrumentaal',
   vocal: 'Vocaal',
   electronic: 'Elektronisch',
@@ -106,18 +88,6 @@ export const SUBTYPE_LABELS: Record<string, string> = {
   wood: 'Hout',
   metal: 'Metaal',
   stone: 'Steen',
-  
-  // Photography
-  portrait: 'Portret',
-  landscape: 'Landschap',
-  street: 'Straatfotografie',
-  abstract: 'Abstract',
-  
-  // Video
-  documentary: 'Documentaire',
-  narrative: 'Verhaal',
-  experimental: 'Experimenteel',
-  animation: 'Animatie',
   
   // Common
   other: 'Overig'
@@ -133,10 +103,6 @@ export const getSubtypesForMedium = (medium: ArtworkMedium): string[] => {
       return MUSIC_SUBTYPES;
     case 'sculpture':
       return SCULPTURE_SUBTYPES;
-    case 'photography':
-      return PHOTOGRAPHY_SUBTYPES;
-    case 'video':
-      return VIDEO_SUBTYPES;
     default:
       return ['other'];
   }
@@ -148,8 +114,6 @@ export const MEDIUM_TO_CATEGORY_MAP: Record<ArtworkMedium, string> = {
   writing: 'poetry', // Default to poetry for writing
   music: 'music',
   sculpture: 'sculpture',
-  photography: 'image',
-  video: 'video',
   other: 'other'
 };
 
@@ -160,7 +124,6 @@ export const CATEGORY_TO_MEDIUM_MAP: Record<string, ArtworkMedium> = {
   prose: 'writing',
   music: 'music',
   sculpture: 'sculpture',
-  image: 'photography',
-  video: 'video',
+  image: 'drawing', // Map image to drawing
   other: 'other'
 };

@@ -25,28 +25,25 @@ STORAGE_BUCKET = "artwall-by-jr.firebasestorage.app"  # Remove the gs:// prefix
 # --- SCRIPT LOGICA ---
 
 # Medium and subtype constants (matching the TypeScript definitions)
-MEDIUMS = ['drawing', 'writing', 'music', 'sculpture', 'photography', 'video', 'other']
+MEDIUMS = ['drawing', 'writing', 'music', 'sculpture', 'other']
 
 SUBTYPES = {
     'drawing': ['marker', 'pencil', 'digital', 'ink', 'charcoal', 'other'],
-    'writing': ['poem', 'prose', 'story', 'essay', 'other'],
-    'music': ['instrumental', 'vocal', 'electronic', 'acoustic', 'other'],
+    'writing': ['poem', 'prose', 'prosepoetry', 'story', 'essay', 'other'],
+    'music': ['song', 'instrumental', 'vocal', 'electronic', 'acoustic', 'other'],
     'sculpture': ['clay', 'wood', 'metal', 'stone', 'other'],
-    'photography': ['portrait', 'landscape', 'street', 'abstract', 'other'],
-    'video': ['documentary', 'narrative', 'experimental', 'animation', 'other'],
     'other': ['other']
 }
 
 # Legacy category to medium/subtype mapping
 CATEGORY_TO_MEDIUM_SUBTYPE = {
     'poetry': ('writing', 'poem'),
-    'prosepoetry': ('writing', 'prose'),
+    'prosepoetry': ('writing', 'prosepoetry'),
     'prose': ('writing', 'story'),
-    'music': ('music', 'vocal'),
+    'music': ('music', 'song'),
     'drawing': ('drawing', 'marker'),
     'sculpture': ('sculpture', 'clay'),
-    'image': ('photography', 'portrait'),
-    'video': ('video', 'documentary'),
+    'image': ('drawing', 'digital'),
     'other': ('other', 'other')
 }
 
@@ -56,8 +53,6 @@ MEDIUM_TO_CATEGORY = {
     'writing': 'poetry',  # Default to poetry for writing
     'music': 'music',
     'sculpture': 'sculpture',
-    'photography': 'image',
-    'video': 'video',
     'other': 'other'
 }
 

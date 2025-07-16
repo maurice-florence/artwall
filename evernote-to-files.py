@@ -1,8 +1,24 @@
 """
 Evernote .enex to HTML Converter with Medium/Subtype Support
 
-This script converts EvernoSUBTYPES = {
-    'drawing': ['marker', 'pencil', 'digital', 'ink', 'charcoal', 'other'],
+This script converts EvernoSUBTYPESSUBTYPES = {
+ # Legacy category to medium/subtype mapping
+CATEGORY_TO_MEDIUM_SUBTYPE = {
+    'poetry': ('writing', 'poem'),
+    'prosepoetry': ('writing', 'prosepoetry'),
+    'prose': ('writing', 'story'),
+    'music': ('music', 'vocal'),
+    'drawing': ('drawing', 'marker'),
+    'sculpture': ('sculpture', 'clay'),
+    'image': ('drawing', 'digital'),  # Map image to drawing/digital
+    'video': ('other', 'other'),      # Map video to other
+    'other': ('other', 'other')
+}: ['marker', 'pencil', 'digital', 'ink', 'charcoal', 'other'],
+    'writing': ['poem', 'prose', 'prosepoetry', 'story', 'essay', 'other'],
+    'music': ['instrumental', 'vocal', 'song', 'electronic', 'acoustic', 'other'],
+    'sculpture': ['clay', 'wood', 'metal', 'stone', 'other'],
+    'other': ['other']
+} 'drawing': ['marker', 'pencil', 'digital', 'ink', 'charcoal', 'other'],
     'writing': ['poem', 'prose', 'prosepoetry', 'story', 'essay', 'other'],
     'music': ['instrumental', 'vocal', 'song', 'electronic', 'acoustic', 'other'],
     'sculpture': ['clay', 'wood', 'metal', 'stone', 'other'],
@@ -100,15 +116,13 @@ NIEUWE OPTIONELE VELDEN:
 # --- SCRIPT LOGICA ---
 
 # Medium and subtype constants (matching the TypeScript definitions)
-MEDIUMS = ['drawing', 'writing', 'music', 'sculpture', 'photography', 'video', 'other']
+MEDIUMS = ['drawing', 'writing', 'music', 'sculpture', 'other']
 
 SUBTYPES = {
     'drawing': ['marker', 'pencil', 'digital', 'ink', 'charcoal', 'other'],
     'writing': ['poem', 'prose', 'story', 'essay', 'prosepoetry', 'other'],
-    'music': ['instrumental', 'vocal', 'electronic', 'acoustic', 'other'],
+    'music': ['song', 'instrumental', 'vocal', 'electronic', 'acoustic', 'other'],
     'sculpture': ['clay', 'wood', 'metal', 'stone', 'other'],
-    'photography': ['portrait', 'landscape', 'street', 'abstract', 'other'],
-    'video': ['documentary', 'narrative', 'experimental', 'animation', 'other'],
     'other': ['other']
 }
 
@@ -117,11 +131,10 @@ CATEGORY_TO_MEDIUM_SUBTYPE = {
     'poetry': ('writing', 'poem'),
     'prosepoetry': ('writing', 'prosepoetry'),
     'prose': ('writing', 'story'),
-    'music': ('music', 'vocal'),
+    'music': ('music', 'song'),
     'drawing': ('drawing', 'marker'),
     'sculpture': ('sculpture', 'clay'),
-    'image': ('photography', 'portrait'),
-    'video': ('video', 'documentary'),
+    'image': ('drawing', 'digital'),
     'other': ('other', 'other')
 }
 
@@ -131,8 +144,6 @@ MEDIUM_TO_CATEGORY = {
     'writing': 'poetry',  # Default to poetry for writing
     'music': 'music',
     'sculpture': 'sculpture',
-    'photography': 'image',
-    'video': 'video',
     'other': 'other'
 }
 
@@ -203,9 +214,9 @@ def auto_detect_medium_subtype_from_content(content: str, resources: list = None
         for resource in resources:
             mime = resource.findtext('mime', '').lower()
             if 'image' in mime or 'jpeg' in mime or 'png' in mime or 'gif' in mime:
-                return ('photography', 'portrait')
+                return ('drawing', 'digital')
             elif 'video' in mime or 'mp4' in mime or 'webm' in mime:
-                return ('video', 'documentary')
+                return ('other', 'other')
     
     # Default fallback
     return ('writing', 'other')
@@ -628,8 +639,9 @@ def process_enex_files(source_dir: pathlib.Path, dest_dir: pathlib.Path):
                 subtype_counts[subtype_key] = subtype_counts.get(subtype_key, 0) + 1
                 
                 # --- Verwerking ---
-                category_folder = dest_dir / category
-                category_folder.mkdir(parents=True, exist_ok=True)
+                # Use medium instead of category for folder structure
+                medium_folder = dest_dir / medium
+                medium_folder.mkdir(parents=True, exist_ok=True)
                 
                 created_files_log = []
 
@@ -666,7 +678,7 @@ def process_enex_files(source_dir: pathlib.Path, dest_dir: pathlib.Path):
                                 print(f"    📝 Auto-description ({lang_code}): {auto_description[:50]}{'...' if len(auto_description) > 50 else ''}")
                         
                         filename_lang = generate_filename(meta, lang=lang_code)
-                        file_path = category_folder / f"{filename_lang}.html"
+                        file_path = medium_folder / f"{filename_lang}.html"
                         
                         # Generate HTML file for all text categories
                         generate_html_file(meta_lang, content_html, file_path)
@@ -695,7 +707,7 @@ def process_enex_files(source_dir: pathlib.Path, dest_dir: pathlib.Path):
                             print(f"    📝 Auto-description: {auto_description[:50]}{'...' if len(auto_description) > 50 else ''}")
                     
                     base_filename = generate_filename(meta)
-                    html_path = category_folder / f"{base_filename}.html"
+                    html_path = medium_folder / f"{base_filename}.html"
                     
                     # Check if file exists to determine if we're overwriting
                     html_file_status = "Overschreven" if html_path.exists() else "Nieuw"
@@ -737,7 +749,7 @@ def process_enex_files(source_dir: pathlib.Path, dest_dir: pathlib.Path):
 
                         version = idx + 1
                         media_filename = generate_filename(meta, version=version)
-                        media_path = category_folder / f"{media_filename}{ext}"
+                        media_path = medium_folder / f"{media_filename}{ext}"
                         
                         # Check if media file exists to determine if we're overwriting
                         media_file_status = "Overschreven" if media_path.exists() else "Nieuw"
