@@ -17,6 +17,11 @@ export interface FormComponentProps {
   errors: ValidationErrors;
   updateField: (field: keyof ArtworkFormData, value: any) => void;
   isFieldLoading?: (field: string) => boolean;
+  shouldShowField?: (field: keyof ArtworkFormData) => boolean;
+  isFieldRequired?: (field: keyof ArtworkFormData) => boolean;
+  shouldAnimateField?: (field: keyof ArtworkFormData) => boolean;
+  getContextualHelpText?: (field: keyof ArtworkFormData) => string;
+  getSmartSuggestions?: (field: keyof ArtworkFormData) => string[];
 }
 
 export interface UseAdminModalReturn {

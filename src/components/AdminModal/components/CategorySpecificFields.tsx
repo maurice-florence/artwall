@@ -16,108 +16,144 @@ export const CategorySpecificFields: React.FC<FormComponentProps> = ({
   formData,
   errors,
   updateField,
-  isFieldLoading
+  isFieldLoading,
+  shouldShowField,
+  isFieldRequired,
+  shouldAnimateField,
+  getContextualHelpText,
+  getSmartSuggestions
 }) => {
   const renderMusicFields = () => (
     <>
-      <SmartFormField
-        label="Tekst"
-        field="lyrics"
-        value={formData.lyrics || ''}
-        formData={formData}
-        onChange={updateField}
-        placeholder="Songtekst"
-        type="richtext"
-        maxLength={2000}
-        loading={isFieldLoading?.('lyrics')}
-        helpText="Gebruik markdown syntax voor opmaak van songteksten"
-      />
+      {shouldShowField?.('lyrics') && (
+        <SmartFormField
+          label="Tekst"
+          field="lyrics"
+          value={formData.lyrics || ''}
+          formData={formData}
+          onChange={updateField}
+          placeholder="Songtekst"
+          type="richtext"
+          maxLength={2000}
+          loading={isFieldLoading?.('lyrics')}
+          helpText={getContextualHelpText?.('lyrics')}
+          required={isFieldRequired?.('lyrics')}
+          animate={shouldAnimateField?.('lyrics')}
+        />
+      )}
 
-      <SmartFormField
-        label="Akkoorden"
-        field="chords"
-        value={formData.chords || ''}
-        formData={formData}
-        onChange={updateField}
-        placeholder="Akkoorden notatie"
-        type="textarea"
-        rows={4}
-        maxLength={1000}
-        loading={isFieldLoading?.('chords')}
-        helpText="Gebruik ChordPro syntax of gewone tekst"
-      />
+      {shouldShowField?.('chords') && (
+        <SmartFormField
+          label="Akkoorden"
+          field="chords"
+          value={formData.chords || ''}
+          formData={formData}
+          onChange={updateField}
+          placeholder="Akkoorden notatie"
+          type="textarea"
+          rows={4}
+          maxLength={1000}
+          loading={isFieldLoading?.('chords')}
+          helpText={getContextualHelpText?.('chords')}
+          required={isFieldRequired?.('chords')}
+          animate={shouldAnimateField?.('chords')}
+        />
+      )}
 
-      <SmartFormField
-        label="SoundCloud Embed URL"
-        field="soundcloudEmbedUrl"
-        value={formData.soundcloudEmbedUrl || ''}
-        formData={formData}
-        onChange={updateField}
-        placeholder="https://w.soundcloud.com/player/?url=..."
-        type="url"
-        previewUrl={true}
-        loading={isFieldLoading?.('soundcloudEmbedUrl')}
-        helpText="Embed URL van SoundCloud voor directe weergave"
-      />
+      {shouldShowField?.('soundcloudEmbedUrl') && (
+        <SmartFormField
+          label="SoundCloud Embed URL"
+          field="soundcloudEmbedUrl"
+          value={formData.soundcloudEmbedUrl || ''}
+          formData={formData}
+          onChange={updateField}
+          placeholder="https://w.soundcloud.com/player/?url=..."
+          type="url"
+          previewUrl={true}
+          loading={isFieldLoading?.('soundcloudEmbedUrl')}
+          helpText={getContextualHelpText?.('soundcloudEmbedUrl')}
+          required={isFieldRequired?.('soundcloudEmbedUrl')}
+          animate={shouldAnimateField?.('soundcloudEmbedUrl')}
+        />
+      )}
 
-      <SmartFormField
-        label="SoundCloud Track URL"
-        field="soundcloudTrackUrl"
-        value={formData.soundcloudTrackUrl || ''}
-        formData={formData}
-        onChange={updateField}
-        placeholder="https://soundcloud.com/..."
-        type="url"
-        previewUrl={true}
-        loading={isFieldLoading?.('soundcloudTrackUrl')}
-        helpText="Directe link naar SoundCloud track"
-      />
+      {shouldShowField?.('soundcloudTrackUrl') && (
+        <SmartFormField
+          label="SoundCloud Track URL"
+          field="soundcloudTrackUrl"
+          value={formData.soundcloudTrackUrl || ''}
+          formData={formData}
+          onChange={updateField}
+          placeholder="https://soundcloud.com/..."
+          type="url"
+          previewUrl={true}
+          loading={isFieldLoading?.('soundcloudTrackUrl')}
+          helpText={getContextualHelpText?.('soundcloudTrackUrl')}
+          required={isFieldRequired?.('soundcloudTrackUrl')}
+          animate={shouldAnimateField?.('soundcloudTrackUrl')}
+        />
+      )}
     </>
   );
 
   const renderMediaFields = () => (
     <>
-      <FieldGroup>
-        <Label htmlFor="mediaType">Media Type</Label>
-        <Select
-          id="mediaType"
+      {shouldShowField?.('mediaType') && (
+        <SmartFormField
+          label="Media Type"
+          field="mediaType"
           value={formData.mediaType || 'text'}
-          onChange={(e) => updateField('mediaType', e.target.value)}
-        >
-          <option value="text">Tekst</option>
-          <option value="image">Afbeelding</option>
-          <option value="video">Video</option>
-          <option value="audio">Audio</option>
-          <option value="pdf">PDF</option>
-        </Select>
-      </FieldGroup>
+          formData={formData}
+          onChange={updateField}
+          placeholder="Selecteer media type"
+          type="select"
+          options={[
+            { value: 'text', label: 'Tekst' },
+            { value: 'image', label: 'Afbeelding' },
+            { value: 'video', label: 'Video' },
+            { value: 'audio', label: 'Audio' },
+            { value: 'pdf', label: 'PDF' }
+          ]}
+          loading={isFieldLoading?.('mediaType')}
+          helpText={getContextualHelpText?.('mediaType')}
+          required={isFieldRequired?.('mediaType')}
+          animate={shouldAnimateField?.('mediaType')}
+          suggestions={getSmartSuggestions?.('mediaType')}
+        />
+      )}
 
-      <SmartFormField
-        label="Media URL"
-        field="mediaUrl"
-        value={formData.mediaUrl || ''}
-        formData={formData}
-        onChange={updateField}
-        placeholder="URL naar het media bestand"
-        type="url"
-        previewUrl={true}
-        loading={isFieldLoading?.('mediaUrl')}
-        helpText="Directe link naar het media bestand"
-      />
+      {shouldShowField?.('mediaUrl') && (
+        <SmartFormField
+          label="Media URL"
+          field="mediaUrl"
+          value={formData.mediaUrl || ''}
+          formData={formData}
+          onChange={updateField}
+          placeholder="URL naar het media bestand"
+          type="url"
+          previewUrl={true}
+          loading={isFieldLoading?.('mediaUrl')}
+          helpText={getContextualHelpText?.('mediaUrl') || "Directe link naar het media bestand"}
+          required={isFieldRequired?.('mediaUrl')}
+          animate={shouldAnimateField?.('mediaUrl')}
+        />
+      )}
 
-      <SmartFormField
-        label="Extra Media URLs"
-        field="mediaUrls"
-        value={Array.isArray(formData.mediaUrls) ? formData.mediaUrls.join('\n') : (formData.mediaUrls || '')}
-        formData={formData}
-        onChange={(field, value) => updateField(field, value)}
-        placeholder="Een URL per regel"
-        type="textarea"
-        rows={3}
-        maxLength={1000}
-        loading={isFieldLoading?.('mediaUrls')}
-        helpText="Voeg extra media URLs toe, één per regel"
-      />
+      {shouldShowField?.('mediaUrls') && (
+        <SmartFormField
+          label="Extra Media URLs"
+          field="mediaUrls"
+          value={Array.isArray(formData.mediaUrls) ? formData.mediaUrls : []}
+          formData={formData}
+          onChange={updateField}
+          placeholder="Voeg media URLs toe..."
+          type="multiselect"
+          loading={isFieldLoading?.('mediaUrls')}
+          helpText={getContextualHelpText?.('mediaUrls') || "Meerdere media bestanden voor dit kunstwerk"}
+          required={isFieldRequired?.('mediaUrls')}
+          animate={shouldAnimateField?.('mediaUrls')}
+        />
+      )}
     </>
   );
 

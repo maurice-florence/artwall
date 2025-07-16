@@ -14,6 +14,8 @@ export interface Theme {
   primary: string;
   cardHeight: number;
   gridGap: number;
+  border: string;
+  textSecondary: string;
 }
 
 declare module 'styled-components' {

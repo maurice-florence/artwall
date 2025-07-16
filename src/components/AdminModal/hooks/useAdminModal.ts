@@ -7,6 +7,7 @@ import { ValidationErrors } from '../types';
 import { createArtwork, updateArtwork } from '../utils/firebaseOperations';
 import { useLoadingState } from './useLoadingState';
 import { useAutoSave } from './useAutoSave';
+import { useSmartFormLogic } from './useSmartFormLogic';
 
 const initialFormData: ArtworkFormData = {
   title: '',
@@ -47,6 +48,20 @@ export const useAdminModal = (artworkToEdit?: Artwork | null) => {
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState('');
   const { loadingState, setLoading, setError, clearLoading, isFieldLoading } = useLoadingState();
+  
+  // Smart form logic
+  const {
+    smartState,
+    shouldShowField,
+    isFieldRequired,
+    applySmartDefaultsForCategory,
+    applyFieldDependencies,
+    shouldAnimateField,
+    getContextualHelpText,
+    getSmartSuggestions,
+    getFieldPriority,
+    getNextSuggestedField
+  } = useSmartFormLogic(formData);
   
   // Auto-save functionality
   const { loadDraft, clearDraft, hasDraft } = useAutoSave(formData, {
@@ -108,10 +123,21 @@ export const useAdminModal = (artworkToEdit?: Artwork | null) => {
   };
 
   const updateField = (field: keyof ArtworkFormData, value: any) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
+    setFormData(prev => {
+      const newData = { ...prev, [field]: value };
+      
+      // Apply smart defaults if category changed
+      if (field === 'category') {
+        const smartDefaults = applySmartDefaultsForCategory(newData);
+        Object.assign(newData, smartDefaults);
+      }
+      
+      // Apply field dependencies
+      const dependencies = applyFieldDependencies(newData, field);
+      Object.assign(newData, dependencies);
+      
+      return newData;
+    });
     
     // Clear error when field is updated
     if (errors[field]) {
@@ -191,6 +217,15 @@ export const useAdminModal = (artworkToEdit?: Artwork | null) => {
     isFieldLoading,
     hasDraft: hasDraft(),
     loadDraft,
-    clearDraft
+    clearDraft,
+    // Smart form logic
+    smartState,
+    shouldShowField,
+    isFieldRequired,
+    shouldAnimateField,
+    getContextualHelpText,
+    getSmartSuggestions,
+    getFieldPriority,
+    getNextSuggestedField
   };
 };

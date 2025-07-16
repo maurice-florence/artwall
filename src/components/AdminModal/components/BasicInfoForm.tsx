@@ -20,7 +20,12 @@ export const BasicInfoForm: React.FC<FormComponentProps> = ({
   formData,
   errors,
   updateField,
-  isFieldLoading
+  isFieldLoading,
+  shouldShowField,
+  isFieldRequired,
+  shouldAnimateField,
+  getContextualHelpText,
+  getSmartSuggestions
 }) => {
   return (
     <>
@@ -33,10 +38,13 @@ export const BasicInfoForm: React.FC<FormComponentProps> = ({
         formData={formData}
         onChange={updateField}
         placeholder="Titel van het kunstwerk"
-        required
+        required={isFieldRequired?.('title')}
         maxLength={100}
         loading={isFieldLoading?.('title')}
         showProgress
+        helpText={getContextualHelpText?.('title')}
+        suggestions={getSmartSuggestions?.('title')}
+        animate={shouldAnimateField?.('title')}
       />
 
       <FieldGroup>
@@ -114,21 +122,28 @@ export const BasicInfoForm: React.FC<FormComponentProps> = ({
         maxLength={500}
         loading={isFieldLoading?.('description')}
         showProgress
+        helpText={getContextualHelpText?.('description') || "Korte beschrijving van het kunstwerk"}
+        required={isFieldRequired?.('description')}
+        animate={shouldAnimateField?.('description')}
       />
 
-      <SmartFormField
-        label="Inhoud"
-        field="content"
-        value={formData.content || ''}
-        formData={formData}
-        onChange={updateField}
-        placeholder="Volledige inhoud van het kunstwerk"
-        type="richtext"
-        maxLength={5000}
-        loading={isFieldLoading?.('content')}
-        showProgress
-        helpText="Gebruik markdown syntax voor opmaak (bijv. **bold**, *italic*, # heading)"
-      />
+      {shouldShowField?.('content') && (
+        <SmartFormField
+          label="Inhoud"
+          field="content"
+          value={formData.content || ''}
+          formData={formData}
+          onChange={updateField}
+          placeholder="Volledige inhoud van het kunstwerk"
+          type="richtext"
+          maxLength={5000}
+          loading={isFieldLoading?.('content')}
+          showProgress
+          helpText={getContextualHelpText?.('content') || "Gebruik markdown syntax voor opmaak (bijv. **bold**, *italic*, # heading)"}
+          required={isFieldRequired?.('content')}
+          animate={shouldAnimateField?.('content')}
+        />
+      )}
 
       <CheckboxGroup>
         <Checkbox

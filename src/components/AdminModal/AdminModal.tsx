@@ -12,6 +12,7 @@ import {
   MetadataSection,
   DraftRecovery
 } from './components'; // ✅ Import from index file
+import { SmartFormIndicator } from './components/SmartFormIndicator';
 import {
   ModalBackdrop,
   ModalContent,
@@ -37,7 +38,16 @@ const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, artworkToEdit 
     isFieldLoading,
     hasDraft,
     loadDraft,
-    clearDraft
+    clearDraft,
+    // Smart form logic
+    smartState,
+    shouldShowField,
+    isFieldRequired,
+    shouldAnimateField,
+    getContextualHelpText,
+    getSmartSuggestions,
+    getFieldPriority,
+    getNextSuggestedField
   } = useAdminModal(artworkToEdit);
 
   const [showDraftRecovery, setShowDraftRecovery] = React.useState(false);
@@ -100,11 +110,26 @@ const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, artworkToEdit 
               />
             )}
             
+            <SmartFormIndicator
+              smartState={smartState}
+              nextSuggestedField={getNextSuggestedField()}
+              totalFields={smartState.visibleFields.length}
+              completedFields={smartState.visibleFields.filter(field => {
+                const value = formData[field];
+                return value && (typeof value !== 'string' || value.trim() !== '');
+              }).length}
+            />
+            
             <BasicInfoForm 
               formData={formData}
               errors={errors}
               updateField={updateField}
               isFieldLoading={isFieldLoading}
+              shouldShowField={shouldShowField}
+              isFieldRequired={isFieldRequired}
+              shouldAnimateField={shouldAnimateField}
+              getContextualHelpText={getContextualHelpText}
+              getSmartSuggestions={getSmartSuggestions}
             />
             
             <CategorySpecificFields
@@ -112,6 +137,11 @@ const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, artworkToEdit 
               errors={errors}
               updateField={updateField}
               isFieldLoading={isFieldLoading}
+              shouldShowField={shouldShowField}
+              isFieldRequired={isFieldRequired}
+              shouldAnimateField={shouldAnimateField}
+              getContextualHelpText={getContextualHelpText}
+              getSmartSuggestions={getSmartSuggestions}
             />
             
             <MediaUploadSection
@@ -119,6 +149,11 @@ const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, artworkToEdit 
               errors={errors}
               updateField={updateField}
               isFieldLoading={isFieldLoading}
+              shouldShowField={shouldShowField}
+              isFieldRequired={isFieldRequired}
+              shouldAnimateField={shouldAnimateField}
+              getContextualHelpText={getContextualHelpText}
+              getSmartSuggestions={getSmartSuggestions}
             />
             
             <MetadataSection
@@ -126,6 +161,11 @@ const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, artworkToEdit 
               errors={errors}
               updateField={updateField}
               isFieldLoading={isFieldLoading}
+              shouldShowField={shouldShowField}
+              isFieldRequired={isFieldRequired}
+              shouldAnimateField={shouldAnimateField}
+              getContextualHelpText={getContextualHelpText}
+              getSmartSuggestions={getSmartSuggestions}
             />
             
             {errors.general && (

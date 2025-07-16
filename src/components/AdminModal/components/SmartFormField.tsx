@@ -33,10 +33,29 @@ interface SmartFormFieldProps {
   accept?: string; // for file inputs
   multiple?: boolean; // for file and multiselect inputs
   previewUrl?: boolean; // for URL inputs to show preview
+  suggestions?: string[]; // smart suggestions
+  animate?: boolean; // animate field appearance
 }
 
 const FieldContainer = styled.div`
   margin-bottom: 16px;
+`;
+
+const AnimatedFieldContainer = styled.div<{ animate?: boolean }>`
+  ${({ animate }) => animate && `
+    animation: fadeInUp 0.3s ease-out;
+    
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  `}
 `;
 
 const Label = styled.label<{ required?: boolean }>`
@@ -188,6 +207,47 @@ const LoadingOverlay = styled.div`
   backdrop-filter: blur(1px);
 `;
 
+const SuggestionsContainer = styled.div`
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  background: ${({ theme }) => theme.cardBg || '#ffffff'};
+  border: 1px solid ${({ theme }) => theme.accent}20;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  max-height: 200px;
+  overflow-y: auto;
+  margin-top: 4px;
+`;
+
+const SuggestionItem = styled.button`
+  width: 100%;
+  padding: 12px;
+  border: none;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  color: ${({ theme }) => theme.text};
+  font-size: 14px;
+  transition: background-color 0.2s;
+  
+  &:hover {
+    background-color: ${({ theme }) => theme.accent}10;
+  }
+  
+  &:first-child {
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+  }
+  
+  &:last-child {
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+  }
+`;
+
 export const SmartFormField: React.FC<SmartFormFieldProps> = ({
   label,
   field,
@@ -208,24 +268,60 @@ export const SmartFormField: React.FC<SmartFormFieldProps> = ({
   showProgress = false,
   accept,
   multiple,
-  previewUrl
+  previewUrl,
+  suggestions,
+  animate
 }) => {
   const [validation, setValidation] = useState<{ error?: string; warning?: string }>({});
   const [isTouched, setIsTouched] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [filteredSuggestions, setFilteredSuggestions] = useState<string[]>([]);
 
   const handleChange = useCallback((newValue: any) => {
     onChange(field, newValue);
     
+    // Filter suggestions based on input
+    if (suggestions && suggestions.length > 0 && typeof newValue === 'string') {
+      const filtered = suggestions.filter(suggestion => 
+        suggestion.toLowerCase().includes(newValue.toLowerCase()) &&
+        suggestion.toLowerCase() !== newValue.toLowerCase()
+      );
+      setFilteredSuggestions(filtered);
+      setShowSuggestions(filtered.length > 0 && newValue.length > 0);
+    } else {
+      setShowSuggestions(false);
+    }
+    
     // Real-time validation
     const validationResult = validateField(field as string, newValue, formData);
     setValidation(validationResult);
-  }, [field, formData, onChange]);
+  }, [field, formData, onChange, suggestions]);
 
   const handleBlur = useCallback(() => {
+    // Delay hiding suggestions to allow clicking on them
+    setTimeout(() => {
+      setShowSuggestions(false);
+    }, 150);
     setIsTouched(true);
     const validationResult = validateField(field as string, value, formData);
     setValidation(validationResult);
   }, [field, value, formData]);
+
+  const handleSuggestionClick = useCallback((suggestion: string) => {
+    handleChange(suggestion);
+    setShowSuggestions(false);
+  }, [handleChange]);
+
+  const handleFocus = useCallback(() => {
+    if (suggestions && suggestions.length > 0 && value) {
+      const filtered = suggestions.filter(suggestion => 
+        suggestion.toLowerCase().includes(value.toLowerCase()) &&
+        suggestion.toLowerCase() !== value.toLowerCase()
+      );
+      setFilteredSuggestions(filtered);
+      setShowSuggestions(filtered.length > 0);
+    }
+  }, [suggestions, value]);
 
   const renderInput = () => {
     const commonProps = {
@@ -233,6 +329,7 @@ export const SmartFormField: React.FC<SmartFormFieldProps> = ({
       onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => 
         handleChange(type === 'number' ? Number(e.target.value) : e.target.value),
       onBlur: handleBlur,
+      onFocus: handleFocus,
       placeholder,
       disabled,
       hasError: !!(isTouched && validation.error),
@@ -381,48 +478,64 @@ export const SmartFormField: React.FC<SmartFormFieldProps> = ({
   const progress = maxLength ? Math.min((characterCount / maxLength) * 100, 100) : 0;
 
   return (
-    <FieldContainer>
-      <Label required={required}>
-        {label}
-        {loading && (
-          <LoadingIndicator>
-            <Spinner />
-            <span>Verwerken...</span>
-          </LoadingIndicator>
+    <AnimatedFieldContainer animate={animate}>
+      <FieldContainer>
+        <Label required={required}>
+          {label}
+          {loading && (
+            <LoadingIndicator>
+              <Spinner />
+              <span>Verwerken...</span>
+            </LoadingIndicator>
+          )}
+        </Label>
+        
+        <InputContainer>
+          {renderInput()}
+          {loading && (
+            <LoadingOverlay>
+              <Spinner />
+            </LoadingOverlay>
+          )}
+          
+          {showSuggestions && filteredSuggestions.length > 0 && (
+            <SuggestionsContainer>
+              {filteredSuggestions.map((suggestion, index) => (
+                <SuggestionItem
+                  key={index}
+                  type="button"
+                  onClick={() => handleSuggestionClick(suggestion)}
+                >
+                  {suggestion}
+                </SuggestionItem>
+              ))}
+            </SuggestionsContainer>
+          )}
+        </InputContainer>
+        
+        {showProgress && maxLength && (
+          <ProgressBar>
+            <ProgressFill progress={progress} />
+          </ProgressBar>
         )}
-      </Label>
-      
-      <InputContainer>
-        {renderInput()}
-        {loading && (
-          <LoadingOverlay>
-            <Spinner />
-          </LoadingOverlay>
+        
+        {showCharacterCount && (
+          <CharacterCount isNearLimit={isNearLimit}>
+            {characterCount}/{maxLength}
+          </CharacterCount>
         )}
-      </InputContainer>
-      
-      {showProgress && maxLength && (
-        <ProgressBar>
-          <ProgressFill progress={progress} />
-        </ProgressBar>
-      )}
-      
-      {showCharacterCount && (
-        <CharacterCount isNearLimit={isNearLimit}>
-          {characterCount}/{maxLength}
-        </CharacterCount>
-      )}
-      
-      {helpText && <HelpText>{helpText}</HelpText>}
-      
-      {isTouched && validation.error && (
-        <ValidationMessage type="error" message={validation.error} field={field as string} />
-      )}
-      
-      {isTouched && validation.warning && !validation.error && (
-        <ValidationMessage type="warning" message={validation.warning} field={field as string} />
-      )}
-    </FieldContainer>
+        
+        {helpText && <HelpText>{helpText}</HelpText>}
+        
+        {isTouched && validation.error && (
+          <ValidationMessage type="error" message={validation.error} field={field as string} />
+        )}
+        
+        {isTouched && validation.warning && !validation.error && (
+          <ValidationMessage type="warning" message={validation.warning} field={field as string} />
+        )}
+      </FieldContainer>
+    </AnimatedFieldContainer>
   );
 };
 
