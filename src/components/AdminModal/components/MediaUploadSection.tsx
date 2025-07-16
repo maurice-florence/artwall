@@ -2,6 +2,7 @@
 // filepath: c:\Users\friem\OneDrive\Documenten\GitHub\artwall\src\components\AdminModal\components\MediaUploadSection.tsx
 import React from 'react';
 import { ArtworkFormData } from '@/types';
+import { FormComponentProps } from '../types';
 import {
   SectionTitle,
   FieldGroup,
@@ -11,17 +12,11 @@ import {
   ErrorMessage
 } from '../styles';
 
-// Temporary inline type definition until types.ts is fixed
-interface FormComponentProps {
-  formData: ArtworkFormData;
-  errors: { [key: string]: string };
-  updateField: (field: keyof ArtworkFormData, value: any) => void;
-}
-
 export const MediaUploadSection: React.FC<FormComponentProps> = ({
   formData,
   errors,
-  updateField
+  updateField,
+  isFieldLoading
 }) => {
   return (
     <>

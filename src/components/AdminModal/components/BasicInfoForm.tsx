@@ -14,31 +14,30 @@ import {
   Checkbox,
   ErrorMessage
 } from '../styles';
+import { SmartFormField } from './SmartFormField';
 
 export const BasicInfoForm: React.FC<FormComponentProps> = ({
   formData,
   errors,
-  updateField
+  updateField,
+  isFieldLoading
 }) => {
   return (
     <>
       <SectionTitle>Basisinformatie</SectionTitle>
       
-      <FieldGroup>
-        <Label htmlFor="title">Titel *</Label>
-        <Input
-          id="title"
-          type="text"
-          value={formData.title}
-          onChange={(e) => updateField('title', e.target.value)}
-          placeholder="Titel van het kunstwerk"
-          aria-invalid={!!errors.title}
-          aria-describedby={errors.title ? 'title-error' : undefined}
-        />
-        {errors.title && (
-          <ErrorMessage id="title-error">{errors.title}</ErrorMessage>
-        )}
-      </FieldGroup>
+      <SmartFormField
+        label="Titel"
+        field="title"
+        value={formData.title}
+        formData={formData}
+        onChange={updateField}
+        placeholder="Titel van het kunstwerk"
+        required
+        maxLength={100}
+        loading={isFieldLoading?.('title')}
+        showProgress
+      />
 
       <FieldGroup>
         <Label htmlFor="category">Categorie *</Label>
@@ -60,22 +59,21 @@ export const BasicInfoForm: React.FC<FormComponentProps> = ({
       </FieldGroup>
 
       <div style={{ display: 'flex', gap: '1rem' }}>
-        <FieldGroup style={{ flex: 1 }}>
-          <Label htmlFor="year">Jaar *</Label>
-          <Input
-            id="year"
-            type="number"
-            value={formData.year || ''}
-            onChange={(e) => updateField('year', parseInt(e.target.value) || null)}
+        <div style={{ flex: 1 }}>
+          <SmartFormField
+            label="Jaar"
+            field="year"
+            value={formData.year}
+            formData={formData}
+            onChange={updateField}
             placeholder="2024"
-            min="1900"
+            type="number"
+            min={1900}
             max={new Date().getFullYear() + 1}
-            aria-invalid={!!errors.year}
+            required
+            loading={isFieldLoading?.('year')}
           />
-          {errors.year && (
-            <ErrorMessage>{errors.year}</ErrorMessage>
-          )}
-        </FieldGroup>
+        </div>
 
         <FieldGroup style={{ flex: 1 }}>
           <Label htmlFor="month">Maand</Label>
@@ -104,27 +102,33 @@ export const BasicInfoForm: React.FC<FormComponentProps> = ({
         </FieldGroup>
       </div>
 
-      <FieldGroup>
-        <Label htmlFor="description">Beschrijving</Label>
-        <Textarea
-          id="description"
-          value={formData.description || ''}
-          onChange={(e) => updateField('description', e.target.value)}
-          placeholder="Korte beschrijving van het kunstwerk"
-          rows={3}
-        />
-      </FieldGroup>
+      <SmartFormField
+        label="Beschrijving"
+        field="description"
+        value={formData.description || ''}
+        formData={formData}
+        onChange={updateField}
+        placeholder="Korte beschrijving van het kunstwerk"
+        type="textarea"
+        rows={3}
+        maxLength={500}
+        loading={isFieldLoading?.('description')}
+        showProgress
+      />
 
-      <FieldGroup>
-        <Label htmlFor="content">Inhoud</Label>
-        <Textarea
-          id="content"
-          value={formData.content || ''}
-          onChange={(e) => updateField('content', e.target.value)}
-          placeholder="Volledige inhoud van het kunstwerk"
-          rows={6}
-        />
-      </FieldGroup>
+      <SmartFormField
+        label="Inhoud"
+        field="content"
+        value={formData.content || ''}
+        formData={formData}
+        onChange={updateField}
+        placeholder="Volledige inhoud van het kunstwerk"
+        type="textarea"
+        rows={6}
+        maxLength={5000}
+        loading={isFieldLoading?.('content')}
+        showProgress
+      />
 
       <CheckboxGroup>
         <Checkbox

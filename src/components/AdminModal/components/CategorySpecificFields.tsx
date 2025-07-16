@@ -2,6 +2,7 @@
 // filepath: c:\Users\friem\OneDrive\Documenten\GitHub\artwall\src\components\AdminModal\components\CategorySpecificFields.tsx
 import React from 'react';
 import { ArtworkFormData } from '@/types';
+import { FormComponentProps } from '../types';
 import {
   SectionTitle,
   FieldGroup,
@@ -12,17 +13,11 @@ import {
   ErrorMessage
 } from '../styles';
 
-// Define the props inline to avoid import issues
-interface CategorySpecificFieldsProps {
-  formData: ArtworkFormData;
-  errors: { [key: string]: string };
-  updateField: (field: keyof ArtworkFormData, value: any) => void;
-}
-
-export const CategorySpecificFields: React.FC<CategorySpecificFieldsProps> = ({
+export const CategorySpecificFields: React.FC<FormComponentProps> = ({
   formData,
   errors,
-  updateField
+  updateField,
+  isFieldLoading
 }) => {
   const renderMusicFields = () => (
     <>

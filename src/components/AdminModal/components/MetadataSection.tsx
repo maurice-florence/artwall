@@ -2,6 +2,7 @@
 // filepath: c:\Users\friem\OneDrive\Documenten\GitHub\artwall\src\components\AdminModal\components\MetadataSection.tsx
 import React from 'react';
 import { ArtworkFormData } from '@/types';
+import { FormComponentProps } from '../types';
 import {
   SectionTitle,
   FieldGroup,
@@ -13,17 +14,11 @@ import {
   ErrorMessage
 } from '../styles';
 
-// Temporary inline type definition
-interface FormComponentProps {
-  formData: ArtworkFormData;
-  errors: { [key: string]: string };
-  updateField: (field: keyof ArtworkFormData, value: any) => void;
-}
-
 export const MetadataSection: React.FC<FormComponentProps> = ({
   formData,
   errors,
-  updateField
+  updateField,
+  isFieldLoading
 }) => {
   return (
     <>

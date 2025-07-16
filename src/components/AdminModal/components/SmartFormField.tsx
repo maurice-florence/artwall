@@ -22,6 +22,8 @@ interface SmartFormFieldProps {
   maxLength?: number;
   min?: number;
   max?: number;
+  loading?: boolean;
+  showProgress?: boolean;
 }
 
 const FieldContainer = styled.div`
@@ -117,6 +119,66 @@ const CharacterCount = styled.div<{ isNearLimit?: boolean }>`
   margin-top: 4px;
 `;
 
+const LoadingIndicator = styled.div`
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: 8px;
+  font-size: 12px;
+  color: ${({ theme }) => theme.text};
+  opacity: 0.7;
+`;
+
+const Spinner = styled.div`
+  width: 16px;
+  height: 16px;
+  border: 2px solid ${({ theme }) => theme.accent}20;
+  border-top: 2px solid ${({ theme }) => theme.accent};
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+`;
+
+const ProgressBar = styled.div`
+  width: 100%;
+  height: 4px;
+  background-color: ${({ theme }) => theme.accent}20;
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: 4px;
+`;
+
+const ProgressFill = styled.div<{ progress: number }>`
+  height: 100%;
+  background-color: ${({ theme }) => theme.accent};
+  width: ${({ progress }) => progress}%;
+  transition: width 0.3s ease;
+`;
+
+const InputContainer = styled.div`
+  position: relative;
+  display: flex;
+  align-items: center;
+`;
+
+const LoadingOverlay = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: ${({ theme }) => theme.cardBg || '#ffffff'}90;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  backdrop-filter: blur(1px);
+`;
+
 export const SmartFormField: React.FC<SmartFormFieldProps> = ({
   label,
   field,
@@ -132,7 +194,9 @@ export const SmartFormField: React.FC<SmartFormFieldProps> = ({
   helpText,
   maxLength,
   min,
-  max
+  max,
+  loading = false,
+  showProgress = false
 }) => {
   const [validation, setValidation] = useState<{ error?: string; warning?: string }>({});
   const [isTouched, setIsTouched] = useState(false);
@@ -218,11 +282,34 @@ export const SmartFormField: React.FC<SmartFormFieldProps> = ({
   const showCharacterCount = maxLength && (type === 'text' || type === 'textarea' || type === 'url');
   const characterCount = typeof value === 'string' ? value.length : 0;
   const isNearLimit = maxLength ? characterCount > maxLength * 0.8 : false;
+  const progress = maxLength ? Math.min((characterCount / maxLength) * 100, 100) : 0;
 
   return (
     <FieldContainer>
-      <Label required={required}>{label}</Label>
-      {renderInput()}
+      <Label required={required}>
+        {label}
+        {loading && (
+          <LoadingIndicator>
+            <Spinner />
+            <span>Verwerken...</span>
+          </LoadingIndicator>
+        )}
+      </Label>
+      
+      <InputContainer>
+        {renderInput()}
+        {loading && (
+          <LoadingOverlay>
+            <Spinner />
+          </LoadingOverlay>
+        )}
+      </InputContainer>
+      
+      {showProgress && maxLength && (
+        <ProgressBar>
+          <ProgressFill progress={progress} />
+        </ProgressBar>
+      )}
       
       {showCharacterCount && (
         <CharacterCount isNearLimit={isNearLimit}>

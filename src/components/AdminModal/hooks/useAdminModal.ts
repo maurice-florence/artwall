@@ -5,6 +5,8 @@ import { Artwork, ArtworkFormData } from '@/types';
 import { validateArtworkForm } from '../utils/validation';
 import { ValidationErrors } from '../types';
 import { createArtwork, updateArtwork } from '../utils/firebaseOperations';
+import { useLoadingState } from './useLoadingState';
+import { useAutoSave } from './useAutoSave';
 
 const initialFormData: ArtworkFormData = {
   title: '',
@@ -44,15 +46,30 @@ export const useAdminModal = (artworkToEdit?: Artwork | null) => {
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState('');
+  const { loadingState, setLoading, setError, clearLoading, isFieldLoading } = useLoadingState();
+  
+  // Auto-save functionality
+  const { loadDraft, clearDraft, hasDraft } = useAutoSave(formData, {
+    enabled: !artworkToEdit, // Only auto-save for new artworks
+    delay: 3000, // Save every 3 seconds
+    key: 'artwall-new-artwork-draft'
+  });
 
   // Initialize form data when artwork changes
   useEffect(() => {
     if (artworkToEdit) {
       setFormData(mapArtworkToFormData(artworkToEdit));
     } else {
-      setFormData(initialFormData);
+      // Try to load draft for new artwork
+      const draft = loadDraft();
+      if (draft) {
+        setFormData(draft);
+        setMessage('Draft loaded - your previous work has been restored.');
+      } else {
+        setFormData(initialFormData);
+      }
     }
-  }, [artworkToEdit]);
+  }, [artworkToEdit, loadDraft]);
 
   const mapArtworkToFormData = (artwork: Artwork): ArtworkFormData => {
     const extendedArtwork = artwork as any;
@@ -109,10 +126,16 @@ export const useAdminModal = (artworkToEdit?: Artwork | null) => {
     setFormData(initialFormData);
     setErrors({});
     setMessage('');
+    
+    // Clear draft when resetting form
+    if (!artworkToEdit) {
+      clearDraft();
+    }
   };
 
   const handleSubmit = async (): Promise<boolean> => {
     setIsLoading(true);
+    setLoading('form');
     setErrors({});
     setMessage('');
 
@@ -122,6 +145,7 @@ export const useAdminModal = (artworkToEdit?: Artwork | null) => {
       
       if (Object.keys(validationErrors).length > 0) {
         setErrors(validationErrors);
+        clearLoading();
         return false;
       }
 
@@ -132,13 +156,23 @@ export const useAdminModal = (artworkToEdit?: Artwork | null) => {
 
       if (result.success) {
         setMessage(artworkToEdit ? 'Kunstwerk bijgewerkt!' : 'Kunstwerk opgeslagen!');
+        
+        // Clear draft on successful submission (for new artwork)
+        if (!artworkToEdit) {
+          clearDraft();
+        }
+        
+        clearLoading();
         return true;
       } else {
         setErrors({ general: result.error || 'Er is een fout opgetreden' });
+        setError(result.error || 'Er is een fout opgetreden');
         return false;
       }
     } catch (error) {
-      setErrors({ general: 'Er is een onverwachte fout opgetreden' });
+      const errorMessage = 'Er is een onverwachte fout opgetreden';
+      setErrors({ general: errorMessage });
+      setError(errorMessage);
       return false;
     } finally {
       setIsLoading(false);
@@ -150,8 +184,13 @@ export const useAdminModal = (artworkToEdit?: Artwork | null) => {
     errors,
     isLoading,
     message,
+    loadingState,
     updateField,
     handleSubmit,
-    resetForm
+    resetForm,
+    isFieldLoading,
+    hasDraft: hasDraft(),
+    loadDraft,
+    clearDraft
   };
 };

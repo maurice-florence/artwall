@@ -16,6 +16,7 @@ export interface FormComponentProps {
   formData: ArtworkFormData;
   errors: ValidationErrors;
   updateField: (field: keyof ArtworkFormData, value: any) => void;
+  isFieldLoading?: (field: string) => boolean;
 }
 
 export interface UseAdminModalReturn {

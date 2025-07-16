@@ -9,7 +9,8 @@ import {
   BasicInfoForm, 
   CategorySpecificFields, 
   MediaUploadSection, 
-  MetadataSection 
+  MetadataSection,
+  DraftRecovery
 } from './components'; // ✅ Import from index file
 import {
   ModalBackdrop,
@@ -29,16 +30,47 @@ const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, artworkToEdit 
     errors,
     isLoading,
     message,
+    loadingState,
     updateField,
     handleSubmit,
-    resetForm
+    resetForm,
+    isFieldLoading,
+    hasDraft,
+    loadDraft,
+    clearDraft
   } = useAdminModal(artworkToEdit);
+
+  const [showDraftRecovery, setShowDraftRecovery] = React.useState(false);
+
+  React.useEffect(() => {
+    if (isOpen && !artworkToEdit && hasDraft) {
+      setShowDraftRecovery(true);
+    }
+  }, [isOpen, artworkToEdit, hasDraft]);
 
   if (!isOpen) return null;
 
   const handleClose = () => {
     resetForm();
+    setShowDraftRecovery(false);
     onClose();
+  };
+
+  const handleLoadDraft = () => {
+    const draft = loadDraft();
+    if (draft) {
+      // The draft is automatically loaded by the useAdminModal hook
+      setShowDraftRecovery(false);
+    }
+  };
+
+  const handleClearDraft = () => {
+    clearDraft();
+    setShowDraftRecovery(false);
+  };
+
+  const handleDismissDraft = () => {
+    setShowDraftRecovery(false);
   };
 
   const onSubmit = async (e: React.FormEvent) => {
@@ -60,28 +92,40 @@ const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, artworkToEdit 
         
         <form onSubmit={onSubmit}>
           <FormWrapper>
+            {showDraftRecovery && (
+              <DraftRecovery
+                onLoadDraft={handleLoadDraft}
+                onClearDraft={handleClearDraft}
+                onDismiss={handleDismissDraft}
+              />
+            )}
+            
             <BasicInfoForm 
               formData={formData}
               errors={errors}
               updateField={updateField}
+              isFieldLoading={isFieldLoading}
             />
             
             <CategorySpecificFields
               formData={formData}
               errors={errors}
               updateField={updateField}
+              isFieldLoading={isFieldLoading}
             />
             
             <MediaUploadSection
               formData={formData}
               errors={errors}
               updateField={updateField}
+              isFieldLoading={isFieldLoading}
             />
             
             <MetadataSection
               formData={formData}
               errors={errors}
               updateField={updateField}
+              isFieldLoading={isFieldLoading}
             />
             
             {errors.general && (
