@@ -123,11 +123,11 @@ export const BasicInfoForm: React.FC<FormComponentProps> = ({
         formData={formData}
         onChange={updateField}
         placeholder="Volledige inhoud van het kunstwerk"
-        type="textarea"
-        rows={6}
+        type="richtext"
         maxLength={5000}
         loading={isFieldLoading?.('content')}
         showProgress
+        helpText="Gebruik markdown syntax voor opmaak (bijv. **bold**, *italic*, # heading)"
       />
 
       <CheckboxGroup>

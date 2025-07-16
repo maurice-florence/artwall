@@ -3,11 +3,11 @@
 import React from 'react';
 import { ArtworkFormData } from '@/types';
 import { FormComponentProps } from '../types';
+import { SmartFormField } from './SmartFormField';
 import {
   SectionTitle,
   FieldGroup,
   Label,
-  Input,
   Select,
   CheckboxGroup,
   Checkbox,
@@ -25,16 +25,18 @@ export const MetadataSection: React.FC<FormComponentProps> = ({
       <SectionTitle>Metadata</SectionTitle>
       
       <div style={{ display: 'flex', gap: '1rem' }}>
-        <FieldGroup style={{ flex: 1 }}>
-          <Label htmlFor="version">Versie</Label>
-          <Input
-            id="version"
-            type="text"
-            value={formData.version || '01'}
-            onChange={(e) => updateField('version', e.target.value)}
-            placeholder="01"
-          />
-        </FieldGroup>
+        <SmartFormField
+          label="Versie"
+          field="version"
+          value={formData.version || '01'}
+          formData={formData}
+          onChange={updateField}
+          placeholder="01"
+          type="text"
+          maxLength={10}
+          loading={isFieldLoading?.('version')}
+          helpText="Versie van het kunstwerk"
+        />
         
         <FieldGroup style={{ flex: 1 }}>
           <Label htmlFor="language">Taal</Label>
@@ -51,19 +53,17 @@ export const MetadataSection: React.FC<FormComponentProps> = ({
         </FieldGroup>
       </div>
 
-      <FieldGroup>
-        <Label htmlFor="tags">Tags (komma gescheiden)</Label>
-        <Input
-          id="tags"
-          type="text"
-          value={Array.isArray(formData.tags) ? formData.tags.join(', ') : ''}
-          onChange={(e) => {
-            const tagsArray = e.target.value.split(',').map(tag => tag.trim()).filter(tag => tag);
-            updateField('tags', tagsArray);
-          }}
-          placeholder="tag1, tag2, tag3"
-        />
-      </FieldGroup>
+      <SmartFormField
+        label="Tags"
+        field="tags"
+        value={Array.isArray(formData.tags) ? formData.tags : []}
+        formData={formData}
+        onChange={updateField}
+        placeholder="Voeg tags toe..."
+        type="tags"
+        loading={isFieldLoading?.('tags')}
+        helpText="Voeg tags toe door te typen en Enter te drukken"
+      />
 
       <CheckboxGroup>
         <Checkbox

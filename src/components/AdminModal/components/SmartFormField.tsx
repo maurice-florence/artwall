@@ -4,6 +4,12 @@ import React, { useState, useCallback } from 'react';
 import styled from 'styled-components';
 import { validateField } from '../utils/validation';
 import { ValidationMessage } from './ValidationMessage';
+import { FileUpload } from './FileUpload';
+import { DatePicker } from './DatePicker';
+import { RichTextEditor } from './RichTextEditor';
+import { MultiSelectField } from './MultiSelectField';
+import { URLPreviewField } from './URLPreviewField';
+import { ColorPickerField } from './ColorPickerField';
 import { ArtworkFormData } from '@/types';
 
 interface SmartFormFieldProps {
@@ -12,7 +18,7 @@ interface SmartFormFieldProps {
   value: any;
   formData: ArtworkFormData;
   onChange: (field: keyof ArtworkFormData, value: any) => void;
-  type?: 'text' | 'number' | 'textarea' | 'select' | 'url';
+  type?: 'text' | 'number' | 'textarea' | 'select' | 'url' | 'date' | 'multiselect' | 'file' | 'richtext' | 'color' | 'tags';
   placeholder?: string;
   required?: boolean;
   options?: Array<{ value: string; label: string }>;
@@ -24,6 +30,9 @@ interface SmartFormFieldProps {
   max?: number;
   loading?: boolean;
   showProgress?: boolean;
+  accept?: string; // for file inputs
+  multiple?: boolean; // for file and multiselect inputs
+  previewUrl?: boolean; // for URL inputs to show preview
 }
 
 const FieldContainer = styled.div`
@@ -196,7 +205,10 @@ export const SmartFormField: React.FC<SmartFormFieldProps> = ({
   min,
   max,
   loading = false,
-  showProgress = false
+  showProgress = false,
+  accept,
+  multiple,
+  previewUrl
 }) => {
   const [validation, setValidation] = useState<{ error?: string; warning?: string }>({});
   const [isTouched, setIsTouched] = useState(false);
@@ -261,10 +273,94 @@ export const SmartFormField: React.FC<SmartFormFieldProps> = ({
       
       case 'url':
         return (
-          <Input
-            {...commonProps}
-            type="url"
+          <URLPreviewField
+            label={label}
+            value={value || ''}
+            onChange={(newValue) => handleChange(newValue)}
+            placeholder={placeholder}
+            required={required}
+            disabled={disabled}
+            helpText={helpText}
+            showPreview={previewUrl !== false}
+            previewTypes={['image', 'video', 'audio', 'embed']}
+            hasError={!!(isTouched && validation.error)}
+            hasWarning={!!(isTouched && validation.warning && !validation.error)}
+          />
+        );
+      
+      case 'richtext':
+        return (
+          <RichTextEditor
+            label={label}
+            value={value || ''}
+            onChange={(newValue) => handleChange(newValue)}
+            placeholder={placeholder}
+            required={required}
+            disabled={disabled}
+            helpText={helpText}
             maxLength={maxLength}
+          />
+        );
+      
+      case 'multiselect':
+        return (
+          <MultiSelectField
+            label={label}
+            value={Array.isArray(value) ? value : []}
+            onChange={(newValue) => handleChange(newValue)}
+            options={options?.map(opt => ({ value: opt.value, label: opt.label })) || []}
+            placeholder="Selecteer opties..."
+            searchable={true}
+            required={required}
+            disabled={disabled}
+            helpText={helpText}
+            hasError={!!(isTouched && validation.error)}
+            hasWarning={!!(isTouched && validation.warning && !validation.error)}
+          />
+        );
+      
+      case 'color':
+        return (
+          <ColorPickerField
+            label={label}
+            value={value || '#000000'}
+            onChange={(newValue) => handleChange(newValue)}
+            required={required}
+            disabled={disabled}
+            helpText={helpText}
+            showPresets={true}
+            allowCustom={true}
+            format="hex"
+            hasError={!!(isTouched && validation.error)}
+            hasWarning={!!(isTouched && validation.warning && !validation.error)}
+          />
+        );
+      
+      case 'date':
+        return (
+          <DatePicker
+            label={label}
+            value={value || {}}
+            onChange={(newValue) => handleChange(newValue)}
+            required={required}
+            disabled={disabled}
+            helpText={helpText}
+            minYear={1900}
+            maxYear={2030}
+          />
+        );
+      
+      case 'file':
+        return (
+          <FileUpload
+            label={label}
+            value={value as File | File[] | null}
+            onFileSelect={(files) => handleChange(files)}
+            accept={accept}
+            multiple={multiple}
+            disabled={disabled}
+            helpText={helpText}
+            maxSize={10} // 10MB default
           />
         );
       

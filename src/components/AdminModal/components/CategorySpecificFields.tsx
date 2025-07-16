@@ -3,12 +3,11 @@
 import React from 'react';
 import { ArtworkFormData } from '@/types';
 import { FormComponentProps } from '../types';
+import { SmartFormField } from './SmartFormField';
 import {
   SectionTitle,
   FieldGroup,
   Label,
-  Input,
-  Textarea,
   Select,
   ErrorMessage
 } from '../styles';
@@ -21,49 +20,58 @@ export const CategorySpecificFields: React.FC<FormComponentProps> = ({
 }) => {
   const renderMusicFields = () => (
     <>
-      <FieldGroup>
-        <Label htmlFor="lyrics">Tekst</Label>
-        <Textarea
-          id="lyrics"
-          value={formData.lyrics || ''}
-          onChange={(e) => updateField('lyrics', e.target.value)}
-          placeholder="Songtekst"
-          rows={6}
-        />
-      </FieldGroup>
+      <SmartFormField
+        label="Tekst"
+        field="lyrics"
+        value={formData.lyrics || ''}
+        formData={formData}
+        onChange={updateField}
+        placeholder="Songtekst"
+        type="richtext"
+        maxLength={2000}
+        loading={isFieldLoading?.('lyrics')}
+        helpText="Gebruik markdown syntax voor opmaak van songteksten"
+      />
 
-      <FieldGroup>
-        <Label htmlFor="chords">Akkoorden</Label>
-        <Textarea
-          id="chords"
-          value={formData.chords || ''}
-          onChange={(e) => updateField('chords', e.target.value)}
-          placeholder="Akkoorden notatie"
-          rows={4}
-        />
-      </FieldGroup>
+      <SmartFormField
+        label="Akkoorden"
+        field="chords"
+        value={formData.chords || ''}
+        formData={formData}
+        onChange={updateField}
+        placeholder="Akkoorden notatie"
+        type="textarea"
+        rows={4}
+        maxLength={1000}
+        loading={isFieldLoading?.('chords')}
+        helpText="Gebruik ChordPro syntax of gewone tekst"
+      />
 
-      <FieldGroup>
-        <Label htmlFor="soundcloudEmbedUrl">SoundCloud Embed URL</Label>
-        <Input
-          id="soundcloudEmbedUrl"
-          type="url"
-          value={formData.soundcloudEmbedUrl || ''}
-          onChange={(e) => updateField('soundcloudEmbedUrl', e.target.value)}
-          placeholder="https://w.soundcloud.com/player/?url=..."
-        />
-      </FieldGroup>
+      <SmartFormField
+        label="SoundCloud Embed URL"
+        field="soundcloudEmbedUrl"
+        value={formData.soundcloudEmbedUrl || ''}
+        formData={formData}
+        onChange={updateField}
+        placeholder="https://w.soundcloud.com/player/?url=..."
+        type="url"
+        previewUrl={true}
+        loading={isFieldLoading?.('soundcloudEmbedUrl')}
+        helpText="Embed URL van SoundCloud voor directe weergave"
+      />
 
-      <FieldGroup>
-        <Label htmlFor="soundcloudTrackUrl">SoundCloud Track URL</Label>
-        <Input
-          id="soundcloudTrackUrl"
-          type="url"
-          value={formData.soundcloudTrackUrl || ''}
-          onChange={(e) => updateField('soundcloudTrackUrl', e.target.value)}
-          placeholder="https://soundcloud.com/..."
-        />
-      </FieldGroup>
+      <SmartFormField
+        label="SoundCloud Track URL"
+        field="soundcloudTrackUrl"
+        value={formData.soundcloudTrackUrl || ''}
+        formData={formData}
+        onChange={updateField}
+        placeholder="https://soundcloud.com/..."
+        type="url"
+        previewUrl={true}
+        loading={isFieldLoading?.('soundcloudTrackUrl')}
+        helpText="Directe link naar SoundCloud track"
+      />
     </>
   );
 
@@ -84,27 +92,32 @@ export const CategorySpecificFields: React.FC<FormComponentProps> = ({
         </Select>
       </FieldGroup>
 
-      <FieldGroup>
-        <Label htmlFor="mediaUrl">Media URL</Label>
-        <Input
-          id="mediaUrl"
-          type="url"
-          value={formData.mediaUrl || ''}
-          onChange={(e) => updateField('mediaUrl', e.target.value)}
-          placeholder="URL naar het media bestand"
-        />
-      </FieldGroup>
+      <SmartFormField
+        label="Media URL"
+        field="mediaUrl"
+        value={formData.mediaUrl || ''}
+        formData={formData}
+        onChange={updateField}
+        placeholder="URL naar het media bestand"
+        type="url"
+        previewUrl={true}
+        loading={isFieldLoading?.('mediaUrl')}
+        helpText="Directe link naar het media bestand"
+      />
 
-      <FieldGroup>
-        <Label htmlFor="mediaUrls">Extra Media URLs</Label>
-        <Textarea
-          id="mediaUrls"
-          value={Array.isArray(formData.mediaUrls) ? formData.mediaUrls.join('\n') : (formData.mediaUrls || '')}
-          onChange={(e) => updateField('mediaUrls', e.target.value)}
-          placeholder="Een URL per regel"
-          rows={3}
-        />
-      </FieldGroup>
+      <SmartFormField
+        label="Extra Media URLs"
+        field="mediaUrls"
+        value={Array.isArray(formData.mediaUrls) ? formData.mediaUrls.join('\n') : (formData.mediaUrls || '')}
+        formData={formData}
+        onChange={(field, value) => updateField(field, value)}
+        placeholder="Een URL per regel"
+        type="textarea"
+        rows={3}
+        maxLength={1000}
+        loading={isFieldLoading?.('mediaUrls')}
+        helpText="Voeg extra media URLs toe, één per regel"
+      />
     </>
   );
 
@@ -118,16 +131,18 @@ export const CategorySpecificFields: React.FC<FormComponentProps> = ({
       {['image', 'video', 'sculpture', 'drawing'].includes(formData.category) && renderMediaFields()}
       
       {formData.category === 'other' && (
-        <FieldGroup>
-          <Label htmlFor="mediaType">Type</Label>
-          <Input
-            id="mediaType"
-            type="text"
-            value={formData.mediaType || ''}
-            onChange={(e) => updateField('mediaType', e.target.value)}
-            placeholder="Specificeer het type kunstwerk"
-          />
-        </FieldGroup>
+        <SmartFormField
+          label="Type"
+          field="mediaType"
+          value={formData.mediaType || ''}
+          formData={formData}
+          onChange={updateField}
+          placeholder="Specificeer het type kunstwerk"
+          type="text"
+          maxLength={100}
+          loading={isFieldLoading?.('mediaType')}
+          helpText="Beschrijf het type kunstwerk"
+        />
       )}
     </>
   );

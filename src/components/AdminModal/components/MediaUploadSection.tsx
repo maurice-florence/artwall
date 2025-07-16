@@ -3,12 +3,11 @@
 import React from 'react';
 import { ArtworkFormData } from '@/types';
 import { FormComponentProps } from '../types';
+import { SmartFormField } from './SmartFormField';
 import {
   SectionTitle,
   FieldGroup,
   Label,
-  Input,
-  FileInput,
   ErrorMessage
 } from '../styles';
 
@@ -22,44 +21,43 @@ export const MediaUploadSection: React.FC<FormComponentProps> = ({
     <>
       <SectionTitle>Media Upload</SectionTitle>
       
-      <FieldGroup>
-        <Label htmlFor="mediaUrl">Media URL</Label>
-        <Input
-          id="mediaUrl"
-          type="url"
-          value={formData.mediaUrl || ''}
-          onChange={(e) => updateField('mediaUrl', e.target.value)}
-          placeholder="Direct link naar media bestand"
-        />
-        {errors.mediaUrl && (
-          <ErrorMessage>{errors.mediaUrl}</ErrorMessage>
-        )}
-      </FieldGroup>
+      <SmartFormField
+        label="Media URL"
+        field="mediaUrl"
+        value={formData.mediaUrl || ''}
+        formData={formData}
+        onChange={updateField}
+        placeholder="Direct link naar media bestand"
+        type="url"
+        previewUrl={true}
+        loading={isFieldLoading?.('mediaUrl')}
+        helpText="Directe link naar het media bestand"
+      />
 
-      <FieldGroup>
-        <Label htmlFor="coverImageUrl">Cover Afbeelding URL</Label>
-        <Input
-          id="coverImageUrl"
-          type="url"
-          value={formData.coverImageUrl || ''}
-          onChange={(e) => updateField('coverImageUrl', e.target.value)}
-          placeholder="Direct link naar cover afbeelding"
-        />
-      </FieldGroup>
+      <SmartFormField
+        label="Cover Afbeelding URL"
+        field="coverImageUrl"
+        value={formData.coverImageUrl || ''}
+        formData={formData}
+        onChange={updateField}
+        placeholder="Direct link naar cover afbeelding"
+        type="url"
+        previewUrl={true}
+        loading={isFieldLoading?.('coverImageUrl')}
+        helpText="Cover afbeelding voor het kunstwerk"
+      />
 
-      <FieldGroup>
-        <Label htmlFor="fileUpload">Bestand uploaden</Label>
-        <FileInput
-          id="fileUpload"
-          accept="image/*,audio/*,video/*,.pdf"
-          onChange={(e) => {
-            const file = e.target.files?.[0];
-            if (file) {
-              updateField('uploadedFile', file);
-            }
-          }}
-        />
-      </FieldGroup>
+      <SmartFormField
+        label="Bestand uploaden"
+        field="uploadedFile"
+        value={formData.uploadedFile || null}
+        formData={formData}
+        onChange={updateField}
+        type="file"
+        accept="image/*,audio/*,video/*,.pdf"
+        loading={isFieldLoading?.('uploadedFile')}
+        helpText="Upload een bestand voor dit kunstwerk"
+      />
     </>
   );
 };

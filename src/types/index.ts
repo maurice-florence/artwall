@@ -158,4 +158,12 @@ export interface ArtworkFormData {
   
   // For file uploads
   uploadedFile?: File;
+  
+  // Test fields for Phase 3B demo
+  testColor?: string;
+  testMultiSelect?: string[];
+  testRichText?: string;
+  testUrl?: string;
+  testFile?: File | FileList | null;
+  testDate?: { year?: number; month?: number; day?: number };
 }
