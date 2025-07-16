@@ -23,7 +23,7 @@ export const useAutoSave = (
   const lastSavedRef = useRef<string>('');
 
   const saveDraft = useCallback(() => {
-    if (!enabled) return;
+    if (!enabled || typeof window === 'undefined') return;
 
     const dataString = JSON.stringify(formData);
     if (dataString === lastSavedRef.current) return;
@@ -38,7 +38,7 @@ export const useAutoSave = (
   }, [formData, key, enabled]);
 
   const loadDraft = useCallback((): ArtworkFormData | null => {
-    if (!enabled) return null;
+    if (!enabled || typeof window === 'undefined') return null;
 
     try {
       const saved = localStorage.getItem(key);
@@ -54,7 +54,7 @@ export const useAutoSave = (
   }, [key, enabled]);
 
   const clearDraft = useCallback(() => {
-    if (!enabled) return;
+    if (!enabled || typeof window === 'undefined') return;
 
     try {
       localStorage.removeItem(key);
@@ -66,8 +66,12 @@ export const useAutoSave = (
   }, [key, enabled]);
 
   const hasDraft = useCallback((): boolean => {
-    if (!enabled) return false;
-    return localStorage.getItem(key) !== null;
+    if (!enabled || typeof window === 'undefined') return false;
+    try {
+      return localStorage.getItem(key) !== null;
+    } catch (error) {
+      return false;
+    }
   }, [key, enabled]);
 
   // Auto-save with debounce
