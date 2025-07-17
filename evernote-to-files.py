@@ -1,46 +1,21 @@
 """
 Evernote .enex to HTML Converter with Medium/Subtype Support
 
-This script converts EvernoSUBTYPESSUBTYPES = {
- # Legacy category to medium/subtype mapping
-CATEGORY_TO_MEDIUM_SUBTYPE = {
-    'poetry': ('writing', 'poem'),
-    'prosepoetry': ('writing', 'prosepoetry'),
-    'prose': ('writing', 'story'),
-    'music': ('music', 'song'),
-    'drawing': ('drawing', 'marker'),
-    'sculpture': ('sculpture', 'clay'),
-    'image': ('drawing', 'digital'),
-    'other': ('other', 'other')
-}: ['marker', 'pencil', 'digital', 'ink', 'charcoal', 'other'],
-    'writing': ['poem', 'prose', 'prosepoetry', 'story', 'essay', 'other'],
-    'music': ['instrumental', 'vocal', 'song', 'electronic', 'acoustic', 'other'],
-    'sculpture': ['clay', 'wood', 'metal', 'stone', 'other'],
-    'other': ['other']
-} 'drawing': ['marker', 'pencil', 'digital', 'ink', 'charcoal', 'other'],
-    'writing': ['poem', 'prose', 'prosepoetry', 'story', 'essay', 'other'],
-    'music': ['instrumental', 'vocal', 'song', 'electronic', 'acoustic', 'other'],
-    'sculpture': ['clay', 'wood', 'metal', 'stone', 'other'],
-    'photography': ['portrait', 'landscape', 'street', 'abstract', 'other'],
-    'video': ['documentary', 'narrative', 'experimental', 'animation', 'other'],
-    'other': ['other']
-}files to HTML files with proper metadata validation.
+This script converts Evernote .enex files to HTML files with proper metadata validation.
 It supports the new medium/subtype classification system introduced in the artwall app.
 
 NEW FEATURES:
 - Medium/Subtype validation and auto-detection
 - Backwards compatibility with legacy category system
-- Enhanced MIME type support for photography and video
+- Enhanced MIME type support for drawing and audio
 - Automatic medium/subtype detection from content analysis
 - Comprehensive reporting with medium/subtype statistics
 
 SUPPORTED MEDIUMS AND SUBTYPES:
 - drawing: marker, pencil, digital, ink, charcoal, other
-- writing: poem, prose, story, essay, other
-- music: instrumental, vocal, electronic, acoustic, other
+- writing: poetry, prosepoetry, novel, short story, essay, other
+- audio: song, rap, beat, instrumental, electronic, sound poem, spoken word, midi, other
 - sculpture: clay, wood, metal, stone, other
-- photography: portrait, landscape, street, abstract, other
-- video: documentary, narrative, experimental, animation, other
 - other: other
 
 MIGRATION NOTES:
@@ -78,30 +53,27 @@ VERPLICHTE METADATA VELDEN VOOR ALLE NOTITIES:
 
 NIEUWE MEDIUM/SUBTYPE STRUCTUUR:
 - drawing: marker, pencil, digital, ink, charcoal, other
-- writing: poem, prose, story, essay, other
-- music: instrumental, vocal, electronic, acoustic, other
+- writing: poetry, prosepoetry, novel, short story, essay, other
+- audio: song, rap, beat, instrumental, electronic, sound poem, spoken word, midi, other
 - sculpture: clay, wood, metal, stone, other
-- photography: portrait, landscape, street, abstract, other
-- video: documentary, narrative, experimental, animation, other
 - other: other
 
 LEGACY CATEGORIEËN (voor backwards compatibility):
-- poetry: gedichten (tekst met vertalingen) → writing/poem
-- prosepoetry: proza-poëzie (tekst met vertalingen) → writing/prose
-- prose: proza/verhalen (media + metadata) → writing/story
-- music: muziek/songteksten (tekst met vertalingen) → music/song
+- poetry: gedichten (tekst met vertalingen) → writing/poetry
+- prosepoetry: proza-poëzie (tekst met vertalingen) → writing/prosepoetry
+- prose: proza/verhalen (media + metadata) → writing/novel
+- music: muziek/songteksten (tekst met vertalingen) → audio/song
 - drawing: tekeningen (media + metadata) → drawing/marker
 - sculpture: beeldhouwwerk (media + metadata) → sculpture/clay
-- image: fotografie (media + metadata) → photography/portrait
-- video: video (media + metadata) → video/documentary
+- image: fotografie (media + metadata) → drawing/digital
 - other: overig → other/other
 
-EXTRA VALIDATIE VOOR TEKST CATEGORIEËN (poetry, prosepoetry, music):
+EXTRA VALIDATIE VOOR TEKST CATEGORIEËN (poetry, prosepoetry, music, writing, audio):
 - language1: moet ingevuld zijn (primaire taal)
 - Als er meerdere talen zijn: language2, language3 moeten overeenkomen met het aantal tekstblokken
 - Elk tekstblok moet gescheiden zijn door ---TRANSLATION_xx--- markers
 
-EXTRA VALIDATIE VOOR MEDIA CATEGORIEËN (drawing, sculpture, prose, image, video):
+EXTRA VALIDATIE VOOR MEDIA CATEGORIEËN (drawing, sculpture, prose):
 - Er moet minstens één bijgevoegd bestand (resource) zijn
 - Bijgevoegde bestanden moeten een geldig MIME-type hebben
 
@@ -115,26 +87,26 @@ NIEUWE OPTIONELE VELDEN:
 # --- SCRIPT LOGICA ---
 
 # Medium and subtype constants (matching the TypeScript definitions)
-MEDIUMS = ['drawing', 'writing', 'music', 'sculpture', 'other']
+MEDIUMS = ['drawing', 'writing', 'audio', 'sculpture', 'other']
 
 SUBTYPES = {
     'drawing': ['marker', 'pencil', 'digital', 'ink', 'charcoal', 'other'],
-    'writing': ['poem', 'prose', 'story', 'essay', 'prosepoetry', 'other'],
-    'music': ['song', 'instrumental', 'vocal', 'electronic', 'acoustic', 'other'],
+    'writing': ['poetry', 'prosepoetry', 'novel', 'short story', 'essay', 'other'],
+    'audio': ['song', 'rap', 'beat', 'instrumental', 'electronic', 'sound poem', 'spoken word', 'midi', 'other'],
     'sculpture': ['clay', 'wood', 'metal', 'stone', 'other'],
     'other': ['other']
 }
 
 # Legacy category to medium/subtype mapping
 CATEGORY_TO_MEDIUM_SUBTYPE = {
-    'poetry': ('writing', 'poem'),
+    'poetry': ('writing', 'poetry'),
     'prosepoetry': ('writing', 'prosepoetry'),
-    'prose': ('writing', 'story'),
-    'music': ('music', 'song'),
+    'prose': ('writing', 'novel'),
+    'music': ('audio', 'song'),
     'drawing': ('drawing', 'marker'),
     'sculpture': ('sculpture', 'clay'),
     'image': ('drawing', 'digital'),
-    'writing': ('writing', 'poem'),  # New system: writing category maps to writing medium with poem subtype as default
+    'writing': ('writing', 'poetry'),  # New system: writing category maps to writing medium with poetry subtype as default
     'other': ('other', 'other')
 }
 
@@ -142,7 +114,7 @@ CATEGORY_TO_MEDIUM_SUBTYPE = {
 MEDIUM_TO_CATEGORY = {
     'drawing': 'drawing',
     'writing': 'writing',  # New system: writing medium maps to writing category
-    'music': 'music',
+    'audio': 'music',
     'sculpture': 'sculpture',
     'other': 'other'
 }
@@ -161,13 +133,13 @@ def validate_medium_subtype(medium: str, subtype: str) -> bool:
 
 def normalize_subtype(medium: str, subtype: str) -> str:
     """Normalize subtype values, handling common aliases."""
-    # Handle common aliases but keep song as song
+    # Handle common aliases but preserve 'song' as 'song'
     subtype_aliases = {
-        'poem': 'poem',
-        'poetry': 'poem',
-        'prose': 'prose',
+        'poem': 'poetry',
+        'poetry': 'poetry',
+        'prose': 'novel',
         'prosepoetry': 'prosepoetry',
-        'story': 'story',
+        'story': 'short story',
         'essay': 'essay'
     }
     
@@ -189,18 +161,18 @@ def auto_detect_medium_subtype_from_content(content: str, resources: list = None
     
     # Check for music-related keywords
     if any(keyword in content_lower for keyword in ['akkoord', 'chord', 'vers', 'refrein', 'lied', 'muziek', 'melody', 'beat']):
-        return ('music', 'song')
+        return ('audio', 'song')
     
     # Check for poetry-related formatting (short lines, stanzas)
     lines = [line.strip() for line in content.split('\n') if line.strip()]
     if len(lines) > 3:
         avg_line_length = sum(len(line) for line in lines) / len(lines)
         if avg_line_length < 50:  # Short lines suggest poetry
-            return ('writing', 'poem')
+            return ('writing', 'poetry')
     
     # Check for prose indicators
     if len(content) > 500:  # Longer content suggests prose
-        return ('writing', 'prose')
+        return ('writing', 'novel')
     
     # Check attached resources for media types
     if resources:
@@ -230,7 +202,7 @@ def clean_metadata_for_yaml(html_block: str) -> str:
 def safe_yaml_value(value: str) -> str:
     """Safely format a value for YAML, handling apostrophes and special characters."""
     if not value:
-        return ""
+        return "''"
     
     # Convert to string if not already
     value = str(value)
@@ -238,18 +210,16 @@ def safe_yaml_value(value: str) -> str:
     # Clean problematic characters that might cause YAML issues
     value = value.replace('`', '').replace('?', '').replace('~', '')
     
-    # Don't wrap simple values in quotes - let YAML handle it naturally
-    # Only wrap if there are special characters that need escaping
-    if any(char in value for char in [':', '[', ']', '{', '}', '#', '&', '*', '!', '|', '>', '%', '@']):
-        # Use double quotes for values with apostrophes
-        if "'" in value:
-            escaped = value.replace('"', '\\"')
-            return f'"{escaped}"'
-        else:
-            return f"'{value}'"
+    # If the value contains apostrophes, use double quotes
+    if "'" in value:
+        # Escape any double quotes and wrap in double quotes
+        escaped = value.replace('"', '\\"')
+        return f'"{escaped}"'
+    # If the value contains special YAML characters, wrap in single quotes
+    elif any(char in value for char in [':', '[', ']', '{', '}', '#', '&', '*', '!', '|', '>', '%', '@']):
+        return f"'{value}'"
     else:
-        # Let YAML handle simple values naturally
-        return value
+        return f"'{value}'"  # Always wrap in single quotes to be safe
 
 def extract_metadata_and_content(note_content: str) -> Tuple[Dict[str, Any] | None, str]:
     """Extraheert metadata en de hoofdcontent (alles voor de metadata)."""
@@ -419,9 +389,15 @@ def clean_html_content(html: str) -> str:
 
 def generate_html_file(meta: Dict[str, Any], content_html: str, file_path: pathlib.Path) -> None:
     """Generates an HTML file with metadata and content."""
-    # Generate clean YAML without excessive quote wrapping
-    yaml_content = yaml.dump(meta, allow_unicode=True, default_flow_style=False, sort_keys=False, default_style=None)
-    clean_html = clean_html_content(content_html)
+    # Create a safe YAML representation of metadata
+    safe_meta = {}
+    for key, value in meta.items():
+        if isinstance(value, str):
+            safe_meta[key] = safe_yaml_value(value)
+        else:
+            safe_meta[key] = value
+    
+    yaml_content = yaml.dump(safe_meta, allow_unicode=True, default_flow_style=False, sort_keys=False)
     clean_html = clean_html_content(content_html)
     
     html_content = f"""<!DOCTYPE html>
@@ -506,7 +482,7 @@ def extract_auto_description(content_html: str, max_length: int = 100, category:
         return ""
     
     # For poetry and music: combine first two lines
-    if category in ['poetry', 'music', 'writing'] and len(available_lines) >= 2:
+    if category in ['poetry', 'music', 'writing', 'audio'] and len(available_lines) >= 2:
         description_text = f"{available_lines[0]} {available_lines[1]}"
     else:
         # For other categories or when only one line available: use first line
@@ -632,14 +608,13 @@ def process_enex_files(source_dir: pathlib.Path, dest_dir: pathlib.Path):
                 subtype_counts[subtype_key] = subtype_counts.get(subtype_key, 0) + 1
                 
                 # --- Verwerking ---
-                # Use medium instead of category for folder structure
-                medium_folder = dest_dir / medium
-                medium_folder.mkdir(parents=True, exist_ok=True)
+                category_folder = dest_dir / category
+                category_folder.mkdir(parents=True, exist_ok=True)
                 
                 created_files_log = []
 
                 # --- Logica voor vertalingen en tekstbestanden ---
-                if category in ['poetry', 'prosepoetry', 'music', 'writing']:
+                if category in ['poetry', 'prosepoetry', 'music', 'writing', 'audio']:
                     translation_delimiter = r'---TRANSLATION_([a-z]{2})---'
                     split_result = re.split(translation_delimiter, main_content_html, flags=re.IGNORECASE)
                     
@@ -671,7 +646,7 @@ def process_enex_files(source_dir: pathlib.Path, dest_dir: pathlib.Path):
                                 print(f"    📝 Auto-description ({lang_code}): {auto_description[:50]}{'...' if len(auto_description) > 50 else ''}")
                         
                         filename_lang = generate_filename(meta, lang=lang_code)
-                        file_path = medium_folder / f"{filename_lang}.html"
+                        file_path = category_folder / f"{filename_lang}.html"
                         
                         # Generate HTML file for all text categories
                         generate_html_file(meta_lang, content_html, file_path)
@@ -681,7 +656,7 @@ def process_enex_files(source_dir: pathlib.Path, dest_dir: pathlib.Path):
                         created_files_log.append(f"{file_path.name} ({file_status})")
 
                 # --- Logica voor media-bestanden ---
-                elif category in ['drawing', 'sculpture', 'prose', 'image', 'video']:
+                elif category in ['drawing', 'sculpture', 'prose']:
                     # Create ordered metadata with 'language' field
                     meta_with_lang = {}
                     for key, value in meta.items():
@@ -700,7 +675,7 @@ def process_enex_files(source_dir: pathlib.Path, dest_dir: pathlib.Path):
                             print(f"    📝 Auto-description: {auto_description[:50]}{'...' if len(auto_description) > 50 else ''}")
                     
                     base_filename = generate_filename(meta)
-                    html_path = medium_folder / f"{base_filename}.html"
+                    html_path = category_folder / f"{base_filename}.html"
                     
                     # Check if file exists to determine if we're overwriting
                     html_file_status = "Overschreven" if html_path.exists() else "Nieuw"
@@ -742,7 +717,7 @@ def process_enex_files(source_dir: pathlib.Path, dest_dir: pathlib.Path):
 
                         version = idx + 1
                         media_filename = generate_filename(meta, version=version)
-                        media_path = medium_folder / f"{media_filename}{ext}"
+                        media_path = category_folder / f"{media_filename}{ext}"
                         
                         # Check if media file exists to determine if we're overwriting
                         media_file_status = "Overschreven" if media_path.exists() else "Nieuw"
@@ -815,11 +790,10 @@ def validate_note_metadata(meta: Dict[str, Any], category: str, has_translations
     errors = []
     
     # Define allowed categories and required fields
-    # Include both legacy categories and new medium names
-    ALLOWED_CATEGORIES = ['poetry', 'prosepoetry', 'music', 'drawing', 'sculpture', 'prose', 'image', 'video', 'other', 'writing']
+    ALLOWED_CATEGORIES = ['poetry', 'prosepoetry', 'music', 'drawing', 'sculpture', 'prose', 'other', 'writing', 'audio']
     REQUIRED_FIELDS = ['title', 'year', 'month', 'day', 'category', 'medium', 'subtype', 'version']
-    TEXT_CATEGORIES = ['poetry', 'prosepoetry', 'music', 'writing']  # Added 'writing' for new medium system
-    MEDIA_CATEGORIES = ['drawing', 'sculpture', 'prose', 'image', 'video']
+    TEXT_CATEGORIES = ['poetry', 'prosepoetry', 'music', 'writing', 'audio']
+    MEDIA_CATEGORIES = ['drawing', 'sculpture', 'prose']
     
     # Check required fields exist and are not empty
     for field in REQUIRED_FIELDS:
@@ -843,16 +817,9 @@ def validate_note_metadata(meta: Dict[str, Any], category: str, has_translations
     
     # Validate medium/category consistency
     if medium and category:
-        # Handle new medium system where category can be the same as medium
-        if category in MEDIUMS:
-            # New system: category is the medium name
-            if medium != category:
-                errors.append(f"Medium '{medium}' komt niet overeen met categorie '{category}' in het nieuwe medium systeem")
-        else:
-            # Legacy system: category maps to medium/subtype
-            expected_medium, _ = get_medium_subtype_from_category(category)
-            if medium != expected_medium:
-                errors.append(f"Medium '{medium}' komt niet overeen met verwachte medium '{expected_medium}' voor categorie '{category}'")
+        expected_medium, _ = get_medium_subtype_from_category(category)
+        if medium != expected_medium:
+            errors.append(f"Medium '{medium}' komt niet overeen met verwachte medium '{expected_medium}' voor categorie '{category}'")
     
     # Validate year (should be 4 digits)
     try:

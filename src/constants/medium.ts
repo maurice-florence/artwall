@@ -5,14 +5,14 @@ import {
   ArtworkMedium, 
   DrawingSubtype, 
   WritingSubtype, 
-  MusicSubtype, 
+  AudioSubtype, 
   SculptureSubtype 
 } from '@/types';
 
 export const MEDIUMS: ArtworkMedium[] = [
   'drawing',
   'writing', 
-  'music',
+  'audio',
   'sculpture',
   'other'
 ];
@@ -20,7 +20,7 @@ export const MEDIUMS: ArtworkMedium[] = [
 export const MEDIUM_LABELS: Record<ArtworkMedium, string> = {
   drawing: 'Tekenen',
   writing: 'Schrijven',
-  music: 'Muziek',
+  audio: 'Audio',
   sculpture: 'Beeldhouwen',
   other: 'Overig'
 };
@@ -36,20 +36,23 @@ export const DRAWING_SUBTYPES: DrawingSubtype[] = [
 ];
 
 export const WRITING_SUBTYPES: WritingSubtype[] = [
-  'poem',
-  'prose',
+  'poetry',
   'prosepoetry',
-  'story',
+  'novel',
+  'short story',
   'essay',
   'other'
 ];
 
-export const MUSIC_SUBTYPES: MusicSubtype[] = [
+export const AUDIO_SUBTYPES: AudioSubtype[] = [
   'song',
+  'rap',
+  'beat',
   'instrumental',
-  'vocal',
   'electronic',
-  'acoustic',
+  'sound poem',
+  'spoken word',
+  'midi',
   'other'
 ];
 
@@ -70,18 +73,21 @@ export const SUBTYPE_LABELS: Record<string, string> = {
   charcoal: 'Houtskool',
   
   // Writing
-  poem: 'Gedicht',
-  prose: 'Proza',
+  poetry: 'Gedicht',
   prosepoetry: 'Proza-poëzie',
-  story: 'Verhaal',
+  novel: 'Roman',
+  'short story': 'Kortverhaal',
   essay: 'Essay',
   
-  // Music
+  // Audio
   song: 'Lied',
+  rap: 'Rap',
+  beat: 'Beat',
   instrumental: 'Instrumentaal',
-  vocal: 'Vocaal',
   electronic: 'Elektronisch',
-  acoustic: 'Akoestisch',
+  'sound poem': 'Geluidsgedicht',
+  'spoken word': 'Gesproken woord',
+  midi: 'MIDI',
   
   // Sculpture
   clay: 'Klei',
@@ -99,8 +105,8 @@ export const getSubtypesForMedium = (medium: ArtworkMedium): string[] => {
       return DRAWING_SUBTYPES;
     case 'writing':
       return WRITING_SUBTYPES;
-    case 'music':
-      return MUSIC_SUBTYPES;
+    case 'audio':
+      return AUDIO_SUBTYPES;
     case 'sculpture':
       return SCULPTURE_SUBTYPES;
     default:
@@ -112,7 +118,7 @@ export const getSubtypesForMedium = (medium: ArtworkMedium): string[] => {
 export const MEDIUM_TO_CATEGORY_MAP: Record<ArtworkMedium, string> = {
   drawing: 'drawing',
   writing: 'poetry', // Default to poetry for writing
-  music: 'music',
+  audio: 'music',
   sculpture: 'sculpture',
   other: 'other'
 };
@@ -122,7 +128,7 @@ export const CATEGORY_TO_MEDIUM_MAP: Record<string, ArtworkMedium> = {
   poetry: 'writing',
   prosepoetry: 'writing',
   prose: 'writing',
-  music: 'music',
+  music: 'audio',
   sculpture: 'sculpture',
   image: 'drawing', // Map image to drawing
   other: 'other'

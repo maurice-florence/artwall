@@ -25,33 +25,34 @@ STORAGE_BUCKET = "artwall-by-jr.firebasestorage.app"  # Remove the gs:// prefix
 # --- SCRIPT LOGICA ---
 
 # Medium and subtype constants (matching the TypeScript definitions)
-MEDIUMS = ['drawing', 'writing', 'music', 'sculpture', 'other']
+MEDIUMS = ['drawing', 'writing', 'audio', 'sculpture', 'other']
 
 SUBTYPES = {
     'drawing': ['marker', 'pencil', 'digital', 'ink', 'charcoal', 'other'],
-    'writing': ['poem', 'prose', 'prosepoetry', 'story', 'essay', 'other'],
-    'music': ['song', 'instrumental', 'vocal', 'electronic', 'acoustic', 'other'],
+    'writing': ['poetry', 'prosepoetry', 'novel', 'short story', 'essay', 'other'],
+    'audio': ['song', 'rap', 'beat', 'instrumental', 'electronic', 'sound poem', 'spoken word', 'midi', 'other'],
     'sculpture': ['clay', 'wood', 'metal', 'stone', 'other'],
     'other': ['other']
 }
 
 # Legacy category to medium/subtype mapping
 CATEGORY_TO_MEDIUM_SUBTYPE = {
-    'poetry': ('writing', 'poem'),
+    'poetry': ('writing', 'poetry'),
     'prosepoetry': ('writing', 'prosepoetry'),
-    'prose': ('writing', 'story'),
-    'music': ('music', 'song'),
+    'prose': ('writing', 'novel'),
+    'music': ('audio', 'song'),
     'drawing': ('drawing', 'marker'),
     'sculpture': ('sculpture', 'clay'),
-    'image': ('drawing', 'digital'),
+    'image': ('photography', 'portrait'),
+    'video': ('video', 'documentary'),
     'other': ('other', 'other')
 }
 
 # Backwards compatibility: medium to category mapping
 MEDIUM_TO_CATEGORY = {
     'drawing': 'drawing',
-    'writing': 'poetry',  # Default to poetry for writing
-    'music': 'music',
+    'writing': 'writing',
+    'audio': 'music',
     'sculpture': 'sculpture',
     'other': 'other'
 }
@@ -282,8 +283,8 @@ def normalize_artwork_payload(artwork_payload: Dict[str, Any], media_urls: List[
                 elif '.pdf' in url.lower():
                     artwork_payload['pdfUrl'] = url
         
-        elif category == 'music' or medium == 'music':
-            # For music: first audio file is audioUrl
+        elif category == 'music' or medium == 'audio':
+            # For audio: first audio file is audioUrl
             for url in media_urls:
                 if any(ext in url.lower() for ext in ['.mp3', '.wav', '.m4a', '.flac', '.ogg']):
                     artwork_payload['audioUrl'] = url

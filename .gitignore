@@ -44,3 +44,7 @@ next-env.d.ts
 # firebase key
 serviceAccountKey_old.json
 serviceAccountKey_artwall.json
+
+# cache
+.__pycache__
+__pycache__/

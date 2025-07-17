@@ -2,15 +2,15 @@
 export type ArtworkCategory = 'poetry' | 'prosepoetry' | 'prose' | 'music' | 'sculpture' | 'drawing' | 'image' | 'video' | 'other';
 
 // New: Medium types based on the new metadata structure
-export type ArtworkMedium = 'drawing' | 'writing' | 'music' | 'sculpture' | 'other';
+export type ArtworkMedium = 'drawing' | 'writing' | 'audio' | 'sculpture' | 'other';
 
 // New: Subtype mappings per medium
 export type DrawingSubtype = 'marker' | 'pencil' | 'digital' | 'ink' | 'charcoal' | 'other';
-export type WritingSubtype = 'poem' | 'prose' | 'prosepoetry' | 'story' | 'essay' | 'other';
-export type MusicSubtype = 'song' | 'instrumental' | 'vocal' | 'electronic' | 'acoustic' | 'other';
+export type WritingSubtype = 'poetry' | 'prosepoetry' | 'novel' | 'short story' | 'essay' | 'other';
+export type AudioSubtype = 'song' | 'rap' | 'beat' | 'instrumental' | 'electronic' | 'sound poem' | 'spoken word' | 'midi' | 'other';
 export type SculptureSubtype = 'clay' | 'wood' | 'metal' | 'stone' | 'other';
 
-export type ArtworkSubtype = DrawingSubtype | WritingSubtype | MusicSubtype | SculptureSubtype | 'other';
+export type ArtworkSubtype = DrawingSubtype | WritingSubtype | AudioSubtype | SculptureSubtype | 'other';
 
 // De basis-interface met alle gedeelde eigenschappen
 interface BaseArtwork {
