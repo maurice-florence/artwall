@@ -94,7 +94,8 @@ describe('AdminModal', () => {
     const mockArtwork: Artwork = {
       id: 'test-id',
       title: 'Test Artwork',
-      category: 'poetry',
+      medium: 'writing',
+      subtype: 'poem',
       year: 2023,
       month: 12,
       day: 25,

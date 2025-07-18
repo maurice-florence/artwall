@@ -19,7 +19,8 @@ const renderWithTheme = (component: React.ReactElement) => {
 describe('CategorySpecificFields', () => {
   const mockFormData: ArtworkFormData = {
     title: 'Test',
-    category: 'music',
+    medium: 'writing',
+    subtype: 'poem',
     year: 2025,
     month: 7,
     day: 15,
@@ -77,8 +78,8 @@ describe('CategorySpecificFields', () => {
   });
 
   it('renders nothing for categories without specific fields', () => {
-    const poetryFormData = { ...mockFormData, category: 'poetry' as const };
-    renderWithTheme(<CategorySpecificFields {...mockProps} formData={poetryFormData} />);
+    const poemFormData = { ...mockFormData, category: 'poem' as const };
+    renderWithTheme(<CategorySpecificFields {...mockProps} formData={poemFormData} />);
     
     expect(screen.queryByLabelText('Tekst')).not.toBeInTheDocument();
     expect(screen.queryByLabelText('Media Type')).not.toBeInTheDocument();

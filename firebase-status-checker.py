@@ -46,46 +46,34 @@ def check_database():
 def analyze_metadata_structure(artworks):
     """Analyze the metadata structure of artworks in the database"""
     print("\n📊 Analyzing Metadata Structure...")
-    
-    category_counts = defaultdict(int)
+
     medium_counts = defaultdict(int)
     subtype_counts = defaultdict(int)
-    
+
     has_medium_field = 0
     has_subtype_field = 0
     has_evaluation_field = 0
     has_rating_field = 0
     has_translations = 0
-    
+
     for artwork_id, artwork in artworks.items():
-        # Count categories (legacy)
-        category = artwork.get('category', 'unknown')
-        category_counts[category] += 1
-        
-        # Count mediums (new)
+        medium = artwork.get('medium', 'other')
+        subtype = artwork.get('subtype', 'other')
+
+        medium_counts[medium] += 1
+        subtype_counts[subtype] += 1
+
         if 'medium' in artwork:
             has_medium_field += 1
-            medium = artwork['medium']
-            medium_counts[medium] += 1
-        
-        # Count subtypes (new)
         if 'subtype' in artwork:
             has_subtype_field += 1
-            subtype = artwork['subtype']
-            subtype_counts[f"{artwork.get('medium', 'unknown')}/{subtype}"] += 1
-        
-        # Count new fields
-        if 'evaluation' in artwork and artwork['evaluation']:
+        if 'evaluation' in artwork:
             has_evaluation_field += 1
-        if 'rating' in artwork and artwork['rating']:
+        if 'rating' in artwork:
             has_rating_field += 1
-        if 'translations' in artwork and artwork['translations']:
+        if 'translations' in artwork:
             has_translations += 1
-    
-    print(f"\n📈 Legacy Categories:")
-    for category, count in sorted(category_counts.items()):
-        print(f"  {category:15} : {count:3} artworks")
-    
+
     print(f"\n🎨 New Mediums:")
     for medium, count in sorted(medium_counts.items()):
         print(f"  {medium:15} : {count:3} artworks")

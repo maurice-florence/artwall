@@ -25,49 +25,19 @@ STORAGE_BUCKET = "artwall-by-jr.firebasestorage.app"  # Remove the gs:// prefix
 # --- SCRIPT LOGICA ---
 
 # Medium and subtype constants (matching the TypeScript definitions)
-MEDIUMS = ['drawing', 'writing', 'audio', 'sculpture', 'other']
+VALID_MEDIUMS = ['audio', 'writing', 'drawing', 'sculpture', 'other']
 
-SUBTYPES = {
+VALID_SUBTYPES = {
+    'audio': ['instrumental', 'vocal', 'electronic', 'acoustic', 'other'],
+    'writing': ['poem', 'prose', 'story', 'essay', 'other'],
     'drawing': ['marker', 'pencil', 'digital', 'ink', 'charcoal', 'other'],
-    'writing': ['poetry', 'prosepoetry', 'novel', 'short story', 'essay', 'other'],
-    'audio': ['song', 'rap', 'beat', 'instrumental', 'electronic', 'sound poem', 'spoken word', 'midi', 'other'],
     'sculpture': ['clay', 'wood', 'metal', 'stone', 'other'],
     'other': ['other']
 }
 
-# Legacy category to medium/subtype mapping
-CATEGORY_TO_MEDIUM_SUBTYPE = {
-    'poetry': ('writing', 'poetry'),
-    'prosepoetry': ('writing', 'prosepoetry'),
-    'prose': ('writing', 'novel'),
-    'music': ('audio', 'song'),
-    'drawing': ('drawing', 'marker'),
-    'sculpture': ('sculpture', 'clay'),
-    'image': ('photography', 'portrait'),
-    'video': ('video', 'documentary'),
-    'other': ('other', 'other')
-}
-
-# Backwards compatibility: medium to category mapping
-MEDIUM_TO_CATEGORY = {
-    'drawing': 'drawing',
-    'writing': 'writing',
-    'audio': 'music',
-    'sculpture': 'sculpture',
-    'other': 'other'
-}
-
-def get_medium_subtype_from_category(category: str) -> tuple:
-    """Convert legacy category to medium/subtype pair."""
-    return CATEGORY_TO_MEDIUM_SUBTYPE.get(category, ('other', 'other'))
-
 def validate_medium_subtype(medium: str, subtype: str) -> bool:
     """Validate that subtype is valid for the given medium."""
-    if medium not in MEDIUMS:
-        return False
-    if subtype not in SUBTYPES.get(medium, []):
-        return False
-    return True
+    return medium in VALID_MEDIUMS and subtype in VALID_SUBTYPES.get(medium, [])
 
 def normalize_metadata_fields(metadata: Dict[str, Any]) -> Dict[str, Any]:
     """
@@ -89,12 +59,12 @@ def normalize_metadata_fields(metadata: Dict[str, Any]) -> Dict[str, Any]:
         
         # Set legacy category for backwards compatibility
         if 'category' not in metadata:
-            metadata['category'] = MEDIUM_TO_CATEGORY.get(medium, 'other')
+            metadata['category'] = 'other'
             
     elif 'category' in metadata:
         # Legacy format: only category is provided, derive medium/subtype
         category = metadata['category']
-        medium, subtype = get_medium_subtype_from_category(category)
+        # Legacy category mapping removed. Only medium/subtype supported.
         metadata['medium'] = medium
         metadata['subtype'] = subtype
         
@@ -283,8 +253,8 @@ def normalize_artwork_payload(artwork_payload: Dict[str, Any], media_urls: List[
                 elif '.pdf' in url.lower():
                     artwork_payload['pdfUrl'] = url
         
-        elif category == 'music' or medium == 'audio':
-            # For audio: first audio file is audioUrl
+        elif category == 'music' or medium == 'music':
+            # For music: first audio file is audioUrl
             for url in media_urls:
                 if any(ext in url.lower() for ext in ['.mp3', '.wav', '.m4a', '.flac', '.ogg']):
                     artwork_payload['audioUrl'] = url

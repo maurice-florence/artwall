@@ -1,10 +1,5 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 
-export interface FilterOptions {
-  category: string;
-  year: string;
-}
-
 export interface ViewOptions {
     spacing: 'compact' | 'comfortabel';
     layout: 'alternerend' | 'enkelzijdig';
@@ -25,7 +20,7 @@ interface FilterContextType {
 const FilterContext = createContext<FilterContextType | undefined>(undefined);
 
 export const FilterProvider = ({ children }: { children: ReactNode }) => {
-  const [filters, setFilters] = useState<FilterOptions>({ category: 'all', year: 'all' });
+  const [filters, setFilters] = useState<FilterOptions>({ medium: 'all', year: 'all' });
   const [searchTerm, setSearchTerm] = useState('');
   const [viewOptions, setViewOptions] = useState<ViewOptions>({
     spacing: 'compact',

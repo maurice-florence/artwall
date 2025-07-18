@@ -12,7 +12,7 @@ import {
   ErrorMessage
 } from '../styles';
 
-export const CategorySpecificFields: React.FC<FormComponentProps> = ({
+export const MediumSpecificFields: React.FC<FormComponentProps> = ({
   formData,
   errors,
   updateField,

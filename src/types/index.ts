@@ -1,16 +1,5 @@
-// De mogelijke categorieën, nu als een expliciet type
-export type ArtworkCategory = 'poetry' | 'prosepoetry' | 'prose' | 'music' | 'sculpture' | 'drawing' | 'image' | 'video' | 'other';
-
-// New: Medium types based on the new metadata structure
-export type ArtworkMedium = 'drawing' | 'writing' | 'audio' | 'sculpture' | 'other';
-
-// New: Subtype mappings per medium
-export type DrawingSubtype = 'marker' | 'pencil' | 'digital' | 'ink' | 'charcoal' | 'other';
-export type WritingSubtype = 'poetry' | 'prosepoetry' | 'novel' | 'short story' | 'essay' | 'other';
-export type AudioSubtype = 'song' | 'rap' | 'beat' | 'instrumental' | 'electronic' | 'sound poem' | 'spoken word' | 'midi' | 'other';
-export type SculptureSubtype = 'clay' | 'wood' | 'metal' | 'stone' | 'other';
-
-export type ArtworkSubtype = DrawingSubtype | WritingSubtype | AudioSubtype | SculptureSubtype | 'other';
+// Use centralized types from src/constants/medium.ts
+import { ArtworkMedium, ArtworkSubtype } from '@/constants/medium';
 
 // De basis-interface met alle gedeelde eigenschappen
 interface BaseArtwork {
@@ -26,8 +15,6 @@ interface BaseArtwork {
   medium: ArtworkMedium;
   subtype: ArtworkSubtype;
   
-  // Legacy: keeping category for backwards compatibility
-  category: string;
   isHidden?: boolean;
   
   // Language support
@@ -72,55 +59,8 @@ interface BaseArtwork {
   recordLastUpdated?: number;
 }
 
-// Specifieke interfaces per categorie
-export interface PoetryArtwork extends BaseArtwork {
-    category: 'poetry' | 'prosepoetry';
-    mediaType: 'text';
-    content: string;
-}
-
-export interface ProseArtwork extends BaseArtwork {
-    category: 'prose';
-    mediaUrl: string; // Link to PDF
-    coverImageUrl: string;
-}
-
-export interface VisualArtArtwork extends BaseArtwork {
-    category: 'sculpture' | 'drawing' | 'image';
-    mediaType: 'image';
-    mediaUrl: string;
-}
-
-export interface MusicArtwork extends BaseArtwork {
-    category: 'music';
-    mediaType: 'audio';
-    mediaUrl?: string;
-    soundcloudEmbedUrl?: string;
-    soundcloudTrackUrl?: string;
-    lyrics?: string;
-    chords?: string;
-}
-
-export interface VideoArtwork extends BaseArtwork {
-    category: 'video';
-    mediaType: 'video';
-    mediaUrl: string;
-}
-
-export interface OtherArtwork extends BaseArtwork {
-    category: 'other';
-    content?: string;
-    mediaUrl?: string;
-}
-
-// De uiteindelijke "union" type
-export type Artwork = 
-    | PoetryArtwork 
-    | ProseArtwork 
-    | VisualArtArtwork 
-    | MusicArtwork 
-    | VideoArtwork
-    | OtherArtwork;
+// Unified Artwork type
+export interface Artwork extends BaseArtwork {}
 
 // Jaartal-marker voor de collage
 export interface YearMarker {
@@ -149,9 +89,6 @@ export interface ArtworkFormData {
   // NEW: Medium-based structure
   medium: ArtworkMedium;
   subtype: ArtworkSubtype;
-  
-  // Legacy: keeping category for backwards compatibility
-  category: ArtworkCategory;
   
   description?: string;
   content?: string;

@@ -8,9 +8,9 @@ A modern, interactive timeline and archive for creative works, built with Next.j
 
 **Artwall** is a personal digital archive and timeline for creative works (art, music, writing, etc.). It allows you to:
 
-- Organize and browse your creative output by year and category.
+- Organize and browse your creative output by year, medium, and subtype.
 - Upload, edit, and manage works with rich metadata and media.
-- Filter and search by category, year, and keywords.
+- Filter and search by medium, subtype, year, and keywords.
 - View statistics and summaries of your creative journey.
 - Use a beautiful, accessible, and mobile-friendly interface.
 
@@ -24,7 +24,7 @@ A modern, interactive timeline and archive for creative works, built with Next.j
 - **Firebase** integration for Realtime Database, Authentication, and Storage.
 - **Admin modal** for adding/editing/removing works (no page reloads).
 - **File upload** for images, audio, video, and PDFs.
-- **Filtering** by category and year (sidebar and header).
+- **Filtering** by medium, subtype, and year (sidebar and header).
 - **Statistics** page for quick insights.
 - **Accessible, responsive UI** for all devices.
 - **Dutch/English**: UI and code comments are in English, some labels in Dutch.
@@ -53,7 +53,7 @@ The project is organized as follows:
 - `src/components/` — Reusable UI components (cards, modals, sidebar, header, etc.).
 - `src/context/` — Context providers for global state management.
 - `src/types/` — TypeScript types for the app.
-- `src/constants.ts` — App-wide constants (categories, labels, etc.).
+- `src/constants/medium.ts` — App-wide constants (mediums, subtypes, labels).
 - `src/themes.ts` — Theme definitions for styled-components.
 - `src/firebase.ts` — Firebase configuration and exports.
 - `public/` — Static assets (SVGs, images).

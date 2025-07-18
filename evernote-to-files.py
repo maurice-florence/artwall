@@ -7,15 +7,17 @@ It supports the new medium/subtype classification system introduced in the artwa
 NEW FEATURES:
 - Medium/Subtype validation and auto-detection
 - Backwards compatibility with legacy category system
-- Enhanced MIME type support for drawing and audio
+- Enhanced MIME type support for photography and video
 - Automatic medium/subtype detection from content analysis
 - Comprehensive reporting with medium/subtype statistics
 
 SUPPORTED MEDIUMS AND SUBTYPES:
 - drawing: marker, pencil, digital, ink, charcoal, other
-- writing: poetry, prosepoetry, novel, short story, essay, other
-- audio: song, rap, beat, instrumental, electronic, sound poem, spoken word, midi, other
+- writing: poem, prose, story, essay, other
+- music: instrumental, vocal, electronic, acoustic, other
 - sculpture: clay, wood, metal, stone, other
+- photography: portrait, landscape, street, abstract, other
+- video: documentary, narrative, experimental, animation, other
 - other: other
 
 MIGRATION NOTES:
@@ -48,32 +50,23 @@ VERPLICHTE METADATA VELDEN VOOR ALLE NOTITIES:
 - day: moet een geldige dag zijn (1-31)
 - medium: moet een van de toegestane mediums zijn
 - subtype: moet een van de toegestane subtypes zijn voor het gekozen medium
-- category: moet een van de toegestane categorieën zijn (voor backwards compatibility)
 - version: moet ingevuld zijn (meestal '01')
 
 NIEUWE MEDIUM/SUBTYPE STRUCTUUR:
 - drawing: marker, pencil, digital, ink, charcoal, other
-- writing: poetry, prosepoetry, novel, short story, essay, other
-- audio: song, rap, beat, instrumental, electronic, sound poem, spoken word, midi, other
+- writing: poem, prose, story, essay, other
+- music: instrumental, vocal, electronic, acoustic, other
 - sculpture: clay, wood, metal, stone, other
+- photography: portrait, landscape, street, abstract, other
+- video: documentary, narrative, experimental, animation, other
 - other: other
 
-LEGACY CATEGORIEËN (voor backwards compatibility):
-- poetry: gedichten (tekst met vertalingen) → writing/poetry
-- prosepoetry: proza-poëzie (tekst met vertalingen) → writing/prosepoetry
-- prose: proza/verhalen (media + metadata) → writing/novel
-- music: muziek/songteksten (tekst met vertalingen) → audio/song
-- drawing: tekeningen (media + metadata) → drawing/marker
-- sculpture: beeldhouwwerk (media + metadata) → sculpture/clay
-- image: fotografie (media + metadata) → drawing/digital
-- other: overig → other/other
-
-EXTRA VALIDATIE VOOR TEKST CATEGORIEËN (poetry, prosepoetry, music, writing, audio):
+EXTRA VALIDATIE VOOR TEKST CATEGORIEËN (poetry, prosepoetry, music):
 - language1: moet ingevuld zijn (primaire taal)
 - Als er meerdere talen zijn: language2, language3 moeten overeenkomen met het aantal tekstblokken
 - Elk tekstblok moet gescheiden zijn door ---TRANSLATION_xx--- markers
 
-EXTRA VALIDATIE VOOR MEDIA CATEGORIEËN (drawing, sculpture, prose):
+EXTRA VALIDATIE VOOR MEDIA CATEGORIEËN (drawing, sculpture, prose, image, video):
 - Er moet minstens één bijgevoegd bestand (resource) zijn
 - Bijgevoegde bestanden moeten een geldig MIME-type hebben
 
@@ -87,59 +80,39 @@ NIEUWE OPTIONELE VELDEN:
 # --- SCRIPT LOGICA ---
 
 # Medium and subtype constants (matching the TypeScript definitions)
-MEDIUMS = ['drawing', 'writing', 'audio', 'sculpture', 'other']
+VALID_MEDIUMS = [
+    'drawing', 'writing', 'music', 'sculpture', 'photography', 'video', 'other'
+]
 
-SUBTYPES = {
+VALID_SUBTYPES = {
     'drawing': ['marker', 'pencil', 'digital', 'ink', 'charcoal', 'other'],
-    'writing': ['poetry', 'prosepoetry', 'novel', 'short story', 'essay', 'other'],
-    'audio': ['song', 'rap', 'beat', 'instrumental', 'electronic', 'sound poem', 'spoken word', 'midi', 'other'],
+    'writing': ['poem', 'prose', 'story', 'essay', 'other'],
+    'music': ['instrumental', 'vocal', 'electronic', 'acoustic', 'other'],
     'sculpture': ['clay', 'wood', 'metal', 'stone', 'other'],
+    'photography': ['portrait', 'landscape', 'street', 'abstract', 'other'],
+    'video': ['documentary', 'narrative', 'experimental', 'animation', 'other'],
     'other': ['other']
 }
 
-# Legacy category to medium/subtype mapping
-CATEGORY_TO_MEDIUM_SUBTYPE = {
-    'poetry': ('writing', 'poetry'),
-    'prosepoetry': ('writing', 'prosepoetry'),
-    'prose': ('writing', 'novel'),
-    'music': ('audio', 'song'),
-    'drawing': ('drawing', 'marker'),
-    'sculpture': ('sculpture', 'clay'),
-    'image': ('drawing', 'digital'),
-    'writing': ('writing', 'poetry'),  # New system: writing category maps to writing medium with poetry subtype as default
-    'other': ('other', 'other')
-}
+# Updated metadata validation
+REQUIRED_METADATA_FIELDS = [
+    'title', 'year', 'month', 'day', 'medium', 'subtype', 'version'
+]
 
-# Backwards compatibility: medium to category mapping
-MEDIUM_TO_CATEGORY = {
-    'drawing': 'drawing',
-    'writing': 'writing',  # New system: writing medium maps to writing category
-    'audio': 'music',
-    'sculpture': 'sculpture',
-    'other': 'other'
-}
-
-def get_medium_subtype_from_category(category: str) -> tuple:
-    """Convert legacy category to medium/subtype pair."""
-    return CATEGORY_TO_MEDIUM_SUBTYPE.get(category, ('other', 'other'))
-
+# Function to validate medium and subtype
 def validate_medium_subtype(medium: str, subtype: str) -> bool:
-    """Validate that subtype is valid for the given medium."""
-    if medium not in MEDIUMS:
-        return False
-    if subtype not in SUBTYPES.get(medium, []):
-        return False
-    return True
+    return medium in VALID_MEDIUMS and subtype in VALID_SUBTYPES.get(medium, [])
 
 def normalize_subtype(medium: str, subtype: str) -> str:
     """Normalize subtype values, handling common aliases."""
-    # Handle common aliases but preserve 'song' as 'song'
+    # Handle common aliases
     subtype_aliases = {
-        'poem': 'poetry',
-        'poetry': 'poetry',
-        'prose': 'novel',
+        'song': 'vocal',
+        'poem': 'poem',
+        'poetry': 'poem',
+        'prose': 'prose',
         'prosepoetry': 'prosepoetry',
-        'story': 'short story',
+        'story': 'story',
         'essay': 'essay'
     }
     
@@ -161,27 +134,27 @@ def auto_detect_medium_subtype_from_content(content: str, resources: list = None
     
     # Check for music-related keywords
     if any(keyword in content_lower for keyword in ['akkoord', 'chord', 'vers', 'refrein', 'lied', 'muziek', 'melody', 'beat']):
-        return ('audio', 'song')
+        return ('music', 'vocal')
     
     # Check for poetry-related formatting (short lines, stanzas)
     lines = [line.strip() for line in content.split('\n') if line.strip()]
     if len(lines) > 3:
         avg_line_length = sum(len(line) for line in lines) / len(lines)
         if avg_line_length < 50:  # Short lines suggest poetry
-            return ('writing', 'poetry')
+            return ('writing', 'poem')
     
     # Check for prose indicators
     if len(content) > 500:  # Longer content suggests prose
-        return ('writing', 'novel')
+        return ('writing', 'prose')
     
     # Check attached resources for media types
     if resources:
         for resource in resources:
             mime = resource.findtext('mime', '').lower()
             if 'image' in mime or 'jpeg' in mime or 'png' in mime or 'gif' in mime:
-                return ('drawing', 'digital')
+                return ('photography', 'portrait')
             elif 'video' in mime or 'mp4' in mime or 'webm' in mime:
-                return ('other', 'other')
+                return ('video', 'documentary')
     
     # Default fallback
     return ('writing', 'other')
@@ -252,10 +225,6 @@ def extract_metadata_and_content(note_content: str) -> Tuple[Dict[str, Any] | No
                 metadata['medium'] = medium
                 metadata['subtype'] = subtype
             
-            # Set legacy category for backwards compatibility
-            if 'category' not in metadata:
-                metadata['category'] = MEDIUM_TO_CATEGORY.get(medium, 'other')
-                
         elif 'category' in metadata:
             # Legacy format: only category is provided, derive medium/subtype
             category = metadata['category']
@@ -336,9 +305,6 @@ def extract_metadata_and_content(note_content: str) -> Tuple[Dict[str, Any] | No
                     metadata['medium'] = medium
                     metadata['subtype'] = subtype
                 
-                if 'category' not in metadata:
-                    metadata['category'] = MEDIUM_TO_CATEGORY.get(medium, 'other')
-                    
             elif 'category' in metadata:
                 category = metadata['category']
                 medium, subtype = get_medium_subtype_from_category(category)
@@ -482,10 +448,10 @@ def extract_auto_description(content_html: str, max_length: int = 100, category:
         return ""
     
     # For poetry and music: combine first two lines
-    if category in ['poetry', 'music', 'writing', 'audio'] and len(available_lines) >= 2:
+    if category in ['poetry', 'music'] and len(available_lines) >= 2:
         description_text = f"{available_lines[0]} {available_lines[1]}"
     else:
-        # For other categories or when only one line available: use first line
+        # For other mediums or when only one line available: use first line
         description_text = available_lines[0]
         
         # Try to extract first sentence if the line contains sentence-ending punctuation
@@ -614,7 +580,7 @@ def process_enex_files(source_dir: pathlib.Path, dest_dir: pathlib.Path):
                 created_files_log = []
 
                 # --- Logica voor vertalingen en tekstbestanden ---
-                if category in ['poetry', 'prosepoetry', 'music', 'writing', 'audio']:
+                if category in ['poetry', 'prosepoetry', 'music']:
                     translation_delimiter = r'---TRANSLATION_([a-z]{2})---'
                     split_result = re.split(translation_delimiter, main_content_html, flags=re.IGNORECASE)
                     
@@ -656,7 +622,7 @@ def process_enex_files(source_dir: pathlib.Path, dest_dir: pathlib.Path):
                         created_files_log.append(f"{file_path.name} ({file_status})")
 
                 # --- Logica voor media-bestanden ---
-                elif category in ['drawing', 'sculpture', 'prose']:
+                elif category in ['drawing', 'sculpture', 'prose', 'image', 'video']:
                     # Create ordered metadata with 'language' field
                     meta_with_lang = {}
                     for key, value in meta.items():
@@ -789,37 +755,21 @@ def validate_note_metadata(meta: Dict[str, Any], category: str, has_translations
     """
     errors = []
     
-    # Define allowed categories and required fields
-    ALLOWED_CATEGORIES = ['poetry', 'prosepoetry', 'music', 'drawing', 'sculpture', 'prose', 'other', 'writing', 'audio']
-    REQUIRED_FIELDS = ['title', 'year', 'month', 'day', 'category', 'medium', 'subtype', 'version']
-    TEXT_CATEGORIES = ['poetry', 'prosepoetry', 'music', 'writing', 'audio']
-    MEDIA_CATEGORIES = ['drawing', 'sculpture', 'prose']
-    
     # Check required fields exist and are not empty
-    for field in REQUIRED_FIELDS:
+    for field in REQUIRED_METADATA_FIELDS:
         if field not in meta or not str(meta[field]).strip():
             errors.append(f"Verplicht veld '{field}' ontbreekt of is leeg")
-    
-    # Validate category
-    if category not in ALLOWED_CATEGORIES:
-        errors.append(f"Onbekende categorie '{category}'. Toegestaan: {', '.join(ALLOWED_CATEGORIES)}")
     
     # Validate medium/subtype
     medium = meta.get('medium')
     subtype = meta.get('subtype')
     
-    if medium and medium not in MEDIUMS:
-        errors.append(f"Onbekend medium '{medium}'. Toegestaan: {', '.join(MEDIUMS)}")
+    if medium and medium not in VALID_MEDIUMS:
+        errors.append(f"Onbekend medium '{medium}'. Toegestaan: {', '.join(VALID_MEDIUMS)}")
     
     if medium and subtype and not validate_medium_subtype(medium, subtype):
-        allowed_subtypes = SUBTYPES.get(medium, [])
+        allowed_subtypes = VALID_SUBTYPES.get(medium, [])
         errors.append(f"Onbekend subtype '{subtype}' voor medium '{medium}'. Toegestaan: {', '.join(allowed_subtypes)}")
-    
-    # Validate medium/category consistency
-    if medium and category:
-        expected_medium, _ = get_medium_subtype_from_category(category)
-        if medium != expected_medium:
-            errors.append(f"Medium '{medium}' komt niet overeen met verwachte medium '{expected_medium}' voor categorie '{category}'")
     
     # Validate year (should be 4 digits)
     try:
@@ -875,28 +825,22 @@ def validate_note_metadata(meta: Dict[str, Any], category: str, has_translations
         except (ValueError, TypeError):
             errors.append(f"Rating '{meta.get('rating')}' is geen geldig getal")
     
-    # Category-specific validation
-    if category in TEXT_CATEGORIES:
-        # Text categories need language fields
+    # Medium-specific validation (replace legacy category logic)
+    if meta.get('medium') in ['writing', 'audio']:
+        # Text/audio mediums need language fields
         if not meta.get('language1'):
-            errors.append(f"Tekst categorie '{category}' vereist een ingevulde 'language1'")
-        
-        # If there are translations, validate language mapping
+            errors.append(f"Medium '{meta.get('medium')}' vereist een ingevulde 'language1'")
         if has_translations:
             languages = [meta.get('language1'), meta.get('language2'), meta.get('language3')]
             filled_languages = [lang for lang in languages if lang and str(lang).strip()]
-            
             if len(filled_languages) != num_translation_parts:
                 errors.append(f"Aantal ingevulde talen ({len(filled_languages)}) komt niet overeen met aantal tekstblokken ({num_translation_parts})")
-            
-            # Check for duplicate languages
             if len(filled_languages) != len(set(filled_languages)):
                 errors.append("Taalcodes mogen niet dubbel voorkomen")
-    
-    elif category in MEDIA_CATEGORIES:
-        # Media categories need attached resources
+    elif meta.get('medium') in ['drawing', 'sculpture', 'other']:
+        # Media mediums need attached resources
         if not has_resources:
-            errors.append(f"Media categorie '{category}' vereist minstens één bijgevoegd bestand")
+            errors.append(f"Medium '{meta.get('medium')}' vereist minstens één bijgevoegd bestand")
     
     return errors
 

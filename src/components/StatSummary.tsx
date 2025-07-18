@@ -21,7 +21,7 @@ interface StatSummaryProps {
 const StatSummary = ({ allArtworks }: StatSummaryProps) => {
     const stats = useMemo(() => {
         const counts = allArtworks.reduce((acc, art) => {
-            acc[art.category] = (acc[art.category] || 0) + 1;
+            acc[art.medium] = (acc[art.medium] || 0) + 1;
             return acc;
         }, {} as Record<string, number>);
 
@@ -37,9 +37,9 @@ const StatSummary = ({ allArtworks }: StatSummaryProps) => {
                 <strong>Totaal:</strong>
                 <span>{stats.total}</span>
             </StatRow>
-            {Object.entries(stats.counts).map(([category, count]) => (
-                <StatRow key={category}>
-                    <span>{category.charAt(0).toUpperCase() + category.slice(1)}:</span>
+            {Object.entries(stats.counts).map(([medium, count]) => (
+                <StatRow key={medium}>
+                    <span>{medium.charAt(0).toUpperCase() + medium.slice(1)}:</span>
                     <span>{count}</span>
                 </StatRow>
             ))}

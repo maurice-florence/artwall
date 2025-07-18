@@ -5,7 +5,7 @@ export interface Artwork {
   year: number;
   month?: number;
   day?: number;
-  category: string;
+  medium: string;
   mediaType: string;
   description?: string;
   content?: string;
@@ -16,11 +16,6 @@ export interface Artwork {
   isHidden?: boolean;
   mediaUrl?: string;
   coverImageUrl?: string;
-}
-
-export interface FilterOptions {
-  category: string;
-  year: string;
 }
 
 export interface ViewOptions {

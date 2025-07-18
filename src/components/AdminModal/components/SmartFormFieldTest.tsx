@@ -11,9 +11,9 @@ export const SmartFormFieldTest: React.FC = () => {
     year: new Date().getFullYear(),
     month: undefined,
     day: undefined,
-    category: 'poetry',
     medium: 'writing',
     subtype: 'poem',
+    // Removed category field, only medium/subtype used
     description: '',
     content: '',
     isHidden: false,
@@ -91,8 +91,8 @@ export const SmartFormFieldTest: React.FC = () => {
       
       <SmartFormField
         label="Categorie"
-        field="category"
-        value={formData.category}
+        field="medium"
+        value={formData.medium}
         formData={formData}
         onChange={handleFieldChange}
         type="select"

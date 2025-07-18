@@ -158,7 +158,7 @@ export default function HomePage() {
                   availableCategories={availableCategories}
                 />
                 <CollageContainer>
-                    <CardContainer category="poetry" onClick={handleAdd} style={{ border: '2px dashed #E07A5F', background: '#fff', color: '#E07A5F', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 64 }} title="Voeg een nieuwe kaart toe" key="plus-card">
+                    <CardContainer category="poem" onClick={handleAdd} style={{ border: '2px dashed #E07A5F', background: '#fff', color: '#E07A5F', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 64 }} title="Voeg een nieuwe kaart toe" key="plus-card">
                         +
                     </CardContainer>
                     {timelineItems.map(item => {

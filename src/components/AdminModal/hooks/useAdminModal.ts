@@ -16,7 +16,7 @@ const initialFormData: ArtworkFormData = {
   day: undefined,
   medium: 'drawing',
   subtype: 'marker',
-  category: 'drawing', // For backwards compatibility
+  medium: 'drawing',
   description: '',
   content: '',
   isHidden: false,
@@ -33,7 +33,7 @@ const initialFormData: ArtworkFormData = {
   evaluation: '',
   rating: '',
   
-  // Music-specific fields
+  // Audio-specific fields
   lyrics: '',
   chords: '',
   soundcloudEmbedUrl: '',

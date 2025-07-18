@@ -5,7 +5,7 @@ import { useRouter, useParams, notFound } from "next/navigation";
 import { db } from "@/firebase";
 import { ref, get } from "firebase/database";
 import { formatDate } from "@/utils";
-import { Artwork, PoetryArtwork, ProseArtwork, VisualArtArtwork, MusicArtwork, VideoArtwork, OtherArtwork } from '@/types';
+import { Artwork, PoemArtwork, ProseArtwork, VisualArtArtwork, MusicArtwork, VideoArtwork, OtherArtwork } from '@/types';
 import styled from "styled-components";
 import { FaTimes, FaSoundcloud, FaShareAlt } from "react-icons/fa";
 import ReactMarkdown from "react-markdown";
@@ -160,7 +160,7 @@ const ModalFooter = styled.div`
 `;
 
 // Type guards for union type fields
-function hasMediaType(artwork: Artwork): artwork is (MusicArtwork | VisualArtArtwork | VideoArtwork | PoetryArtwork) {
+function hasMediaType(artwork: Artwork): artwork is (MusicArtwork | VisualArtArtwork | VideoArtwork | PoemArtwork) {
   return 'mediaType' in artwork && typeof (artwork as any).mediaType === 'string';
 }
 function hasMediaUrl(artwork: Artwork): artwork is (ProseArtwork | VisualArtArtwork | MusicArtwork | VideoArtwork | OtherArtwork) {
@@ -181,7 +181,7 @@ function hasLyrics(artwork: Artwork): artwork is MusicArtwork {
 function hasChords(artwork: Artwork): artwork is MusicArtwork {
   return 'chords' in artwork && typeof (artwork as any).chords === 'string';
 }
-function hasContent(artwork: Artwork): artwork is PoetryArtwork {
+function hasContent(artwork: Artwork): artwork is PoemArtwork {
   return 'content' in artwork && typeof (artwork as any).content === 'string';
 }
 

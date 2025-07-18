@@ -35,8 +35,8 @@ const Footer: React.FC = () => {
       const dbCount: Record<string, number> = {};
       if (data) {
         Object.values(data).forEach((art: any) => {
-          const cat = art.category || 'onbekend';
-          dbCount[cat] = (dbCount[cat] || 0) + 1;
+          const med = art.medium || 'onbekend';
+          dbCount[med] = (dbCount[med] || 0) + 1;
         });
       }
       setDbCounts(dbCount);
@@ -52,8 +52,8 @@ const Footer: React.FC = () => {
     // Use artworks from context for appCounts
     const appCount: Record<string, number> = {};
     appArtworks.forEach((art: any) => {
-      const cat = art.category || 'onbekend';
-      appCount[cat] = (appCount[cat] || 0) + 1;
+          const med = art.medium || 'onbekend';
+      appCount[med] = (appCount[med] || 0) + 1;
     });
     setAppCounts(appCount);
   }, [appArtworks]);

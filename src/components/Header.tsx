@@ -2,7 +2,7 @@ import React from 'react';
 import styled from 'styled-components';
 import { FaGripLines, FaPenNib, FaBookOpen, FaPaintBrush, FaMusic, FaAlignLeft, FaImage, FaVideo, FaEllipsisH, FaCube } from 'react-icons/fa';
 import ThemeSwitcher from './ThemeSwitcher'; // Importeren
-import { CATEGORIES, CATEGORY_LABELS } from '@/constants';
+import { MEDIUMS, MEDIUM_LABELS, SUBTYPE_LABELS } from '@/constants/medium';
 
 const HeaderWrapper = styled.header`
   background: ${({ theme }) => theme.headerBg};
@@ -62,18 +62,15 @@ const CenteredTitleWrapper = styled.div`
   position: relative;
 `;
 
-const CATEGORY_ICONS: Record<string, React.ReactNode> = {
-  'poetry': <FaPenNib />,
-  'prosepoetry': <FaAlignLeft />,
-  'prose': <FaBookOpen />,
-  'music': <FaMusic />,
+const MEDIUM_ICONS: Record<string, React.ReactNode> = {
+  'audio': <FaMusic />,
+  'writing': <FaPenNib />,
+  'drawing': <FaPaintBrush />,
   'sculpture': <FaCube />,
-  'drawing': <FaImage />,
-  'image': <FaImage />,
   'other': <FaEllipsisH />,
 };
 
-const CategoryIconButton = styled.button<{ $selected?: boolean }>`
+const MediumIconButton = styled.button<{ $selected?: boolean }>`
   background: none;
   border: none;
   color: ${({ theme, $selected }) => $selected ? theme.accent : theme.headerText};
@@ -88,7 +85,7 @@ const CategoryIconButton = styled.button<{ $selected?: boolean }>`
   }
 `;
 
-const Header = ({ onToggleSidebar, selectedCategories = [], onCategoryToggle, availableCategories = [] }: { onToggleSidebar: () => void, selectedCategories?: string[], onCategoryToggle?: (cat: string) => void, availableCategories?: string[] }) => {
+const Header = ({ onToggleSidebar, selectedMediums = [], onMediumToggle, availableMediums = [] }: { onToggleSidebar: () => void, selectedMediums?: string[], onMediumToggle?: (med: string) => void, availableMediums?: string[] }) => {
   return (
     <HeaderWrapper>
       <div style={{ display: 'flex', alignItems: 'center', flex: '0 0 auto' }}>
@@ -96,16 +93,16 @@ const Header = ({ onToggleSidebar, selectedCategories = [], onCategoryToggle, av
           <FaGripLines />
         </ToggleButton>
         <IconsWrapper style={{ marginLeft: '2rem', marginRight: 0 }}>
-          {(availableCategories.length > 0 ? availableCategories : CATEGORIES).map(cat => (
-            <CategoryIconButton
-              key={cat}
-              $selected={selectedCategories.includes(cat)}
-              title={CATEGORY_LABELS[cat]}
-              aria-label={CATEGORY_LABELS[cat]}
-              onClick={() => onCategoryToggle && onCategoryToggle(cat)}
+          {(availableMediums.length > 0 ? availableMediums : MEDIUMS).map((med) => (
+            <MediumIconButton
+              key={med}
+              $selected={selectedMediums.includes(med as string)}
+              title={MEDIUM_LABELS[med as keyof typeof MEDIUM_LABELS]}
+              aria-label={MEDIUM_LABELS[med as keyof typeof MEDIUM_LABELS]}
+              onClick={() => onMediumToggle && onMediumToggle(med as string)}
             >
-              {CATEGORY_ICONS[cat]}
-            </CategoryIconButton>
+              {MEDIUM_ICONS[med as keyof typeof MEDIUM_ICONS]}
+            </MediumIconButton>
           ))}
         </IconsWrapper>
       </div>

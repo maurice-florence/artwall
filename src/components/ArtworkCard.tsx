@@ -1,24 +1,19 @@
 import React from 'react';
 import styled, { useTheme } from 'styled-components';
-import { Artwork, ArtworkCategory, PoetryArtwork, ProseArtwork, VisualArtArtwork, MusicArtwork, VideoArtwork, OtherArtwork } from '@/types';
+import { Artwork, ArtworkMedium, PoemArtwork, ProseArtwork, VisualArtArtwork, MusicArtwork, VideoArtwork, OtherArtwork } from '@/types';
 import { FaPenNib, FaPaintBrush, FaMusic, FaBookOpen, FaVolumeUp, FaAlignLeft } from 'react-icons/fa';
 
-interface CardContainerProps {
-    category: ArtworkCategory;
+    medium: ArtworkMedium;
 }
 
-const getGridSpan = (category: ArtworkCategory, rowSpan: number = 1) => {
-    switch(category) {
-        case 'prose':
+const getGridSpan = (medium: ArtworkMedium, rowSpan: number = 1) => {
+    switch(medium) {
+        case 'writing':
             return `grid-column: span 2; grid-row: span ${rowSpan};`;
-        case 'prosepoetry':
+        case 'audio':
             return `grid-column: span 1.5; grid-row: span ${rowSpan};`;
-        case 'music':
-            return 'grid-column: span 2; grid-row: span 1;';
         case 'sculpture':
-            return 'grid-row: span 1;';
         case 'drawing':
-        case 'poetry':
         default:
             return 'grid-column: span 1; grid-row: span 1;';
     }
@@ -29,7 +24,7 @@ const CardContainer = styled.div<CardContainerProps & { $rowSpan?: number; $blan
   width: 100%;
   border-radius: 12px;
   /* Remove explicit height, let grid control it */
-  ${props => getGridSpan(props.category, props.$rowSpan)}
+  ${props => getGridSpan(props.medium, props.$rowSpan)}
 
   @media (max-width: 768px) {
       grid-column: span 2;
@@ -161,8 +156,8 @@ const ProzaImage = styled.img`
 `;
 
 const iconMap: { [key: string]: React.JSX.Element } = {
-  poetry: <FaPenNib />,
-  prosepoetry: <FaAlignLeft />,
+  poem: <FaPenNib />,
+  prosepoem: <FaAlignLeft />,
   prose: <FaBookOpen />,
   sculpture: <FaPaintBrush />,
   drawing: <FaPaintBrush />,

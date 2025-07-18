@@ -186,7 +186,7 @@ function hasLyrics(artwork: Artwork): artwork is import("@/types").MusicArtwork 
 function hasChords(artwork: Artwork): artwork is import("@/types").MusicArtwork {
   return 'chords' in artwork && typeof (artwork as any).chords === 'string';
 }
-function hasMediaType(artwork: Artwork): artwork is (import("@/types").MusicArtwork | import("@/types").VisualArtArtwork | import("@/types").VideoArtwork | import("@/types").PoetryArtwork) {
+function hasMediaType(artwork: Artwork): artwork is (import("@/types").MusicArtwork | import("@/types").VisualArtArtwork | import("@/types").VideoArtwork | import("@/types").PoemArtwork) {
   return 'mediaType' in artwork && typeof (artwork as any).mediaType === 'string';
 }
 
@@ -329,7 +329,7 @@ const Modal: React.FC<ModalProps> = ({
         <StyledHr />
 
         <MediaTextContainer>
-          {/* Display content for all categories */}
+          {/* Display content for all mediums */}
           {translation.content && (
             <TextContainer
               style={{ marginTop: '1rem', whiteSpace: 'pre-wrap' }}

@@ -19,7 +19,8 @@ const renderWithTheme = (component: React.ReactElement) => {
 describe('BasicInfoForm', () => {
   const mockFormData: ArtworkFormData = {
     title: '',
-    category: 'poetry',
+    medium: 'writing',
+    subtype: 'poem',
     year: 2025,
     month: 7,
     day: 15,

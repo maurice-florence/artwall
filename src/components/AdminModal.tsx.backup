@@ -135,7 +135,7 @@ const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, artworkToEdit 
   const [year, setYear] = React.useState<number | null>(null);
   const [month, setMonth] = React.useState<number | null>(null);
   const [day, setDay] = React.useState<number | null>(null);
-  const [category, setCategory] = React.useState<Artwork["category"]>("poetry");
+  const [category, setCategory] = React.useState<Artwork["category"]>("poem");
   const [description, setDescription] = React.useState("");
   const [content, setContent] = React.useState("");
   const [isHidden, setIsHidden] = React.useState<boolean>(false);
@@ -192,7 +192,7 @@ const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, artworkToEdit 
       setYear(artworkToEdit.year || new Date().getFullYear());
       setMonth(artworkToEdit.month || new Date().getMonth() + 1);
       setDay(artworkToEdit.day || new Date().getDate());
-      setCategory(artworkToEdit.category || "poetry");
+      setCategory(artworkToEdit.category || "poem");
       setDescription(artworkToEdit.description || "");
       setIsHidden(!!artworkToEdit.isHidden);
       
@@ -244,7 +244,7 @@ const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, artworkToEdit 
       setYear(new Date().getFullYear());
       setMonth(new Date().getMonth() + 1);
       setDay(new Date().getDate());
-      setCategory("poetry");
+      setCategory("poem");
       setDescription("");
       setContent("");
       setIsHidden(false);
@@ -306,8 +306,8 @@ const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, artworkToEdit 
 
   // Helper: which fields to show for each category
   const categoryFields: Record<string, string[]> = {
-    poetry: ["title", "year", "month", "day", "description", "content"],
-    prosepoetry: ["title", "year", "month", "day", "description", "content"],
+    poem: ["title", "year", "month", "day", "description", "content"],
+    prosepoem: ["title", "year", "month", "day", "description", "content"],
     prose: ["title", "year", "month", "day", "description", "content", "coverImageUrl", "pdfUrl"],
     music: ["title", "year", "month", "day", "description", "lyrics", "chords", "audioUrl", "soundcloudUrl"],
     sculpture: ["title", "year", "month", "day", "description", "coverImageUrl"],

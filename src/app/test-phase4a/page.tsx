@@ -114,7 +114,7 @@ const TestPhase4APage = () => {
   const mockArtwork = {
     id: 'test-artwork',
     title: 'Test Compositie',
-    category: 'music' as const,
+    medium: 'audio' as const,
     year: 2025,
     month: 7,
     day: 16,

@@ -1,7 +1,7 @@
 import React, { createContext, useState, useEffect, useContext, ReactNode } from 'react';
 import { db } from '../firebase';
 import { ref, onValue } from 'firebase/database';
-import { Artwork, PoetryArtwork, ProseArtwork, VisualArtArtwork, MusicArtwork, VideoArtwork, OtherArtwork } from '@/types';
+import { Artwork, PoemArtwork, ProseArtwork, VisualArtArtwork, MusicArtwork, VideoArtwork, OtherArtwork } from '@/types';
 
 interface ArtworksContextType {
   artworks: Artwork[];

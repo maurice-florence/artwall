@@ -1,6 +1,7 @@
 // src/components/AdminModal/utils/formLogic.ts
 // filepath: c:\Users\friem\OneDrive\Documenten\GitHub\artwall\src\components\AdminModal\utils\formLogic.ts
-import { ArtworkFormData, ArtworkCategory, ArtworkMedium } from '@/types';
+import { ArtworkFormData } from '@/types';
+import { MEDIUMS, MEDIUM_LABELS, ArtworkMedium } from '@/constants/medium';
 
 export interface ConditionalRule {
   field: keyof ArtworkFormData;
@@ -22,42 +23,42 @@ export interface SmartDefault {
 
 // Conditional field rules - when to show/hide fields
 export const CONDITIONAL_RULES: ConditionalRule[] = [
-  // Music medium rules
+  // Audio medium rules
   {
     field: 'lyrics',
-    condition: (data) => data.medium === 'music',
+    condition: (data) => data.medium === 'audio',
     action: 'show'
   },
   {
     field: 'chords',
-    condition: (data) => data.medium === 'music',
+    condition: (data) => data.medium === 'audio',
     action: 'show'
   },
   {
     field: 'soundcloudEmbedUrl',
-    condition: (data) => data.medium === 'music',
+    condition: (data) => data.medium === 'audio',
     action: 'show'
   },
   {
     field: 'soundcloudTrackUrl',
-    condition: (data) => data.medium === 'music',
+    condition: (data) => data.medium === 'audio',
     action: 'show'
   },
   {
     field: 'audioUrl',
-    condition: (data) => data.medium === 'music',
+    condition: (data) => data.medium === 'audio',
     action: 'show'
   },
   
-  // Visual arts rules (drawing, photography, video)
+  // Visual arts rules (drawing, sculpture)
   {
     field: 'mediaUrl',
-    condition: (data) => ['drawing', 'photography', 'video', 'sculpture'].includes(data.medium),
+    condition: (data) => ['drawing', 'sculpture'].includes(data.medium),
     action: 'show'
   },
   {
     field: 'coverImageUrl',
-    condition: (data) => ['writing', 'sculpture'].includes(data.medium),
+    condition: (data) => ['drawing', 'sculpture', 'writing'].includes(data.medium),
     action: 'show'
   },
   
@@ -83,7 +84,7 @@ export const CONDITIONAL_RULES: ConditionalRule[] = [
   // Advanced fields based on media type
   {
     field: 'mediaUrls',
-    condition: (data) => data.mediaType === 'video' || data.mediaType === 'audio',
+    condition: (data) => data.mediaType === 'audio',
     action: 'show'
   },
   
@@ -142,37 +143,17 @@ export const DEPENDENCY_RULES: DependencyRule[] = [
       
       const year = formData.year || new Date().getFullYear();
       const suggestions = {
-        drawing: `Tekening ${year}`,
+        audio: `Audio ${year}`,
         writing: `Tekst ${year}`,
-        music: `Compositie ${year}`,
+        drawing: `Tekening ${year}`,
         sculpture: `Sculptuur ${year}`,
-        photography: `Foto ${year}`,
-        video: `Video ${year}`,
         other: `Kunstwerk ${year}`
       };
-      
-      return suggestions[medium] || `Kunstwerk ${year}`;
+      return suggestions[medium as keyof typeof suggestions] || `Kunstwerk ${year}`;
     }
   },
   
-  // Auto-set category based on medium for backwards compatibility
-  {
-    sourceField: 'medium',
-    targetField: 'category',
-    transform: (medium: ArtworkMedium) => {
-      const categoryMap = {
-        drawing: 'drawing',
-        writing: 'poetry', // Default to poetry for writing
-        music: 'music',
-        sculpture: 'sculpture',
-        photography: 'image',
-        video: 'video',
-        other: 'other'
-      };
-      
-      return categoryMap[medium] || 'other';
-    }
-  },
+  // Category mapping removed. Use medium only.
   
   // Auto-set media type based on medium
   {
@@ -180,16 +161,13 @@ export const DEPENDENCY_RULES: DependencyRule[] = [
     targetField: 'mediaType',
     transform: (medium: ArtworkMedium) => {
       const mediaTypeMap = {
-        drawing: 'image',
+        audio: 'audio',
         writing: 'text',
-        music: 'audio',
+        drawing: 'image',
         sculpture: 'image',
-        photography: 'image',
-        video: 'video',
         other: 'text'
       };
-      
-      return mediaTypeMap[medium] || 'text';
+      return mediaTypeMap[medium as keyof typeof mediaTypeMap] || 'text';
     }
   },
   
@@ -256,12 +234,10 @@ export const SMART_DEFAULTS: SmartDefault[] = [
     field: 'subtype',
     getValue: (data) => {
       const subtypeMap = {
-        drawing: 'marker',
+        audio: 'instrumental',
         writing: 'poem',
-        music: 'instrumental',
+        drawing: 'marker',
         sculpture: 'clay',
-        photography: 'portrait',
-        video: 'documentary',
         other: 'other'
       };
       return subtypeMap[data.medium] || 'other';
@@ -271,12 +247,10 @@ export const SMART_DEFAULTS: SmartDefault[] = [
     field: 'mediaType',
     getValue: (data) => {
       const typeMap = {
-        drawing: 'image',
+        audio: 'audio',
         writing: 'text',
-        music: 'audio',
+        drawing: 'image',
         sculpture: 'image',
-        photography: 'image',
-        video: 'video',
         other: 'text'
       };
       return typeMap[data.medium] || 'text';
@@ -352,7 +326,7 @@ export const applySmartDefaults = (formData: ArtworkFormData): Partial<ArtworkFo
 
 export const getVisibleFields = (formData: ArtworkFormData): Array<keyof ArtworkFormData> => {
   const allFields: Array<keyof ArtworkFormData> = [
-    'title', 'medium', 'subtype', 'category', 'year', 'month', 'day', 'description', 'content',
+    'title', 'medium', 'subtype', 'year', 'month', 'day', 'description', 'content',
     'lyrics', 'chords', 'soundcloudEmbedUrl', 'soundcloudTrackUrl', 'audioUrl',
     'mediaType', 'mediaUrl', 'mediaUrls', 'coverImageUrl', 'pdfUrl',
     'version', 'language1', 'language2', 'language3',
@@ -381,8 +355,8 @@ export const validateWithSmartLogic = (formData: ArtworkFormData): { errors: str
   });
   
   // Smart warnings based on medium
-  if (formData.medium === 'music' && !formData.lyrics && !formData.audioUrl) {
-    warnings.push('Consider adding lyrics or audio URL for music medium');
+  if (formData.medium === 'audio' && !formData.lyrics && !formData.audioUrl) {
+    warnings.push('Consider adding lyrics or audio URL for audio medium');
   }
   
   if (formData.medium === 'writing' && !formData.content && !formData.pdfUrl) {

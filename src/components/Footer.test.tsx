@@ -19,8 +19,8 @@ vi.mock('firebase/database', () => ({
     // Simulate a Firebase snapshot with some data
     const mockSnapshot = {
       val: () => ({
-        artwork1: { category: 'poetry', year: 2023 },
-        artwork2: { category: 'music', year: 2022 },
+        artwork1: { medium: 'writing', subtype: 'poem', year: 2023 },
+        artwork2: { medium: 'audio', subtype: 'song', year: 2022 },
       }),
     };
     callback(mockSnapshot);
@@ -40,8 +40,8 @@ vi.mock('firebase/auth', () => ({
 vi.mock('@/context/ArtworksContext', () => ({
   useArtworks: () => ({
     artworks: [
-      { id: '1', category: 'poetry', year: 2023, title: 'Test Poem' },
-      { id: '2', category: 'music', year: 2022, title: 'Test Song' },
+      { id: '1', medium: 'writing', subtype: 'poem', year: 2023, title: 'Test Poem' },
+      { id: '2', medium: 'audio', subtype: 'song', year: 2022, title: 'Test Song' },
     ],
     isLoading: false,
   }),

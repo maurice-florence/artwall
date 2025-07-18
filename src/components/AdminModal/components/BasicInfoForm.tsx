@@ -1,7 +1,6 @@
 // src/components/AdminModal/components/BasicInfoForm.tsx
 // filepath: c:\Users\friem\OneDrive\Documenten\GitHub\artwall\src\components\AdminModal\components\BasicInfoForm.tsx
 import React from 'react';
-import { CATEGORIES, CATEGORY_LABELS } from '@/constants';
 import { MEDIUMS, MEDIUM_LABELS, getSubtypesForMedium, SUBTYPE_LABELS } from '@/constants/medium';
 import { FormComponentProps } from '../types';
 import {
@@ -84,24 +83,7 @@ export const BasicInfoForm: React.FC<FormComponentProps> = ({
         </FieldGroup>
       )}
 
-      <FieldGroup>
-        <Label htmlFor="category">Categorie (Legacy)</Label>
-        <Select
-          id="category"
-          value={formData.category}
-          onChange={(e) => updateField('category', e.target.value)}
-          aria-invalid={!!errors.category}
-        >
-          {CATEGORIES.map((cat) => (
-            <option key={cat} value={cat}>
-              {CATEGORY_LABELS[cat]}
-            </option>
-          ))}
-        </Select>
-        {errors.category && (
-          <ErrorMessage>{errors.category}</ErrorMessage>
-        )}
-      </FieldGroup>
+      {/* Legacy category field removed. Use medium only. */}
 
       <div style={{ display: 'flex', gap: '1rem' }}>
         <div style={{ flex: 1 }}>

@@ -47,7 +47,7 @@ export const useSmartFormLogic = (formData: ArtworkFormData) => {
     const fieldStates: Record<string, SmartFormState['fieldStates'][string]> = {};
     
     const allPossibleFields: Array<keyof ArtworkFormData> = [
-      'title', 'category', 'year', 'month', 'day', 'description', 'content',
+      'title', 'medium', 'subtype', 'year', 'month', 'day', 'description', 'content',
       'lyrics', 'chords', 'soundcloudEmbedUrl', 'soundcloudTrackUrl', 'audioUrl',
       'mediaType', 'mediaUrl', 'mediaUrls', 'coverImageUrl', 'pdfUrl',
       'version', 'language1', 'language2', 'language3',

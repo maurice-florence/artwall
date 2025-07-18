@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import SimpleModal from '@/components/SimpleModal';
-import { CATEGORIES } from '@/constants';
+import { MEDIUMS } from '@/constants/medium';
 import styled from 'styled-components';
 import { FaTrash, FaShareAlt } from 'react-icons/fa';
 import { storage } from '@/firebase';
@@ -81,14 +81,12 @@ const CardFooter = styled.div`
   color: ${({ theme }) => theme.cardText};
 `;
 
-const categoryFields: Record<string, string[]> = {
-  'poetry': ['title', 'year', 'month', 'day', 'description', 'content'],
-  'prosepoetry': ['title', 'year', 'month', 'day', 'description', 'content'],
-  'prose': ['title', 'year', 'month', 'day', 'description', 'coverImageUrl', 'pdfUrl'],
+const mediumFields: Record<string, string[]> = {
+  'drawing': ['title', 'year', 'month', 'day', 'description', 'coverImageUrl'],
+  'writing': ['title', 'year', 'month', 'day', 'description', 'content'],
   'music': ['title', 'year', 'month', 'day', 'description', 'lyrics', 'audioFile', 'soundcloudUrl'],
   'sculpture': ['title', 'year', 'month', 'day', 'description', 'coverImageUrl'],
-  'drawing': ['title', 'year', 'month', 'day', 'description', 'coverImageUrl'],
-  'image': ['title', 'year', 'month', 'day', 'description', 'coverImageUrl'],
+  'photography': ['title', 'year', 'month', 'day', 'description', 'coverImageUrl'],
   'video': ['title', 'year', 'month', 'day', 'description', 'mediaUrl'],
   'other': ['title', 'year', 'month', 'day', 'description', 'content', 'mediaUrl'],
 };
@@ -105,7 +103,8 @@ const initialState = {
   year: new Date().getFullYear(),
   month: 1,
   day: 1,
-  category: 'poetry',
+  medium: 'drawing',
+  subtype: 'marker',
   description: '',
   content: '',
   lyrics: '',
@@ -171,12 +170,12 @@ const NewEntryModal: React.FC<NewEntryModalProps> = ({ isOpen, onClose, onSave, 
       let pdfUrl = form.pdfUrl || '';
       let audioUrl = form.audioUrl || '';
       let videoUrl = form.videoUrl || '';
-      // Upload cover image for proza, sculptuur, tekening
-      if (coverFile && ['prose', 'sculpture', 'drawing'].includes(form.category)) {
+      // Upload cover image for specific mediums
+      if (coverFile && ['writing', 'sculpture', 'drawing'].includes(form.medium)) {
         coverImageUrl = await uploadToStorage(coverFile, `covers/${Date.now()}_${coverFile.name}`);
       }
-      // Upload PDF for proza
-      if (pdfFile && form.category === 'prose') {
+      // Upload PDF for writing subtype
+      if (pdfFile && form.medium === 'writing' && form.subtype === 'prose') {
         pdfUrl = await uploadToStorage(pdfFile, `pdfs/${Date.now()}_${pdfFile.name}`);
       }
       // Upload audio for muziek
@@ -222,7 +221,7 @@ const NewEntryModal: React.FC<NewEntryModalProps> = ({ isOpen, onClose, onSave, 
   };
 
   // Dynamic fields per category
-  const fields = categoryFields[form.category] || [];
+  const fields = mediumFields[form.medium] || [];
 
   const renderField = (field: string) => {
     switch (field) {
@@ -329,9 +328,9 @@ const NewEntryModal: React.FC<NewEntryModalProps> = ({ isOpen, onClose, onSave, 
   return (
     <SimpleModal isOpen={isOpen} onClose={onClose}>
       <form onSubmit={e => { e.preventDefault(); handleSave(); }}>
-        <CategorySelect name="category" value={form.category} onChange={handleInputChange}>
-          {Object.keys(categoryFields).map(cat => (
-            <option key={cat} value={cat}>{cat}</option>
+        <CategorySelect name="medium" value={form.medium} onChange={handleInputChange}>
+          {Object.keys(mediumFields).map(med => (
+            <option key={med} value={med}>{med}</option>
           ))}
         </CategorySelect>
         {fields.map(renderField)}

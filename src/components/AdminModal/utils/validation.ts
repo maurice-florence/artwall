@@ -124,8 +124,8 @@ export const validateArtworkFormEnhanced = (formData: ArtworkFormData): Validati
     });
   }
 
-  // Category-specific validation
-  if (formData.category === 'music') {
+  // Medium-specific validation
+  if (formData.medium === 'audio') {
     if (!formData.lyrics && !formData.content) {
       warnings.lyrics = 'Muziek zonder tekst of content - overweeg toevoegen van lyrics';
     }

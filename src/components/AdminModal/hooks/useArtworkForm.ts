@@ -12,9 +12,9 @@ const getInitialFormData = (): ArtworkFormData => {
     year: new Date().getFullYear(),
     month: new Date().getMonth() + 1,
     day: new Date().getDate(),
-    category: 'poetry',
     medium: 'writing',
     subtype: 'poem',
+    // Removed category field, only medium/subtype used
     description: '',
     content: '',
     isHidden: false,
