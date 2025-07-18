@@ -177,16 +177,17 @@ const isClient = typeof window !== 'undefined';
 const isMobile = isClient ? window.innerWidth < 768 : false;
 
 // Type guards for union type fields
-function hasSoundcloudTrackUrl(artwork: Artwork): artwork is import("@/types").MusicArtwork {
-  return 'soundcloudTrackUrl' in artwork && typeof (artwork as any).soundcloudTrackUrl === 'string';
+// Type guards for audio medium fields
+function hasSoundcloudTrackUrl(artwork: Artwork): boolean {
+  return artwork.medium === 'audio' && 'soundcloudTrackUrl' in artwork && typeof (artwork as any).soundcloudTrackUrl === 'string';
 }
-function hasLyrics(artwork: Artwork): artwork is import("@/types").MusicArtwork {
-  return 'lyrics' in artwork && typeof (artwork as any).lyrics === 'string';
+function hasLyrics(artwork: Artwork): boolean {
+  return artwork.medium === 'audio' && 'lyrics' in artwork && typeof (artwork as any).lyrics === 'string';
 }
-function hasChords(artwork: Artwork): artwork is import("@/types").MusicArtwork {
-  return 'chords' in artwork && typeof (artwork as any).chords === 'string';
+function hasChords(artwork: Artwork): boolean {
+  return artwork.medium === 'audio' && 'chords' in artwork && typeof (artwork as any).chords === 'string';
 }
-function hasMediaType(artwork: Artwork): artwork is (import("@/types").MusicArtwork | import("@/types").VisualArtArtwork | import("@/types").VideoArtwork | import("@/types").PoemArtwork) {
+function hasMediaType(artwork: Artwork): boolean {
   return 'mediaType' in artwork && typeof (artwork as any).mediaType === 'string';
 }
 

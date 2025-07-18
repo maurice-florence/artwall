@@ -267,19 +267,7 @@ def normalize_artwork_payload(artwork_payload: Dict[str, Any], media_urls: List[
                     artwork_payload['coverImageUrl'] = url
                     break
         
-        elif category == 'image' or medium == 'photography':
-            # For photography: first image is coverImageUrl
-            for url in media_urls:
-                if any(ext in url.lower() for ext in ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.raw']):
-                    artwork_payload['coverImageUrl'] = url
-                    break
-        
-        elif category == 'video' or medium == 'video':
-            # For video: first video file is mediaUrl
-            for url in media_urls:
-                if any(ext in url.lower() for ext in ['.mp4', '.mov', '.avi', '.webm', '.mkv']):
-                    artwork_payload['mediaUrl'] = url
-                    break
+        # ...existing code...
         
         # Keep original mediaUrl/mediaUrls for backwards compatibility
         if len(media_urls) > 1:

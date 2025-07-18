@@ -59,7 +59,6 @@ const DataDisplay = styled.pre`
 const initialFormData: ArtworkFormData = {
   title: '',
   description: '',
-  category: 'other',
   medium: 'drawing',
   subtype: 'marker',
   year: new Date().getFullYear(),
@@ -83,7 +82,6 @@ export default function Phase3BDemo() {
   const categoryOptions = [
     { value: 'painting', label: 'Painting' },
     { value: 'sculpture', label: 'Sculpture' },
-    { value: 'photography', label: 'Photography' },
     { value: 'digital', label: 'Digital Art' },
     { value: 'mixed', label: 'Mixed Media' }
   ];
@@ -167,7 +165,7 @@ export default function Phase3BDemo() {
           onChange={handleChange}
           type="url"
           placeholder="https://example.com/image.jpg"
-          helpText="Enter a URL to an image, video, or other media"
+          helpText="Enter a URL to an image or other media"
           previewUrl={true}
         />
       </Section>

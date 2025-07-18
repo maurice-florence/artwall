@@ -1,3 +1,17 @@
+def get_medium_subtype_from_category(category: str) -> tuple:
+    """Map legacy category to new medium/subtype values."""
+    category = category.lower()
+    mapping = {
+        'poetry': ('writing', 'poem'),
+        'prosepoetry': ('writing', 'poem'),
+        'prose': ('writing', 'prose'),
+        'music': ('audio', 'vocal'),
+        'sculpture': ('sculpture', 'clay'),
+        'drawing': ('drawing', 'marker'),
+        'image': ('drawing', 'digital'),
+        'other': ('other', 'other'),
+    }
+    return mapping.get(category, ('other', 'other'))
 """
 Evernote .enex to HTML Converter with Medium/Subtype Support
 
@@ -7,7 +21,6 @@ It supports the new medium/subtype classification system introduced in the artwa
 NEW FEATURES:
 - Medium/Subtype validation and auto-detection
 - Backwards compatibility with legacy category system
-- Enhanced MIME type support for photography and video
 - Automatic medium/subtype detection from content analysis
 - Comprehensive reporting with medium/subtype statistics
 
@@ -16,8 +29,6 @@ SUPPORTED MEDIUMS AND SUBTYPES:
 - writing: poem, prose, story, essay, other
 - music: instrumental, vocal, electronic, acoustic, other
 - sculpture: clay, wood, metal, stone, other
-- photography: portrait, landscape, street, abstract, other
-- video: documentary, narrative, experimental, animation, other
 - other: other
 
 MIGRATION NOTES:
@@ -57,8 +68,6 @@ NIEUWE MEDIUM/SUBTYPE STRUCTUUR:
 - writing: poem, prose, story, essay, other
 - music: instrumental, vocal, electronic, acoustic, other
 - sculpture: clay, wood, metal, stone, other
-- photography: portrait, landscape, street, abstract, other
-- video: documentary, narrative, experimental, animation, other
 - other: other
 
 EXTRA VALIDATIE VOOR TEKST CATEGORIEËN (poetry, prosepoetry, music):
@@ -66,7 +75,7 @@ EXTRA VALIDATIE VOOR TEKST CATEGORIEËN (poetry, prosepoetry, music):
 - Als er meerdere talen zijn: language2, language3 moeten overeenkomen met het aantal tekstblokken
 - Elk tekstblok moet gescheiden zijn door ---TRANSLATION_xx--- markers
 
-EXTRA VALIDATIE VOOR MEDIA CATEGORIEËN (drawing, sculpture, prose, image, video):
+EXTRA VALIDATIE VOOR MEDIA CATEGORIEËN (drawing, sculpture, prose, image):
 - Er moet minstens één bijgevoegd bestand (resource) zijn
 - Bijgevoegde bestanden moeten een geldig MIME-type hebben
 
@@ -81,7 +90,7 @@ NIEUWE OPTIONELE VELDEN:
 
 # Medium and subtype constants (matching the TypeScript definitions)
 VALID_MEDIUMS = [
-    'drawing', 'writing', 'music', 'sculpture', 'photography', 'video', 'other'
+    'drawing', 'writing', 'music', 'sculpture', 'other'
 ]
 
 VALID_SUBTYPES = {
@@ -89,8 +98,6 @@ VALID_SUBTYPES = {
     'writing': ['poem', 'prose', 'story', 'essay', 'other'],
     'music': ['instrumental', 'vocal', 'electronic', 'acoustic', 'other'],
     'sculpture': ['clay', 'wood', 'metal', 'stone', 'other'],
-    'photography': ['portrait', 'landscape', 'street', 'abstract', 'other'],
-    'video': ['documentary', 'narrative', 'experimental', 'animation', 'other'],
     'other': ['other']
 }
 
@@ -152,9 +159,7 @@ def auto_detect_medium_subtype_from_content(content: str, resources: list = None
         for resource in resources:
             mime = resource.findtext('mime', '').lower()
             if 'image' in mime or 'jpeg' in mime or 'png' in mime or 'gif' in mime:
-                return ('photography', 'portrait')
-            elif 'video' in mime or 'mp4' in mime or 'webm' in mime:
-                return ('video', 'documentary')
+                pass
     
     # Default fallback
     return ('writing', 'other')
@@ -537,9 +542,10 @@ def process_enex_files(source_dir: pathlib.Path, dest_dir: pathlib.Path):
                         
                     # Set legacy category based on detected medium
                     if 'category' not in meta:
-                        meta['category'] = MEDIUM_TO_CATEGORY.get(detected_medium, 'other')
+                        # Legacy mapping removed. Use only new medium/subtype logic or fallback
+                        meta['category'] = 'other'
 
-                category = meta.get('category', 'unknown')
+                category = meta.get('category', 'other')
                 medium = meta.get('medium', 'other')
                 subtype = meta.get('subtype', 'other')
                 
@@ -622,7 +628,7 @@ def process_enex_files(source_dir: pathlib.Path, dest_dir: pathlib.Path):
                         created_files_log.append(f"{file_path.name} ({file_status})")
 
                 # --- Logica voor media-bestanden ---
-                elif category in ['drawing', 'sculpture', 'prose', 'image', 'video']:
+                elif category in ['drawing', 'sculpture', 'prose', 'image']:
                     # Create ordered metadata with 'language' field
                     meta_with_lang = {}
                     for key, value in meta.items():

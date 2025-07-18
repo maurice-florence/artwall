@@ -312,8 +312,7 @@ const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, artworkToEdit 
     music: ["title", "year", "month", "day", "description", "lyrics", "chords", "audioUrl", "soundcloudUrl"],
     sculpture: ["title", "year", "month", "day", "description", "coverImageUrl"],
     drawing: ["title", "year", "month", "day", "description", "coverImageUrl"],
-    image: ["title", "year", "month", "day", "description", "coverImageUrl"],
-    video: ["title", "year", "month", "day", "description", "mediaUrl"],
+    # photography and video removed
     other: ["title", "year", "month", "day", "description", "content", "mediaUrl"],
   };
   const fieldsToShow = categoryFields[category] || [];

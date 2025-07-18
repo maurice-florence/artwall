@@ -7,7 +7,7 @@ import { storage } from '@/firebase';
 import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { push, ref as dbRef } from 'firebase/database';
 import { db } from '@/firebase';
-import { ArtworkCategory } from '@/types';
+// Removed ArtworkCategory import
 
 const CategorySelect = styled.select`
   margin-bottom: 1.5rem;
@@ -84,10 +84,8 @@ const CardFooter = styled.div`
 const mediumFields: Record<string, string[]> = {
   'drawing': ['title', 'year', 'month', 'day', 'description', 'coverImageUrl'],
   'writing': ['title', 'year', 'month', 'day', 'description', 'content'],
-  'music': ['title', 'year', 'month', 'day', 'description', 'lyrics', 'audioFile', 'soundcloudUrl'],
+  'audio': ['title', 'year', 'month', 'day', 'description', 'lyrics', 'audioFile', 'soundcloudUrl'],
   'sculpture': ['title', 'year', 'month', 'day', 'description', 'coverImageUrl'],
-  'photography': ['title', 'year', 'month', 'day', 'description', 'coverImageUrl'],
-  'video': ['title', 'year', 'month', 'day', 'description', 'mediaUrl'],
   'other': ['title', 'year', 'month', 'day', 'description', 'content', 'mediaUrl'],
 };
 
@@ -113,9 +111,7 @@ const initialState = {
   coverImageUrl: '',
   pdfUrl: '',
   audioUrl: '',
-  videoUrl: '',
   audioFile: null,
-  videoFile: null,
 };
 
 const NewEntryModal: React.FC<NewEntryModalProps> = ({ isOpen, onClose, onSave, editItem }) => {
@@ -123,7 +119,6 @@ const NewEntryModal: React.FC<NewEntryModalProps> = ({ isOpen, onClose, onSave, 
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [audioFile, setAudioFile] = useState<File | null>(null);
-  const [videoFile, setVideoFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -136,7 +131,6 @@ const NewEntryModal: React.FC<NewEntryModalProps> = ({ isOpen, onClose, onSave, 
     setCoverFile(null);
     setPdfFile(null);
     setAudioFile(null);
-    setVideoFile(null);
   }, [editItem, isOpen]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -145,14 +139,13 @@ const NewEntryModal: React.FC<NewEntryModalProps> = ({ isOpen, onClose, onSave, 
   };
 
   // File input handlers
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'cover' | 'pdf' | 'audio' | 'video') => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'cover' | 'pdf' | 'audio') => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
     const file = files[0];
     if (type === 'cover') setCoverFile(file);
     if (type === 'pdf') setPdfFile(file);
     if (type === 'audio') setAudioFile(file);
-    if (type === 'video') setVideoFile(file);
   };
 
   // Upload helper
@@ -169,7 +162,6 @@ const NewEntryModal: React.FC<NewEntryModalProps> = ({ isOpen, onClose, onSave, 
       let coverImageUrl = form.coverImageUrl || '';
       let pdfUrl = form.pdfUrl || '';
       let audioUrl = form.audioUrl || '';
-      let videoUrl = form.videoUrl || '';
       // Upload cover image for specific mediums
       if (coverFile && ['writing', 'sculpture', 'drawing'].includes(form.medium)) {
         coverImageUrl = await uploadToStorage(coverFile, `covers/${Date.now()}_${coverFile.name}`);
@@ -179,12 +171,8 @@ const NewEntryModal: React.FC<NewEntryModalProps> = ({ isOpen, onClose, onSave, 
         pdfUrl = await uploadToStorage(pdfFile, `pdfs/${Date.now()}_${pdfFile.name}`);
       }
       // Upload audio for muziek
-      if (audioFile && form.category === 'music') {
+      if (audioFile && form.medium === 'music') {
         audioUrl = await uploadToStorage(audioFile, `audio/${Date.now()}_${audioFile.name}`);
-      }
-      // Upload video for video
-      if (videoFile && form.category === 'video') {
-        videoUrl = await uploadToStorage(videoFile, `video/${Date.now()}_${videoFile.name}`);
       }
       // Compose artwork object
       const newArtwork: any = {
@@ -192,7 +180,6 @@ const NewEntryModal: React.FC<NewEntryModalProps> = ({ isOpen, onClose, onSave, 
         coverImageUrl: coverImageUrl || undefined,
         pdfUrl: pdfUrl || undefined,
         audioUrl: audioUrl || undefined,
-        videoUrl: videoUrl || undefined,
         type: 'artwork',
         year: Number(form.year),
         month: Number(form.month),
@@ -209,7 +196,6 @@ const NewEntryModal: React.FC<NewEntryModalProps> = ({ isOpen, onClose, onSave, 
       setCoverFile(null);
       setPdfFile(null);
       setAudioFile(null);
-      setVideoFile(null);
       onClose();
     } catch (err) {
       let message = 'Onbekende fout.';
@@ -303,14 +289,6 @@ const NewEntryModal: React.FC<NewEntryModalProps> = ({ isOpen, onClose, onSave, 
             <Label>PDF uploaden</Label>
             <Input type="file" accept="application/pdf" onChange={e => handleFileChange(e, 'pdf')} />
             {pdfFile && <span>{pdfFile.name}</span>}
-          </FieldGroup>
-        );
-      case 'videoFile':
-        return (
-          <FieldGroup key="videoFile">
-            <Label>Video uploaden</Label>
-            <Input type="file" accept="video/*" onChange={e => handleFileChange(e, 'video')} />
-            {videoFile && <span>{videoFile.name}</span>}
           </FieldGroup>
         );
       case 'youtubeUrl':

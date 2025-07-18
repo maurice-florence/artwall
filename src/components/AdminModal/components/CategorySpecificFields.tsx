@@ -110,7 +110,7 @@ export const MediumSpecificFields: React.FC<FormComponentProps> = ({
           options={[
             { value: 'text', label: 'Tekst' },
             { value: 'image', label: 'Afbeelding' },
-            { value: 'video', label: 'Video' },
+            // ...existing code...
             { value: 'audio', label: 'Audio' },
             { value: 'pdf', label: 'PDF' }
           ]}
@@ -157,16 +157,14 @@ export const MediumSpecificFields: React.FC<FormComponentProps> = ({
     </>
   );
 
-  if (!formData.category) return null;
+  if (!formData.medium) return null;
 
   return (
     <>
-      <SectionTitle>Categorie-specifieke Velden</SectionTitle>
-      
-      {formData.category === 'music' && renderMusicFields()}
-      {['image', 'video', 'sculpture', 'drawing'].includes(formData.category) && renderMediaFields()}
-      
-      {formData.category === 'other' && (
+      <SectionTitle>Medium-specifieke Velden</SectionTitle>
+      {formData.medium === 'audio' && renderMusicFields()}
+      {['drawing', 'sculpture'].includes(formData.medium) && renderMediaFields()}
+      {formData.medium === 'other' && (
         <SmartFormField
           label="Type"
           field="mediaType"
