@@ -1,5 +1,6 @@
 // Use centralized types from src/constants/medium.ts
 import { ArtworkMedium, ArtworkSubtype } from '@/constants/medium';
+export type { ArtworkMedium, ArtworkSubtype };
 
 // De basis-interface met alle gedeelde eigenschappen
 interface BaseArtwork {
@@ -47,6 +48,7 @@ interface BaseArtwork {
   pdfUrl?: string;
   mediaUrl?: string;
   mediaUrls?: string[];
+  mediaType?: string; // Optional mediaType for compatibility
   
   // Music-specific fields
   lyrics?: string; // Primary language lyrics

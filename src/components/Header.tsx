@@ -85,7 +85,29 @@ const MediumIconButton = styled.button<{ $selected?: boolean }>`
   }
 `;
 
-const Header = ({ onToggleSidebar, selectedMediums = [], onMediumToggle, availableMediums = [] }: { onToggleSidebar: () => void, selectedMediums?: string[], onMediumToggle?: (med: string) => void, availableMediums?: string[] }) => {
+interface HeaderProps {
+  onToggleSidebar: () => void;
+  selectedMedium: string;
+  setSelectedMedium: (med: string) => void;
+  selectedYear: string;
+  setSelectedYear: (year: string) => void;
+  availableMediums: string[];
+  availableYears: string[];
+  searchTerm: string;
+  setSearchTerm: (term: string) => void;
+}
+
+const Header: React.FC<HeaderProps> = ({
+  onToggleSidebar,
+  selectedMedium,
+  setSelectedMedium,
+  selectedYear,
+  setSelectedYear,
+  availableMediums,
+  availableYears,
+  searchTerm,
+  setSearchTerm
+}) => {
   return (
     <HeaderWrapper>
       <div style={{ display: 'flex', alignItems: 'center', flex: '0 0 auto' }}>
@@ -96,15 +118,38 @@ const Header = ({ onToggleSidebar, selectedMediums = [], onMediumToggle, availab
           {(availableMediums.length > 0 ? availableMediums : MEDIUMS).map((med) => (
             <MediumIconButton
               key={med}
-              $selected={selectedMediums.includes(med as string)}
+              $selected={selectedMedium === med}
               title={MEDIUM_LABELS[med as keyof typeof MEDIUM_LABELS]}
               aria-label={MEDIUM_LABELS[med as keyof typeof MEDIUM_LABELS]}
-              onClick={() => onMediumToggle && onMediumToggle(med as string)}
+              onClick={() => setSelectedMedium(med)}
             >
               {MEDIUM_ICONS[med as keyof typeof MEDIUM_ICONS]}
             </MediumIconButton>
           ))}
         </IconsWrapper>
+      {/* Year filter dropdown */}
+      <div style={{ marginLeft: '2rem' }}>
+        <select
+          value={selectedYear}
+          onChange={e => setSelectedYear(e.target.value)}
+          style={{ padding: '0.4rem 0.8rem', borderRadius: 4, border: '1px solid #ccc', fontSize: '1rem' }}
+        >
+          <option value="all">Alle jaren</option>
+          {availableYears.map(year => (
+            <option key={year} value={year}>{year}</option>
+          ))}
+        </select>
+      </div>
+      {/* Search input */}
+      <div style={{ marginLeft: '2rem' }}>
+        <input
+          type="text"
+          value={searchTerm}
+          onChange={e => setSearchTerm(e.target.value)}
+          placeholder="Zoeken..."
+          style={{ padding: '0.4rem 0.8rem', borderRadius: 4, border: '1px solid #ccc', fontSize: '1rem' }}
+        />
+      </div>
       </div>
       <CenteredTitleWrapper>
         <Title>Kunstmuur</Title>

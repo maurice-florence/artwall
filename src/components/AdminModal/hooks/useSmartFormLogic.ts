@@ -110,8 +110,6 @@ export const useSmartFormLogic = (formData: ArtworkFormData) => {
   // Get contextual help text for fields
   const getContextualHelpText = useCallback((field: keyof ArtworkFormData): string => {
     const helpTexts: Record<string, string> = {
-      title: formData.category === 'music' ? 'Enter the song title' : 'Enter the artwork title',
-      content: formData.category === 'poetry' ? 'Enter your poem here' : 'Enter the main content',
       lyrics: 'Enter the song lyrics (optional if instrumental)',
       chords: 'Enter chord progressions (e.g., C - Am - F - G)',
       mediaType: 'Select the primary media type for this artwork',
@@ -128,38 +126,38 @@ export const useSmartFormLogic = (formData: ArtworkFormData) => {
     };
     
     return helpTexts[field] || '';
-  }, [formData.category]);
+   }, [formData.medium]);
 
   // Get smart suggestions for field values
-  const getSmartSuggestions = useCallback((field: keyof ArtworkFormData): string[] => {
-    const suggestions: Record<string, string[]> = {
-      mediaType: formData.category === 'music' 
-        ? ['audio', 'video', 'text'] 
-        : ['image', 'video', 'text'],
-      language1: ['nl', 'en', 'de', 'fr'],
-      tags: formData.category === 'music' 
-        ? ['instrumental', 'vocal', 'electronic', 'acoustic', 'experimental']
-        : ['abstract', 'contemporary', 'classic', 'modern', 'experimental']
-    };
-    
-    return suggestions[field] || [];
-  }, [formData.category]);
+   const getSmartSuggestions = useCallback((field: keyof ArtworkFormData): string[] => {
+     const suggestions: Record<string, string[]> = {
+       mediaType: formData.medium === 'audio' 
+         ? ['audio', 'video', 'text'] 
+         : ['image', 'video', 'text'],
+       language1: ['nl', 'en', 'de', 'fr'],
+       tags: formData.medium === 'audio' 
+         ? ['instrumental', 'vocal', 'electronic', 'acoustic', 'experimental']
+         : ['abstract', 'contemporary', 'classic', 'modern', 'experimental']
+     };
+     
+     return suggestions[field] || [];
+   }, [formData.medium]);
 
   // Get field priority for focus management
-  const getFieldPriority = useCallback((field: keyof ArtworkFormData): number => {
-    const priorities: Record<string, number> = {
-      title: 1,
-      category: 2,
-      year: 3,
-      description: 4,
-      content: 5,
-      lyrics: 6,
-      mediaUrl: 7,
-      tags: 8
-    };
-    
-    return priorities[field] || 99;
-  }, []);
+   const getFieldPriority = useCallback((field: keyof ArtworkFormData): number => {
+     const priorities: Record<string, number> = {
+       title: 1,
+       medium: 2,
+       year: 3,
+       description: 4,
+       content: 5,
+       lyrics: 6,
+       mediaUrl: 7,
+       tags: 8
+     };
+     
+     return priorities[field] || 99;
+   }, []);
 
   // Get next suggested field to focus
   const getNextSuggestedField = useCallback((): keyof ArtworkFormData | null => {

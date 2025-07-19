@@ -16,7 +16,6 @@ const initialFormData: ArtworkFormData = {
   day: undefined,
   medium: 'drawing',
   subtype: 'marker',
-  medium: 'drawing',
   description: '',
   content: '',
   isHidden: false,
@@ -102,7 +101,6 @@ export const useAdminModal = (artworkToEdit?: Artwork | null) => {
       day: artwork.day,
       medium: extendedArtwork.medium || 'drawing',
       subtype: extendedArtwork.subtype || 'marker',
-      category: artwork.category || 'drawing',
       description: artwork.description || '',
       content: extendedArtwork.content || '',
       isHidden: !!artwork.isHidden,
@@ -139,11 +137,6 @@ export const useAdminModal = (artworkToEdit?: Artwork | null) => {
     setFormData(prev => {
       const newData = { ...prev, [field]: value };
       
-      // Apply smart defaults if category changed
-      if (field === 'category') {
-        const smartDefaults = applySmartDefaultsForCategory(newData);
-        Object.assign(newData, smartDefaults);
-      }
       
       // Apply field dependencies
       const dependencies = applyFieldDependencies(newData, field);

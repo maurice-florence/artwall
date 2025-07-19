@@ -5,7 +5,7 @@ import { ThemeContext } from '@/context/ThemeContext';
 import { Artwork } from '@/types';
 import Link from 'next/link';
 import StatSummary from './StatSummary';
-import { FilterOptions, useFilterContext } from '@/context/FilterContext'; // <-- Gebruik de useFilterContext hook
+// import { useFilterContext } from '@/context/FilterContext'; // Filter logic removed
 import { atelierTheme, blueprintTheme, darkModeTheme, ThemeName } from '@/themes';
 import { Theme } from '@/themes';
 import { FaGripLines } from 'react-icons/fa'; // <-- Import the new icon
@@ -121,7 +121,7 @@ const themeOptions: { name: ThemeName; color: string; label: string }[] = [
 ];
 
 const Sidebar = ({ isOpen, allArtworks }: SidebarProps) => {
-    const { filters, setFilters, searchTerm, setSearchTerm } = useFilterContext();
+    // Filter context removed
     const { theme, themeObject, toggleTheme, updateThemeColor, cardHeight, setCardHeight } = useContext(ThemeContext);
 
     const availableYears = useMemo(() => {
@@ -129,10 +129,7 @@ const Sidebar = ({ isOpen, allArtworks }: SidebarProps) => {
         return Array.from(years).sort((a, b) => b - a);
     }, [allArtworks]);
 
-    const handleFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        const { name, value } = e.target;
-        setFilters((prev: typeof filters) => ({ ...prev, [name]: value }));
-    };
+    // Filter change handler removed
 
     return (
         <SidebarContainer $isOpen={isOpen}>
@@ -141,28 +138,7 @@ const Sidebar = ({ isOpen, allArtworks }: SidebarProps) => {
                 Welkom op mijn Kunstmuur. Een persoonlijk archief van hersenspinsels, probeersels en creaties door de jaren heen.
             </IntroText>
             
-            <SectionTitle>Filters</SectionTitle>
-            <OptionGroup>
-                <StyledSelect name="medium" value={filters.medium} onChange={handleFilterChange}>
-                    <option value="all">Alle Media</option>
-                    <option value="drawing">Drawing</option>
-                    <option value="writing">Writing</option>
-                    <option value="audio">Audio</option>
-                    <option value="sculpture">Sculpture</option>
-                    <option value="other">Other</option>
-                </StyledSelect>
-                <StyledSelect name="year" value={filters.year} onChange={handleFilterChange}>
-                    <option value="all">Alle Jaren</option>
-                    {availableYears.map(year => <option key={year} value={year}>{year}</option>)}
-                </StyledSelect>
-                 <SearchInput 
-                    as="input"
-                    type="text"
-                    placeholder="Zoek op trefwoord..."
-                    value={searchTerm}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
-                />
-            </OptionGroup>
+            {/* Filter section removed as requested */}
 
             <SectionTitle>Statistieken</SectionTitle>
             <StatSummary allArtworks={allArtworks} />

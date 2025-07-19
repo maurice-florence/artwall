@@ -5,7 +5,7 @@ import { useRouter, useParams, notFound } from "next/navigation";
 import { db } from "@/firebase";
 import { ref, get } from "firebase/database";
 import { formatDate } from "@/utils";
-import { Artwork, PoemArtwork, ProseArtwork, VisualArtArtwork, MusicArtwork, VideoArtwork, OtherArtwork } from '@/types';
+import { Artwork } from '@/types/index';
 import styled from "styled-components";
 import { FaTimes, FaSoundcloud, FaShareAlt } from "react-icons/fa";
 import ReactMarkdown from "react-markdown";
@@ -159,30 +159,44 @@ const ModalFooter = styled.div`
   padding-top: 1.5rem;
 `;
 
-// Type guards for union type fields
-function hasMediaType(artwork: Artwork): artwork is (MusicArtwork | VisualArtArtwork | VideoArtwork | PoemArtwork) {
-  return 'mediaType' in artwork && typeof (artwork as any).mediaType === 'string';
+// Helper to get mediaType from artwork (fallback to medium)
+function getMediaType(artwork: Artwork): string {
+  if ('mediaType' in artwork && typeof (artwork as any).mediaType === 'string') {
+    return (artwork as any).mediaType;
+  }
+  // Fallback mapping
+  switch (artwork.medium) {
+    case 'audio':
+      return 'audio';
+    case 'drawing':
+    case 'sculpture':
+      return 'image';
+    case 'writing':
+      return 'text';
+    default:
+      return 'text';
+  }
 }
-function hasMediaUrl(artwork: Artwork): artwork is (ProseArtwork | VisualArtArtwork | MusicArtwork | VideoArtwork | OtherArtwork) {
+function hasMediaUrl(artwork: Artwork): boolean {
   return 'mediaUrl' in artwork && typeof (artwork as any).mediaUrl === 'string';
 }
-function hasCoverImageUrl(artwork: Artwork): artwork is ProseArtwork | VisualArtArtwork {
+function hasCoverImageUrl(artwork: Artwork): boolean {
   return 'coverImageUrl' in artwork && typeof (artwork as any).coverImageUrl === 'string';
 }
-function hasSoundcloudEmbedUrl(artwork: Artwork): artwork is MusicArtwork {
-  return 'soundcloudEmbedUrl' in artwork && typeof (artwork as any).soundcloudEmbedUrl === 'string';
+function hasSoundcloudEmbedUrl(artwork: Artwork): boolean {
+  return artwork.medium === 'audio' && 'soundcloudEmbedUrl' in artwork && typeof (artwork as any).soundcloudEmbedUrl === 'string';
 }
-function hasSoundcloudTrackUrl(artwork: Artwork): artwork is MusicArtwork {
-  return 'soundcloudTrackUrl' in artwork && typeof (artwork as any).soundcloudTrackUrl === 'string';
+function hasSoundcloudTrackUrl(artwork: Artwork): boolean {
+  return artwork.medium === 'audio' && 'soundcloudTrackUrl' in artwork && typeof (artwork as any).soundcloudTrackUrl === 'string';
 }
-function hasLyrics(artwork: Artwork): artwork is MusicArtwork {
-  return 'lyrics' in artwork && typeof (artwork as any).lyrics === 'string';
+function hasLyrics(artwork: Artwork): boolean {
+  return artwork.medium === 'audio' && 'lyrics' in artwork && typeof (artwork as any).lyrics === 'string';
 }
-function hasChords(artwork: Artwork): artwork is MusicArtwork {
-  return 'chords' in artwork && typeof (artwork as any).chords === 'string';
+function hasChords(artwork: Artwork): boolean {
+  return artwork.medium === 'audio' && 'chords' in artwork && typeof (artwork as any).chords === 'string';
 }
-function hasContent(artwork: Artwork): artwork is PoemArtwork {
-  return 'content' in artwork && typeof (artwork as any).content === 'string';
+function hasContent(artwork: Artwork): boolean {
+  return artwork.medium === 'writing' && 'content' in artwork && typeof (artwork as any).content === 'string';
 }
 
 export default function ArtworkModalPage() {
@@ -241,24 +255,27 @@ export default function ArtworkModalPage() {
         <p style={{ marginTop: '1rem', fontStyle: 'italic' }}>{artwork.description}</p>
         <StyledHr />
         <MediaContainer>
-          {artwork.category === 'prose' && (
+          {/* Writing/Prose: PDF and cover image */}
+          {artwork.medium === 'writing' && (
             <>
-              {hasCoverImageUrl(artwork) && (artwork as ProseArtwork).coverImageUrl && (
+              {hasCoverImageUrl(artwork) && artwork.coverImageUrl && (
                 <ModalImage
-                  src={(artwork as ProseArtwork).coverImageUrl}
-                  alt={`Cover voor ${(artwork as ProseArtwork).title}`}
+                  src={artwork.coverImageUrl}
+                  alt={`Cover voor ${artwork.title}`}
                   style={{ marginBottom: '1rem' }}
                 />
               )}
-              {hasMediaUrl(artwork) && (artwork as ProseArtwork).mediaUrl && (
-                <PdfViewer src={(artwork as ProseArtwork).mediaUrl} title={`PDF voor ${(artwork as ProseArtwork).title}`} />
+              {hasMediaUrl(artwork) && artwork.mediaUrl && (
+                <PdfViewer src={artwork.mediaUrl} title={`PDF voor ${artwork.title}`} />
               )}
             </>
           )}
-          {hasMediaType(artwork) && artwork.mediaType === 'image' && hasMediaUrl(artwork) && (
+          {/* Visual arts: image */}
+          {getMediaType(artwork) === 'image' && hasMediaUrl(artwork) && (
             <ModalImage src={artwork.mediaUrl || '/logo192.png'} alt={artwork.title} loading="lazy" />
           )}
-          {hasMediaType(artwork) && artwork.mediaType === 'audio' && (
+          {/* Audio/music: SoundCloud or audio */}
+          {getMediaType(artwork) === 'audio' && (
             hasSoundcloudEmbedUrl(artwork) && artwork.soundcloudEmbedUrl ? (
               <SoundCloudEmbed
                 scrolling="no"
@@ -275,7 +292,8 @@ export default function ArtworkModalPage() {
               )
             )
           )}
-          {hasMediaType(artwork) && artwork.mediaType === 'text' && hasContent(artwork) && (
+          {/* Writing: text content */}
+          {getMediaType(artwork) === 'text' && hasContent(artwork) && (
             <div style={{ whiteSpace: 'pre-wrap' }}>
               <ReactMarkdown>{artwork.content || ''}</ReactMarkdown>
             </div>

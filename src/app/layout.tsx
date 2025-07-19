@@ -7,7 +7,7 @@ import { ThemeProvider } from '../context/ThemeContext';
 import { GlobalStyle } from '../GlobalStyle'; // We maken dit bestand zo
 import ScrollToTop from '../components/ScrollToTop';
 import StyledComponentsRegistry from '../lib/registry';
-import { FilterProvider } from '@/context/FilterContext';
+// import { FilterProvider } from '@/context/FilterContext';
 import { ArtworksProvider } from '../context/ArtworksContext';
 
 
@@ -20,13 +20,11 @@ export default function RootLayout({
   return (
     <html lang="nl">
       <body>
-        <FilterProvider>
-          <ArtworksProvider>
-            <ThemeProvider>
-              <ThemedApp>{children}</ThemedApp>
-            </ThemeProvider>
-          </ArtworksProvider>
-        </FilterProvider>
+        <ArtworksProvider>
+          <ThemeProvider>
+            <ThemedApp>{children}</ThemedApp>
+          </ThemeProvider>
+        </ArtworksProvider>
       </body>
     </html>
   )

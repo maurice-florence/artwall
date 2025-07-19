@@ -115,7 +115,6 @@ const mapArtworkToFormData = (artwork: Artwork): ArtworkFormData => {
     year: artwork.year || new Date().getFullYear(),
     month: artwork.month || new Date().getMonth() + 1,
     day: artwork.day || new Date().getDate(),
-    category: artwork.category || 'poetry',
     medium: extendedArtwork.medium || 'writing',
     subtype: extendedArtwork.subtype || 'poem',
     description: artwork.description || '',

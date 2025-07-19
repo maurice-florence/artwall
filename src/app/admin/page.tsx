@@ -173,7 +173,7 @@ const AdminPage: React.FC = () => {
           <ArtworkCard key={artwork.id}>
             <ArtworkTitle>{artwork.title}</ArtworkTitle>
             <ArtworkMeta>
-              {artwork.category} • {artwork.year}
+              {artwork.medium} • {artwork.year}
               {artwork.month && `/${artwork.month}`}
               {artwork.day && `/${artwork.day}`}
             </ArtworkMeta>

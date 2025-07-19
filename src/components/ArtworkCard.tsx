@@ -1,10 +1,12 @@
 import React from 'react';
+import { FaBookOpen, FaPaintBrush, FaMusic, FaAlignLeft } from 'react-icons/fa';
 import styled, { useTheme } from 'styled-components';
-import { Artwork, ArtworkMedium, PoemArtwork, ProseArtwork, VisualArtArtwork, MusicArtwork, VideoArtwork, OtherArtwork } from '@/types';
-import { FaPenNib, FaPaintBrush, FaMusic, FaBookOpen, FaVolumeUp, FaAlignLeft } from 'react-icons/fa';
+import { Artwork, ArtworkMedium } from '@/types';
 
-    medium: ArtworkMedium;
+interface CardContainerProps {
+  medium: ArtworkMedium;
 }
+
 
 const getGridSpan = (medium: ArtworkMedium, rowSpan: number = 1) => {
     switch(medium) {
@@ -59,7 +61,7 @@ const CardFace = styled.div`
 `;
 
 // Use a transient prop ($coverImageUrl) to avoid passing it to the DOM
-const CardFront = styled(CardFace)<{ category: ArtworkCategory }>`
+const CardFront = styled(CardFace)<{ medium: ArtworkMedium }>`
   background: ${({ theme }) => theme.cardBg};
   color: ${({ theme }) => theme.cardText};
   padding: 1.5rem;
@@ -155,19 +157,17 @@ const ProzaImage = styled.img`
   display: block;
 `;
 
-const iconMap: { [key: string]: React.JSX.Element } = {
-  poem: <FaPenNib />,
-  prosepoem: <FaAlignLeft />,
-  prose: <FaBookOpen />,
-  sculpture: <FaPaintBrush />,
+const iconMap: { [key in ArtworkMedium]?: React.JSX.Element } = {
+  writing: <FaBookOpen />,
+  audio: <FaMusic />,
   drawing: <FaPaintBrush />,
-  music: <FaMusic />,
+  sculpture: <FaPaintBrush />,
+  other: <FaAlignLeft />,
 };
 
 // Add a helper to get the correct icon for audio
 const getArtworkIcon = (artwork: Artwork) => {
-  if ('mediaType' in artwork && artwork.mediaType === 'audio') return <FaMusic />;
-  return iconMap[artwork.category] || null;
+  return iconMap[artwork.medium] || null;
 };
 
 const truncateText = (text: string, maxLength: number) => {
@@ -208,25 +208,25 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin }: ArtworkCardProps) => {
     const formattedDate = new Date(artwork.year, (artwork.month || 1) - 1, artwork.day || 1)
                             .toLocaleDateString('nl-NL', { month: 'short', year: 'numeric' });
 
-    const hasCover = artwork.category === 'prose' && 'coverImageUrl' in artwork;
+    const hasCover = artwork.medium === 'writing' && 'coverImageUrl' in artwork;
     // Calculate rowSpan for prose: 2 rows + 1 gap, so rowSpan = 2 + (gridGap / reducedCardHeight)
     let rowSpan = 1;
-    if (artwork.category === 'prose') {
+    if (artwork.medium === 'writing') {
       rowSpan = Math.round((reducedCardHeight * 2 + gridGap) / reducedCardHeight);
     }
     // Only render prose cover if category is prose and artwork has coverImageUrl
-    if ((artwork as any).category === 'prose' && (artwork as any).coverImageUrl) {
+    if ((artwork as any).medium === 'writing' && (artwork as any).coverImageUrl) {
       return (
-        <CardContainer category={artwork.category} $rowSpan={rowSpan} onClick={onSelect}>
+        <CardContainer medium={artwork.medium} $rowSpan={rowSpan} onClick={onSelect}>
           <CardInner>
-            <CardFront category={artwork.category}>
+            <CardFront medium={artwork.medium}>
               <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
                 <CardTitle style={{ marginBottom: '0.5rem' }}>{artwork.title}</CardTitle>
                 <ProzaImage src={(artwork as any).coverImageUrl} alt={artwork.title} style={{ maxHeight: `calc(100% - 3.5rem)` }} />
                 <CardFooter style={{ marginTop: '0.5rem', justifyContent: 'space-between' }}>
                   <span>{formattedDate}</span>
                   <CardCategory>
-                    {iconMap[artwork.category]}
+                    {iconMap[artwork.medium]}
                   </CardCategory>
                 </CardFooter>
               </div>
@@ -260,9 +260,9 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin }: ArtworkCardProps) => {
     if (artwork.language3) availableLanguages.push(artwork.language3);
 
     return (
-      <CardContainer category={artwork.category} $rowSpan={rowSpan} onClick={onSelect}>
+      <CardContainer medium={artwork.medium} $rowSpan={rowSpan} onClick={onSelect}>
         <CardInner>
-          <CardFront category={artwork.category}>
+          <CardFront medium={artwork.medium}>
             <div>
               <CardTitle>{artwork.title}</CardTitle>
               {availableLanguages.length > 1 && (
