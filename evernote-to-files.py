@@ -5,7 +5,7 @@ def get_medium_subtype_from_category(category: str) -> tuple:
         'poetry': ('writing', 'poem'),
         'prosepoetry': ('writing', 'poem'),
         'prose': ('writing', 'prose'),
-        'music': ('audio', 'vocal'),
+        'music': ('audio', 'song'),
         'sculpture': ('sculpture', 'clay'),
         'drawing': ('drawing', 'marker'),
         'image': ('drawing', 'digital'),
@@ -49,8 +49,8 @@ import time
 from typing import Dict, Any, List, Tuple
 
 # --- CONFIGURATIE ---
-SOURCE_ENEX_FOLDER = pathlib.Path('G:/Mijn Drive/Creatief/Kunstmuur')
-DESTINATION_MEDIA_FOLDER = pathlib.Path('G:/Mijn Drive/Creatief/Kunstmuur')
+SOURCE_ENEX_FOLDER = pathlib.Path('G:/Mijn Drive/Creatief/Artwall')
+DESTINATION_MEDIA_FOLDER = pathlib.Path('G:/Mijn Drive/Creatief/Artwall')
 
 # --- VALIDATIE REGELS ---
 """
@@ -88,18 +88,13 @@ NIEUWE OPTIONELE VELDEN:
 
 # --- SCRIPT LOGICA ---
 
-# Medium and subtype constants (matching the TypeScript definitions)
-VALID_MEDIUMS = [
-    'drawing', 'writing', 'music', 'sculpture', 'other'
-]
 
-VALID_SUBTYPES = {
-    'drawing': ['marker', 'pencil', 'digital', 'ink', 'charcoal', 'other'],
-    'writing': ['poem', 'prose', 'story', 'essay', 'other'],
-    'music': ['instrumental', 'vocal', 'electronic', 'acoustic', 'other'],
-    'sculpture': ['clay', 'wood', 'metal', 'stone', 'other'],
-    'other': ['other']
-}
+# Load mediums and subtypes from shared JSON file
+import json
+MEDIUM_SUBTYPES_PATH = pathlib.Path(__file__).parent / 'src' / 'constants' / 'medium-subtypes.json'
+with open(MEDIUM_SUBTYPES_PATH, encoding='utf-8') as f:
+    VALID_SUBTYPES = json.load(f)
+VALID_MEDIUMS = list(VALID_SUBTYPES.keys())
 
 # Updated metadata validation
 REQUIRED_METADATA_FIELDS = [
@@ -111,25 +106,10 @@ def validate_medium_subtype(medium: str, subtype: str) -> bool:
     return medium in VALID_MEDIUMS and subtype in VALID_SUBTYPES.get(medium, [])
 
 def normalize_subtype(medium: str, subtype: str) -> str:
-    """Normalize subtype values, handling common aliases."""
-    # Handle common aliases
-    subtype_aliases = {
-        'song': 'vocal',
-        'poem': 'poem',
-        'poetry': 'poem',
-        'prose': 'prose',
-        'prosepoetry': 'prosepoetry',
-        'story': 'story',
-        'essay': 'essay'
-    }
-    
-    normalized = subtype_aliases.get(subtype, subtype)
-    
-    # Validate the normalized subtype
-    if validate_medium_subtype(medium, normalized):
-        return normalized
+    """Return the subtype if valid for the medium, else fallback to 'other'."""
+    if validate_medium_subtype(medium, subtype):
+        return subtype
     else:
-        # Fall back to 'other' if not valid
         return 'other'
 
 def auto_detect_medium_subtype_from_content(content: str, resources: list = None) -> tuple:
@@ -257,43 +237,42 @@ def extract_metadata_and_content(note_content: str) -> Tuple[Dict[str, Any] | No
                     key, value = line.split(':', 1)
                     key = key.strip()
                     value = value.strip()
-                    
-                    # Remove quotes from values
-                    if value.startswith("'") and value.endswith("'"):
+
+                    # Remove only outer quotes, but preserve inner apostrophes and quotes
+                    if (value.startswith("'") and value.endswith("'")) or (value.startswith('"') and value.endswith('"')):
                         value = value[1:-1]
-                    elif value.startswith('"') and value.endswith('"'):
-                        value = value[1:-1]
-                    
+
+                    # Clean problematic YAML characters inside values
+                    if isinstance(value, str):
+                        value = value.replace('`', '').replace('~', '')
+
                     # Convert numeric values
                     if key in ['year', 'month', 'day', 'evaluation', 'rating']:
                         try:
-                            # Handle backtick errors and special characters
                             if isinstance(value, str):
-                                # Clean problematic characters from numeric strings
-                                clean_value = value.strip().replace('`', '').replace('?', '').replace('~', '')
-                                # Extract just the number using regex
+                                clean_value = value.strip().replace('?', '')
                                 match = re.search(r'\d+', clean_value)
                                 if match:
                                     value = int(match.group())
                                 else:
                                     if key == 'day':
-                                        value = 1  # Default fallback for day
+                                        value = 1
                                     else:
-                                        value = 0  # Default fallback for other numeric fields
+                                        value = 0
                             else:
                                 value = int(value)
                             metadata[key] = value
                         except (ValueError, TypeError):
                             if key == 'day':
-                                metadata[key] = 1  # Default fallback for day
+                                metadata[key] = 1
                             elif key in ['year', 'month']:
-                                metadata[key] = 0  # Will be caught by validation
+                                metadata[key] = 0
                             else:
-                                metadata[key] = ''  # For evaluation/rating, empty is okay
+                                metadata[key] = ''
                     else:
-                        # For string values, apply safe YAML formatting
+                        # Always wrap string values in single quotes for YAML output, never triple quotes
                         if isinstance(value, str):
-                            metadata[key] = value  # Don't apply safe_yaml_value here, do it during HTML generation
+                            metadata[key] = f"'{value}'"
                         else:
                             metadata[key] = value
             
@@ -395,14 +374,14 @@ def generate_html_file(meta: Dict[str, Any], content_html: str, file_path: pathl
     file_path.write_text(html_content, encoding='utf-8')
 
 def generate_filename(meta: Dict[str, Any], lang: str = None, version: Any = None) -> str:
-    """Genereert een gestandaardiseerde bestandsnaam."""
     date = f"{meta.get('year', '0000')}{str(meta.get('month', '00')).zfill(2)}{str(meta.get('day', '00')).zfill(2)}"
-    category = meta.get('category', 'unknown')
+    medium = meta.get('medium', 'unknown')
+    subtype = meta.get('subtype', 'unknown')
     title = str(meta.get('title', 'untitled')).lower()
     safe_title = re.sub(r'[^a-z0-9]+', '-', title).strip('-')
-    
-    filename = f"{date}_{category}_{safe_title}"
-    
+
+    filename = f"{date}_{medium}_{subtype}_{safe_title}"
+
     version_int = None
     if version is not None:
         try:
@@ -412,7 +391,7 @@ def generate_filename(meta: Dict[str, Any], lang: str = None, version: Any = Non
 
     if version_int:
         filename += f"_{str(version_int).zfill(2)}"
-        
+
     if lang:
         filename += f"_{lang.lower()}"
 
@@ -545,48 +524,44 @@ def process_enex_files(source_dir: pathlib.Path, dest_dir: pathlib.Path):
                         # Legacy mapping removed. Use only new medium/subtype logic or fallback
                         meta['category'] = 'other'
 
-                category = meta.get('category', 'other')
                 medium = meta.get('medium', 'other')
                 subtype = meta.get('subtype', 'other')
-                
+
                 # --- Pre-processing voor validatie ---
-                # Check for translations
                 translation_delimiter = r'---TRANSLATION_([a-z]{2})---'
                 split_result = re.split(translation_delimiter, main_content_html, flags=re.IGNORECASE)
                 parts = [split_result[i] for i in range(0, len(split_result), 2)]
                 has_translations = len(parts) > 1
                 num_translation_parts = len(parts)
-                
-                # Check for resources
+
                 has_resources = len(resources) > 0
-                
+
                 # --- Uitgebreide validatie ---
                 validation_errors = validate_note_metadata(
-                    meta, 
-                    category, 
-                    has_translations=has_translations, 
+                    meta,
+                    medium,  # Use medium instead of legacy category
+                    has_translations=has_translations,
                     num_translation_parts=num_translation_parts,
                     has_resources=has_resources
                 )
-                
+
                 if validation_errors:
                     error_msg = "Validatiefouten: " + "; ".join(validation_errors)
                     raise ValueError(error_msg)
-                
-                # Count notes per category, medium, and subtype
-                category_counts[category] = category_counts.get(category, 0) + 1
+
+                # Count notes per medium and subtype
                 medium_counts[medium] = medium_counts.get(medium, 0) + 1
                 subtype_key = f"{medium}/{subtype}"
                 subtype_counts[subtype_key] = subtype_counts.get(subtype_key, 0) + 1
-                
+
                 # --- Verwerking ---
-                category_folder = dest_dir / category
-                category_folder.mkdir(parents=True, exist_ok=True)
-                
+                medium_folder = dest_dir / medium
+                medium_folder.mkdir(parents=True, exist_ok=True)
+
                 created_files_log = []
 
                 # --- Logica voor vertalingen en tekstbestanden ---
-                if category in ['poetry', 'prosepoetry', 'music']:
+                if medium in ['writing', 'audio']:
                     translation_delimiter = r'---TRANSLATION_([a-z]{2})---'
                     split_result = re.split(translation_delimiter, main_content_html, flags=re.IGNORECASE)
                     
@@ -612,57 +587,45 @@ def process_enex_files(source_dir: pathlib.Path, dest_dir: pathlib.Path):
                         
                         # --- Auto-generate description if empty (per translation from its own content) ---
                         if not meta_lang.get('description') or not str(meta_lang.get('description')).strip():
-                            auto_description = extract_auto_description(content_html, category=category)
+                            auto_description = extract_auto_description(content_html, category=meta.get('subtype'))
                             if auto_description:
                                 meta_lang['description'] = auto_description
                                 print(f"    📝 Auto-description ({lang_code}): {auto_description[:50]}{'...' if len(auto_description) > 50 else ''}")
                         
                         filename_lang = generate_filename(meta, lang=lang_code)
-                        file_path = category_folder / f"{filename_lang}.html"
-                        
-                        # Generate HTML file for all text categories
+                        file_path = medium_folder / f"{filename_lang}.html"
                         generate_html_file(meta_lang, content_html, file_path)
-                        
-                        # Check if file exists to determine if we're overwriting
+                        print(f"    📄 File saved: {file_path}")
                         file_status = "Overschreven" if file_path.exists() else "Nieuw"
                         created_files_log.append(f"{file_path.name} ({file_status})")
 
                 # --- Logica voor media-bestanden ---
-                elif category in ['drawing', 'sculpture', 'prose', 'image']:
-                    # Create ordered metadata with 'language' field
+                elif medium in ['drawing', 'sculpture', 'other']:
                     meta_with_lang = {}
                     for key, value in meta.items():
                         meta_with_lang[key] = value
-                        # Insert 'language' right after 'version' and before 'language1'
                         if key == 'version':
-                            # For media categories, use language1 as the primary language
-                            primary_lang = meta.get('language1', 'en')  # Default to 'en' if not specified
+                            primary_lang = meta.get('language1', 'en')
                             meta_with_lang['language'] = primary_lang
-                    
-                    # --- Auto-generate description if empty (for media categories) ---
+
                     if not meta_with_lang.get('description') or not str(meta_with_lang.get('description')).strip():
                         auto_description = extract_auto_description(main_content_html)
                         if auto_description:
                             meta_with_lang['description'] = auto_description
                             print(f"    📝 Auto-description: {auto_description[:50]}{'...' if len(auto_description) > 50 else ''}")
-                    
+
                     base_filename = generate_filename(meta)
-                    html_path = category_folder / f"{base_filename}.html"
-                    
-                    # Check if file exists to determine if we're overwriting
-                    html_file_status = "Overschreven" if html_path.exists() else "Nieuw"
-                    
-                    # Generate HTML file for media categories with text content
+                    html_path = medium_folder / f"{base_filename}.html"
                     generate_html_file(meta_with_lang, main_content_html, html_path)
+                    print(f"    📄 File saved: {html_path}")
+                    html_file_status = "Overschreven" if html_path.exists() else "Nieuw"
                     created_files_log.append(f"{html_path.name} ({html_file_status})")
 
-                    # Process attached media files
                     if not resources:
-                        raise ValueError(f"Categorie is '{category}' maar er is geen afbeelding/bestand bijgevoegd.")
-                        
+                        raise ValueError(f"Medium is '{medium}' maar er is geen afbeelding/bestand bijgevoegd.")
+
                     for idx, resource in enumerate(resources):
                         mime = resource.findtext('mime', '')
-                        # Enhanced MIME type handling for new categories
                         if 'jpeg' in mime or 'jpg' in mime:
                             ext = '.jpg'
                         elif 'png' in mime:
@@ -682,19 +645,18 @@ def process_enex_files(source_dir: pathlib.Path, dest_dir: pathlib.Path):
                         elif 'svg' in mime:
                             ext = '.svg'
                         else:
-                            ext = '.dat'  # Unknown format
-                            
+                            ext = '.dat'
+
                         data_b64 = resource.findtext('data')
-                        if not data_b64: continue
+                        if not data_b64:
+                            continue
 
                         version = idx + 1
                         media_filename = generate_filename(meta, version=version)
-                        media_path = category_folder / f"{media_filename}{ext}"
-                        
-                        # Check if media file exists to determine if we're overwriting
-                        media_file_status = "Overschreven" if media_path.exists() else "Nieuw"
-                        
+                        media_path = medium_folder / f"{media_filename}{ext}"
                         media_path.write_bytes(base64.b64decode(data_b64))
+                        print(f"    📄 File saved: {media_path}")
+                        media_file_status = "Overschreven" if media_path.exists() else "Nieuw"
                         created_files_log.append(f"{media_path.name} ({media_file_status})")
                 
                 report['success'].append({'title': meta.get('title', note_title_raw), 'files': created_files_log})
