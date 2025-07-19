@@ -557,19 +557,19 @@ def process_enex_files(source_dir: pathlib.Path, dest_dir: pathlib.Path):
                 if medium in ['writing', 'audio']:
                     translation_delimiter = r'---TRANSLATION_([a-z]{2})---'
                     split_result = re.split(translation_delimiter, main_content_html, flags=re.IGNORECASE)
-                    
+
                     # re.split with capturing groups returns: [text1, captured_group1, text2, captured_group2, ...]
                     # We only want the actual text parts (even indices)
                     parts = [split_result[i] for i in range(0, len(split_result), 2)]
-                    
+
                     languages_from_meta = [l for l in [meta.get('language1'), meta.get('language2'), meta.get('language3')] if l]
-                    
+
                     if len(parts) != len(languages_from_meta):
                         raise ValueError(f"Aantal tekstblokken ({len(parts)}) komt niet overeen met het aantal talen in metadata ({len(languages_from_meta)}). Gevonden delen: {len(parts)}, verwachte talen: {len(languages_from_meta)}")
 
                     for i, lang_code in enumerate(languages_from_meta):
                         content_html = parts[i]
-                        
+
                         # Create ordered metadata with 'language' placed before other language fields
                         meta_lang = {}
                         for key, value in meta.items():
@@ -577,14 +577,14 @@ def process_enex_files(source_dir: pathlib.Path, dest_dir: pathlib.Path):
                             # Insert 'language' right after 'version' and before 'language1'
                             if key == 'version':
                                 meta_lang['language'] = lang_code
-                        
+
                         # --- Auto-generate description if empty (per translation from its own content) ---
                         if not meta_lang.get('description') or not str(meta_lang.get('description')).strip():
                             auto_description = extract_auto_description(content_html, category=meta.get('subtype'))
                             if auto_description:
                                 meta_lang['description'] = auto_description
                                 print(f"    📝 Auto-description ({lang_code}): {auto_description[:50]}{'...' if len(auto_description) > 50 else ''}")
-                        
+
                         filename_lang = generate_filename(meta, lang=lang_code)
                         file_path = medium_folder / f"{filename_lang}.html"
                         generate_html_file(meta_lang, content_html, file_path)
@@ -592,62 +592,208 @@ def process_enex_files(source_dir: pathlib.Path, dest_dir: pathlib.Path):
                         file_status = "Overschreven" if file_path.exists() else "Nieuw"
                         created_files_log.append(f"{file_path.name} ({file_status})")
 
-                # --- Logica voor media-bestanden ---
-                elif medium in ['drawing', 'sculpture', 'other']:
-                    meta_with_lang = {}
-                    for key, value in meta.items():
-                        meta_with_lang[key] = value
-                        if key == 'version':
-                            primary_lang = meta.get('language1', 'en')
-                            meta_with_lang['language'] = primary_lang
+                # --- Save all attached resources for all mediums, but only if before ---META_BEGIN--- ---
+                if resources:
+                    # Split note content into three sections: before META_BEGIN, metadata block, after META_END
+                    meta_begin_pos = content_xml.find('---META_BEGIN---')
+                    meta_end_pos = content_xml.find('---META_END---')
+                    before_meta = content_xml[:meta_begin_pos] if meta_begin_pos != -1 else content_xml
+                    after_meta = content_xml[meta_end_pos + len('---META_END---'):] if meta_end_pos != -1 else ''
+                    # Only save resources whose base64 data appears in before_meta (not in metadata block or after_meta)
+                    for idx, resource in enumerate(resources):
+                        data_b64 = resource.findtext('data')
+                        if not data_b64:
+                            continue
+                        # Only save if data_b64 appears in before_meta, and NOT in metadata block or after_meta
+                        in_before = before_meta.find(data_b64) != -1
+                        in_meta_block = False
+                        in_after = after_meta.find(data_b64) != -1
+                        # Optionally, check metadata block
+                        if meta_begin_pos != -1 and meta_end_pos != -1:
+                            meta_block = content_xml[meta_begin_pos:meta_end_pos + len('---META_END---')]
+                            in_meta_block = meta_block.find(data_b64) != -1
+                        if not in_before or in_meta_block or in_after:
+                            continue
+                        mime = resource.findtext('mime', '')
+                        file_name = resource.findtext('file-name', '')
+                        ext = ''
+                        data_bytes = base64.b64decode(data_b64)
+                        # Detect audio type by binary header
+                        if medium == 'audio':
+                            # MIDI: starts with 'MThd'
+                            if data_bytes[:4] == b'MThd':
+                                ext = '.midi'
+                            # MP3: starts with ID3 or 0xFFFB/0xFFF3/0xFFFA
+                            elif data_bytes[:3] == b'ID3' or (len(data_bytes) > 1 and data_bytes[0] == 0xFF and data_bytes[1] in [0xFB, 0xF3, 0xFA]):
+                                ext = '.mp3'
+                            # WAV: starts with 'RIFF' and 'WAVE' at offset 8
+                            elif data_bytes[:4] == b'RIFF' and data_bytes[8:12] == b'WAVE':
+                                ext = '.wav'
+                            # OGG: starts with 'OggS'
+                            elif data_bytes[:4] == b'OggS':
+                                ext = '.ogg'
+                            # FLAC: starts with 'fLaC'
+                            elif data_bytes[:4] == b'fLaC':
+                                ext = '.flac'
+                            # AAC: ADTS header 0xFFF1 or 0xFFF9
+                            elif len(data_bytes) > 1 and data_bytes[0] == 0xFF and data_bytes[1] in [0xF1, 0xF9]:
+                                ext = '.aac'
+                            # M4A: starts with 'ftypM4A' at offset 4
+                            elif data_bytes[4:11] == b'ftypM4A':
+                                ext = '.m4a'
+                            else:
+                                ext = '.dat'
+                        else:
+                            # Use original filename extension if present
+                            if file_name and '.' in file_name:
+                                ext = os.path.splitext(file_name)[1].lower()
+                            if not ext:
+                                # Fallback to MIME type detection
+                                if 'jpeg' in mime or 'jpg' in mime:
+                                    ext = '.jpg'
+                                elif 'png' in mime:
+                                    ext = '.png'
+                                elif 'gif' in mime:
+                                    ext = '.gif'
+                                elif 'webp' in mime:
+                                    ext = '.webp'
+                                elif 'mp3' in mime:
+                                    ext = '.mp3'
+                                elif 'wav' in mime:
+                                    ext = '.wav'
+                                elif 'ogg' in mime:
+                                    ext = '.ogg'
+                                elif 'flac' in mime:
+                                    ext = '.flac'
+                                elif 'aac' in mime:
+                                    ext = '.aac'
+                                elif 'm4a' in mime:
+                                    ext = '.m4a'
+                                elif 'mp4' in mime:
+                                    ext = '.mp4'
+                                elif 'webm' in mime:
+                                    ext = '.webm'
+                                elif 'mov' in mime:
+                                    ext = '.mov'
+                                elif 'pdf' in mime:
+                                    ext = '.pdf'
+                                elif 'svg' in mime:
+                                    ext = '.svg'
+                                elif 'audio' in mime:
+                                    ext = '.mp3'
+                                else:
+                                    ext = '.dat'
 
-                    if not meta_with_lang.get('description') or not str(meta_with_lang.get('description')).strip():
-                        auto_description = extract_auto_description(main_content_html)
-                        if auto_description:
-                            meta_with_lang['description'] = auto_description
-                            print(f"    📝 Auto-description: {auto_description[:50]}{'...' if len(auto_description) > 50 else ''}")
+                        version = idx + 1
+                        media_filename = generate_filename(meta, version=version)
+                        media_path = medium_folder / f"{media_filename}{ext}"
+                        media_path.write_bytes(data_bytes)
+                        print(f"    📄 File saved: {media_path}")
+                        media_file_status = "Overschreven" if media_path.exists() else "Nieuw"
+                        created_files_log.append(f"{media_path.name} ({media_file_status})")
+                    # Only generate the main HTML file for non-writing/audio mediums
+                    if medium not in ['writing', 'audio']:
+                        meta_with_lang = {}
+                        for key, value in meta.items():
+                            meta_with_lang[key] = value
+                            if key == 'version':
+                                primary_lang = meta.get('language1', 'en')
+                                meta_with_lang['language'] = primary_lang
 
-                    base_filename = generate_filename(meta)
-                    html_path = medium_folder / f"{base_filename}.html"
-                    generate_html_file(meta_with_lang, main_content_html, html_path)
-                    print(f"    📄 File saved: {html_path}")
-                    html_file_status = "Overschreven" if html_path.exists() else "Nieuw"
-                    created_files_log.append(f"{html_path.name} ({html_file_status})")
+                        if not meta_with_lang.get('description') or not str(meta_with_lang.get('description')).strip():
+                            auto_description = extract_auto_description(main_content_html)
+                            if auto_description:
+                                meta_with_lang['description'] = auto_description
+                                print(f"    📝 Auto-description: {auto_description[:50]}{'...' if len(auto_description) > 50 else ''}")
+
+                        base_filename = generate_filename(meta)
+                        html_path = medium_folder / f"{base_filename}.html"
+                        generate_html_file(meta_with_lang, main_content_html, html_path)
+                        print(f"    📄 File saved: {html_path}")
+                        html_file_status = "Overschreven" if html_path.exists() else "Nieuw"
+                        created_files_log.append(f"{html_path.name} ({html_file_status})")
 
                     if not resources:
                         raise ValueError(f"Medium is '{medium}' maar er is geen afbeelding/bestand bijgevoegd.")
 
                     for idx, resource in enumerate(resources):
                         mime = resource.findtext('mime', '')
-                        if 'jpeg' in mime or 'jpg' in mime:
-                            ext = '.jpg'
-                        elif 'png' in mime:
-                            ext = '.png'
-                        elif 'gif' in mime:
-                            ext = '.gif'
-                        elif 'webp' in mime:
-                            ext = '.webp'
-                        elif 'mp4' in mime:
-                            ext = '.mp4'
-                        elif 'webm' in mime:
-                            ext = '.webm'
-                        elif 'mov' in mime:
-                            ext = '.mov'
-                        elif 'pdf' in mime:
-                            ext = '.pdf'
-                        elif 'svg' in mime:
-                            ext = '.svg'
-                        else:
-                            ext = '.dat'
-
+                        file_name = resource.findtext('file-name', '')
+                        ext = ''
                         data_b64 = resource.findtext('data')
                         if not data_b64:
                             continue
+                        data_bytes = base64.b64decode(data_b64)
+                        # Detect audio type by binary header
+                        if medium == 'audio':
+                            # MIDI: starts with 'MThd'
+                            if data_bytes[:4] == b'MThd':
+                                ext = '.midi'
+                            # MP3: starts with ID3 or 0xFFFB/0xFFF3/0xFFFA
+                            elif data_bytes[:3] == b'ID3' or (len(data_bytes) > 1 and data_bytes[0] == 0xFF and data_bytes[1] in [0xFB, 0xF3, 0xFA]):
+                                ext = '.mp3'
+                            # WAV: starts with 'RIFF' and 'WAVE' at offset 8
+                            elif data_bytes[:4] == b'RIFF' and data_bytes[8:12] == b'WAVE':
+                                ext = '.wav'
+                            # OGG: starts with 'OggS'
+                            elif data_bytes[:4] == b'OggS':
+                                ext = '.ogg'
+                            # FLAC: starts with 'fLaC'
+                            elif data_bytes[:4] == b'fLaC':
+                                ext = '.flac'
+                            # AAC: ADTS header 0xFFF1 or 0xFFF9
+                            elif len(data_bytes) > 1 and data_bytes[0] == 0xFF and data_bytes[1] in [0xF1, 0xF9]:
+                                ext = '.aac'
+                            # M4A: starts with 'ftypM4A' at offset 4
+                            elif data_bytes[4:11] == b'ftypM4A':
+                                ext = '.m4a'
+                            else:
+                                ext = '.dat'
+                        else:
+                            # Use original filename extension if present
+                            if file_name and '.' in file_name:
+                                ext = os.path.splitext(file_name)[1].lower()
+                            if not ext:
+                                # Fallback to MIME type detection
+                                if 'jpeg' in mime or 'jpg' in mime:
+                                    ext = '.jpg'
+                                elif 'png' in mime:
+                                    ext = '.png'
+                                elif 'gif' in mime:
+                                    ext = '.gif'
+                                elif 'webp' in mime:
+                                    ext = '.webp'
+                                elif 'mp3' in mime:
+                                    ext = '.mp3'
+                                elif 'wav' in mime:
+                                    ext = '.wav'
+                                elif 'ogg' in mime:
+                                    ext = '.ogg'
+                                elif 'flac' in mime:
+                                    ext = '.flac'
+                                elif 'aac' in mime:
+                                    ext = '.aac'
+                                elif 'm4a' in mime:
+                                    ext = '.m4a'
+                                elif 'mp4' in mime:
+                                    ext = '.mp4'
+                                elif 'webm' in mime:
+                                    ext = '.webm'
+                                elif 'mov' in mime:
+                                    ext = '.mov'
+                                elif 'pdf' in mime:
+                                    ext = '.pdf'
+                                elif 'svg' in mime:
+                                    ext = '.svg'
+                                elif 'audio' in mime:
+                                    ext = '.mp3'
+                                else:
+                                    ext = '.dat'
 
                         version = idx + 1
                         media_filename = generate_filename(meta, version=version)
                         media_path = medium_folder / f"{media_filename}{ext}"
-                        media_path.write_bytes(base64.b64decode(data_b64))
+                        media_path.write_bytes(data_bytes)
                         print(f"    📄 File saved: {media_path}")
                         media_file_status = "Overschreven" if media_path.exists() else "Nieuw"
                         created_files_log.append(f"{media_path.name} ({media_file_status})")
