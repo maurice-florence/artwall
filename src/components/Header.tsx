@@ -108,6 +108,7 @@ const Header: React.FC<HeaderProps> = ({
   searchTerm,
   setSearchTerm
 }) => {
+
   return (
     <HeaderWrapper>
       <div style={{ display: 'flex', alignItems: 'center', flex: '0 0 auto' }}>
@@ -115,41 +116,37 @@ const Header: React.FC<HeaderProps> = ({
           <FaGripLines />
         </ToggleButton>
         <IconsWrapper style={{ marginLeft: '2rem', marginRight: 0 }}>
+          {/* 'All' button to deselect medium filter */}
+          <MediumIconButton
+            key="all"
+            $selected={selectedMedium === 'all'}
+            title="Alle mediums"
+            aria-label="Alle mediums"
+            onClick={() => setSelectedMedium('all')}
+          >
+            <FaEllipsisH />
+          </MediumIconButton>
           {(availableMediums.length > 0 ? availableMediums : MEDIUMS).map((med) => (
             <MediumIconButton
               key={med}
               $selected={selectedMedium === med}
               title={MEDIUM_LABELS[med as keyof typeof MEDIUM_LABELS]}
               aria-label={MEDIUM_LABELS[med as keyof typeof MEDIUM_LABELS]}
-              onClick={() => setSelectedMedium(med)}
+              onClick={() => setSelectedMedium(selectedMedium === med ? 'all' : med)}
             >
               {MEDIUM_ICONS[med as keyof typeof MEDIUM_ICONS]}
             </MediumIconButton>
           ))}
         </IconsWrapper>
-      {/* Year filter dropdown */}
-      <div style={{ marginLeft: '2rem' }}>
-        <select
-          value={selectedYear}
-          onChange={e => setSelectedYear(e.target.value)}
-          style={{ padding: '0.4rem 0.8rem', borderRadius: 4, border: '1px solid #ccc', fontSize: '1rem' }}
-        >
-          <option value="all">Alle jaren</option>
-          {availableYears.map(year => (
-            <option key={year} value={year}>{year}</option>
-          ))}
-        </select>
-      </div>
-      {/* Search input */}
-      <div style={{ marginLeft: '2rem' }}>
+        {/* Year filter dropdown placeholder */}
+        <div style={{ marginLeft: '2rem' }}></div>
         <input
           type="text"
           value={searchTerm}
           onChange={e => setSearchTerm(e.target.value)}
           placeholder="Zoeken..."
-          style={{ padding: '0.4rem 0.8rem', borderRadius: 4, border: '1px solid #ccc', fontSize: '1rem' }}
+          style={{ padding: '0.4rem 0.8rem', borderRadius: 4, border: '1px solid #ccc', fontSize: '1rem', marginLeft: '2rem' }}
         />
-      </div>
       </div>
       <CenteredTitleWrapper>
         <Title>Kunstmuur</Title>

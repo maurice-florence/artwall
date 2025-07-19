@@ -121,27 +121,18 @@ const themeOptions: { name: ThemeName; color: string; label: string }[] = [
 ];
 
 const Sidebar = ({ isOpen, allArtworks }: SidebarProps) => {
-    // Filter context removed
-    const { theme, themeObject, toggleTheme, updateThemeColor, cardHeight, setCardHeight } = useContext(ThemeContext);
-
-    const availableYears = useMemo(() => {
-        const years = new Set(allArtworks.map(art => art.year));
-        return Array.from(years).sort((a, b) => b - a);
-    }, [allArtworks]);
-
-    // Filter change handler removed
-
+    // Sidebar intro text explaining the app
     return (
         <SidebarContainer $isOpen={isOpen}>
-            <SectionTitle>Over Deze Site</SectionTitle>
-            <IntroText>
-                Welkom op mijn Kunstmuur. Een persoonlijk archief van hersenspinsels, probeersels en creaties door de jaren heen.
-            </IntroText>
-            
-            {/* Filter section removed as requested */}
-
-            <SectionTitle>Statistieken</SectionTitle>
-            <StatSummary allArtworks={allArtworks} />
+            <div style={{ padding: '2rem 1rem', fontSize: '1.1rem', color: '#444' }}>
+                <h2 style={{ fontSize: '1.3rem', marginBottom: '1rem' }}>Welkom bij Kunstmuur</h2>
+                <p>
+                    Dit is een digitale kunstmuur waar je een overzicht vindt van alle werken, gesorteerd op jaar en medium. Gebruik de knoppen bovenaan om te filteren op medium, of zoek op titel/omschrijving. Klik op een werk voor meer details, media en vertalingen.
+                </p>
+                <p style={{ marginTop: '1rem', fontStyle: 'italic', color: '#888' }}>
+                    Je kunt altijd terugkeren naar het volledige overzicht door de filter op 'Alle mediums' te zetten.
+                </p>
+            </div>
         </SidebarContainer>
     );
 };

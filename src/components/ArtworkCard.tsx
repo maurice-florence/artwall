@@ -201,28 +201,26 @@ const LanguageTag = styled.span`
 const ArtworkCard = ({ artwork, onSelect, isAdmin }: ArtworkCardProps) => {
     const theme = useTheme();
 
-    // Make all cards 1/3 smaller in height
-    const reducedCardHeight = Math.round((theme.cardHeight || 280) * (2/3));
-    const gridGap = theme.gridGap || 24;
-
+    // Card sizing logic: only 'novels' and 'songs' get special sizing, all others use standard size
     const formattedDate = new Date(artwork.year, (artwork.month || 1) - 1, artwork.day || 1)
-                            .toLocaleDateString('nl-NL', { month: 'short', year: 'numeric' });
+      .toLocaleDateString('nl-NL', { month: 'short', year: 'numeric' });
 
-    const hasCover = artwork.medium === 'writing' && 'coverImageUrl' in artwork;
-    // Calculate rowSpan for prose: 2 rows + 1 gap, so rowSpan = 2 + (gridGap / reducedCardHeight)
+    // Determine rowSpan for special subtypes: only 'novel' and 'song' get larger size
     let rowSpan = 1;
-    if (artwork.medium === 'writing') {
-      rowSpan = Math.round((reducedCardHeight * 2 + gridGap) / reducedCardHeight);
+    const subtype = (artwork.subtype || '').toLowerCase();
+    if (subtype === 'novel' || subtype === 'song') {
+      rowSpan = 2;
     }
-    // Only render prose cover if category is prose and artwork has coverImageUrl
-    if ((artwork as any).medium === 'writing' && (artwork as any).coverImageUrl) {
+
+    // Only render prose cover if medium is writing and artwork has coverImageUrl
+    if (artwork.medium === 'writing' && artwork.coverImageUrl) {
       return (
         <CardContainer medium={artwork.medium} $rowSpan={rowSpan} onClick={onSelect}>
           <CardInner>
             <CardFront medium={artwork.medium}>
               <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
                 <CardTitle style={{ marginBottom: '0.5rem' }}>{artwork.title}</CardTitle>
-                <ProzaImage src={(artwork as any).coverImageUrl} alt={artwork.title} style={{ maxHeight: `calc(100% - 3.5rem)` }} />
+                <ProzaImage src={artwork.coverImageUrl} alt={artwork.title} style={{ maxHeight: `calc(100% - 3.5rem)` }} />
                 <CardFooter style={{ marginTop: '0.5rem', justifyContent: 'space-between' }}>
                   <span>{formattedDate}</span>
                   <CardCategory>
@@ -248,7 +246,7 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin }: ArtworkCardProps) => {
     }
 
     // Blank card rendering
-    const blank = !artwork.title && !artwork.description && !('coverImageUrl' in artwork && artwork.coverImageUrl);
+    const blank = !artwork.title && !artwork.description && !artwork.coverImageUrl;
     if (blank) {
       return null;
     }
