@@ -109,11 +109,12 @@ export default function HomePage() {
     })();
 
     const handleSaveNewEntry = async (entry: any) => {
-        if (entry && entry._delete && entry.id) {
-            await remove(ref(db, `artworks/${entry.id}`));
+        if (entry && entry._delete && entry.id && entry.medium) {
+            await remove(ref(db, `artwall/${entry.medium}/${entry.id}`));
             setSelectedItem(null);
             return;
         }
+        const medium = entry.medium || 'other';
         const newEntry = {
             ...entry,
             year: Number(entry.year) || new Date().getFullYear(),
@@ -122,7 +123,11 @@ export default function HomePage() {
             createdAt: Date.now(),
             isHidden: false,
         };
-        await push(ref(db, 'artworks'), newEntry);
+        // Generate a new key for the artwork
+        const artwallRef = ref(db, `artwall/${medium}`);
+        const pushRef = push(artwallRef);
+        const newId = pushRef.key;
+        await update(ref(db, `artwall/${medium}/${newId}`), { ...newEntry, id: newId });
     };
 
     const handleEdit = useCallback((artwork: Artwork) => {

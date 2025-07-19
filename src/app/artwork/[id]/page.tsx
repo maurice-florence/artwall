@@ -212,12 +212,26 @@ export default function ArtworkModalPage() {
       return;
     }
     const fetchArtwork = async () => {
-      const snapshot = await get(ref(db, `artworks/${id}`));
-      if (!snapshot.exists()) {
+      // Search all medium folders in 'artwall' for the artwork
+      const artwallRef = ref(db, 'artwall');
+      const snapshot = await get(artwallRef);
+      const data = snapshot.val();
+      if (!data) {
         notFound();
         return;
       }
-      setArtwork({ id, type: 'artwork', ...snapshot.val() });
+      let found = null;
+      for (const medium of Object.keys(data)) {
+        if (data[medium] && data[medium][id]) {
+          found = { id, type: 'artwork', ...data[medium][id] };
+          break;
+        }
+      }
+      if (!found) {
+        notFound();
+        return;
+      }
+      setArtwork(found);
     };
     fetchArtwork();
   }, [id]);
