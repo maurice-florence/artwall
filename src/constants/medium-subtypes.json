@@ -1,0 +1,7 @@
+{
+  "drawing": ["digital", "marker", "other", "pencil"],
+  "writing": ["essay", "novel", "other", "poem", "prosepoem", "shortstory"],
+  "audio": ["beat", "electronic", "other", "rap", "song", "soundpoem"],
+  "sculpture": ["clay", "other", "wood"],
+  "other": ["other"]
+}
