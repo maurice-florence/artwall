@@ -161,23 +161,14 @@ def safe_yaml_value(value: str) -> str:
     """Safely format a value for YAML, handling apostrophes and special characters."""
     if not value:
         return "''"
-    
     # Convert to string if not already
     value = str(value)
-    
     # Clean problematic characters that might cause YAML issues
     value = value.replace('`', '').replace('?', '').replace('~', '')
-    
-    # If the value contains apostrophes, use double quotes
-    if "'" in value:
-        # Escape any double quotes and wrap in double quotes
-        escaped = value.replace('"', '\\"')
-        return f'"{escaped}"'
-    # If the value contains special YAML characters, wrap in single quotes
-    elif any(char in value for char in [':', '[', ']', '{', '}', '#', '&', '*', '!', '|', '>', '%', '@']):
-        return f"'{value}'"
-    else:
-        return f"'{value}'"  # Always wrap in single quotes to be safe
+    # Escape internal single quotes as two single quotes
+    safe_value = value.replace("'", "''")
+    # Always wrap in single quotes, never triple quotes
+    return f"'{safe_value}'"
 
 def extract_metadata_and_content(note_content: str) -> Tuple[Dict[str, Any] | None, str]:
     """Extraheert metadata en de hoofdcontent (alles voor de metadata)."""
@@ -270,9 +261,12 @@ def extract_metadata_and_content(note_content: str) -> Tuple[Dict[str, Any] | No
                             else:
                                 metadata[key] = ''
                     else:
-                        # Always wrap string values in single quotes for YAML output, never triple quotes
+                        # Always wrap string values in single quotes for YAML output, escape internal single quotes (never triple quotes)
                         if isinstance(value, str):
-                            metadata[key] = f"'{value}'"
+                            # Escape internal single quotes as two single quotes
+                            safe_value = value.replace("'", "''")
+                            # Only wrap in single quotes, never triple quotes
+                            metadata[key] = f"'{safe_value}'"
                         else:
                             metadata[key] = value
             
@@ -339,21 +333,20 @@ def clean_html_content(html: str) -> str:
 
 def generate_html_file(meta: Dict[str, Any], content_html: str, file_path: pathlib.Path) -> None:
     """Generates an HTML file with metadata and content."""
-    # Create a safe YAML representation of metadata
-    safe_meta = {}
+    # Manually write YAML metadata block to avoid triple single quotes
+    yaml_lines = []
     for key, value in meta.items():
         if isinstance(value, str):
-            safe_meta[key] = safe_yaml_value(value)
+            yaml_lines.append(f"{key}: {safe_yaml_value(value)}")
         else:
-            safe_meta[key] = value
-    
-    yaml_content = yaml.dump(safe_meta, allow_unicode=True, default_flow_style=False, sort_keys=False)
+            yaml_lines.append(f"{key}: {value}")
+    yaml_content = '\n'.join(yaml_lines)
     clean_html = clean_html_content(content_html)
-    
+
     html_content = f"""<!DOCTYPE html>
 <html>
 <head>
-    <meta charset="UTF-8">
+    <meta charset=\"UTF-8\">
     <title>{meta.get('title', 'Untitled')}</title>
     <style>
         body {{ font-family: Georgia, serif; max-width: 600px; margin: 40px auto; padding: 20px; line-height: 1.6; }}
@@ -363,10 +356,10 @@ def generate_html_file(meta: Dict[str, Any], content_html: str, file_path: pathl
     </style>
 </head>
 <body>
-    <div class="metadata">
+    <div class=\"metadata\">
         <pre>{yaml_content.strip()}</pre>
     </div>
-    <div class="content">
+    <div class=\"content\">
         {clean_html}
     </div>
 </body>
