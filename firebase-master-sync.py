@@ -15,7 +15,7 @@ import xml.etree.ElementTree as ET
 
 # --- CONFIGURATIE ---
 # De bronmap met al uw categorie-submappen (poetry, music, etc.)
-SOURCE_MEDIA_FOLDER = pathlib.Path('G:/Mijn Drive/Creatief/Kunstmuur')
+SOURCE_MEDIA_FOLDER = pathlib.Path('G:/Mijn Drive/Creatief/Artwall')
 
 # Pad naar uw Firebase service account sleutel
 SERVICE_ACCOUNT_KEY_PATH = pathlib.Path(__file__).parent / 'serviceAccountKey_artwall.json'
@@ -24,20 +24,18 @@ STORAGE_BUCKET = "artwall-by-jr.firebasestorage.app"  # Remove the gs:// prefix
 
 # --- SCRIPT LOGICA ---
 
-# Medium and subtype constants (matching the TypeScript definitions)
-VALID_MEDIUMS = ['audio', 'writing', 'drawing', 'sculpture', 'other']
 
-VALID_SUBTYPES = {
-    'audio': ['instrumental', 'vocal', 'electronic', 'acoustic', 'other'],
-    'writing': ['poem', 'prose', 'story', 'essay', 'other'],
-    'drawing': ['marker', 'pencil', 'digital', 'ink', 'charcoal', 'other'],
-    'sculpture': ['clay', 'wood', 'metal', 'stone', 'other'],
-    'other': ['other']
-}
+# Load mediums and subtypes from shared JSON file for consistency
+import json
+MEDIUM_SUBTYPES_PATH = pathlib.Path(__file__).parent / 'src' / 'constants' / 'medium-subtypes.json'
+with open(MEDIUM_SUBTYPES_PATH, encoding='utf-8') as f:
+    VALID_SUBTYPES = json.load(f)
+VALID_MEDIUMS = list(VALID_SUBTYPES.keys())
 
 def validate_medium_subtype(medium: str, subtype: str) -> bool:
     """Validate that subtype is valid for the given medium."""
-    return medium in VALID_MEDIUMS and subtype in VALID_SUBTYPES.get(medium, [])
+    # Accept any subtype present in the shared JSON, or allow new subtypes for migration
+    return medium in VALID_MEDIUMS and (subtype in VALID_SUBTYPES.get(medium, []) or True)
 
 def normalize_metadata_fields(metadata: Dict[str, Any]) -> Dict[str, Any]:
     """
@@ -46,30 +44,21 @@ def normalize_metadata_fields(metadata: Dict[str, Any]) -> Dict[str, Any]:
     """
     # Handle medium/subtype mapping
     if 'medium' in metadata and 'subtype' in metadata:
-        # New format: medium and subtype are explicitly provided
         medium = metadata['medium']
         subtype = metadata['subtype']
-        
-        # Validate medium/subtype combination
-        if not validate_medium_subtype(medium, subtype):
-            print(f"    ⚠️ Invalid medium/subtype combination: {medium}/{subtype}, using defaults")
-            medium, subtype = ('other', 'other')
-            metadata['medium'] = medium
-            metadata['subtype'] = subtype
-        
+        # Accept all subtypes present in notes, do not fallback unless medium is invalid
+        if medium not in VALID_MEDIUMS:
+            print(f"    ⚠️ Invalid medium: {medium}, using 'other'")
+            metadata['medium'] = 'other'
         # Set legacy category for backwards compatibility
         if 'category' not in metadata:
             metadata['category'] = 'other'
-            
     elif 'category' in metadata:
-        # Legacy format: only category is provided, derive medium/subtype
         category = metadata['category']
         # Legacy category mapping removed. Only medium/subtype supported.
-        metadata['medium'] = medium
-        metadata['subtype'] = subtype
-        
+        metadata['medium'] = 'other'
+        metadata['subtype'] = 'other'
     else:
-        # Neither medium nor category provided, use defaults
         metadata['medium'] = 'other'
         metadata['subtype'] = 'other'
         metadata['category'] = 'other'
@@ -377,9 +366,17 @@ def sync_to_firebase(force_update: bool = False):
         return
 
     print("\n🔍 Ophalen van bestaande data uit de database...")
-    artworks_ref = db.reference('artworks')
-    existing_artworks = artworks_ref.get() or {}
-    existing_keys = set(existing_artworks.keys())
+    # Use 'artwall' as root and medium as subfolder
+    artwall_ref = db.reference('artwall')
+    # Gather all existing items by medium
+    existing_artworks = {}
+    existing_keys = set()
+    for medium in VALID_MEDIUMS:
+        medium_ref = artwall_ref.child(medium)
+        medium_items = medium_ref.get() or {}
+        for k in medium_items.keys():
+            existing_artworks[f"{medium}/{k}"] = medium_items[k]
+            existing_keys.add(f"{medium}/{k}")
     print(f"ℹ️  {len(existing_keys)} bestaande items gevonden")
 
     bucket = storage.bucket()
@@ -498,16 +495,17 @@ def sync_to_firebase(force_update: bool = False):
         metadata = grouped_item['metadata']
         title = metadata['title']
         local_modified = grouped_item.get('last_modified', 0)
-        
+
         # Show which languages are being combined
         available_languages = list(grouped_item['languages'].keys())
         lang_display = f"({', '.join(available_languages)})"
-        
-        if base_key in existing_keys and not force_update:
-            existing_item = existing_artworks[base_key]
+
+        medium = metadata.get('medium', 'other')
+        db_key = f"{medium}/{base_key}"
+
+        if db_key in existing_keys and not force_update:
+            existing_item = existing_artworks[db_key]
             firebase_modified = existing_item.get('recordCreationDate', 0)
-            
-            # Check if local files are newer than Firebase data
             if local_modified > firebase_modified:
                 print(f"🔄 {title} {lang_display} - Lokale bestanden zijn nieuwer, bijwerken...")
                 needs_update = True
@@ -516,42 +514,38 @@ def sync_to_firebase(force_update: bool = False):
                 database_operations['skipped'].append(f"{title} {lang_display}")
                 continue
         else:
-            if base_key in existing_keys:
+            if db_key in existing_keys:
                 print(f"🔄 {title} {lang_display} - FORCE UPDATE actief, overschrijven...")
                 needs_update = True
             else:
                 print(f"🆕 {title} {lang_display} - Nieuw gecombineerd item aanmaken...")
-                needs_update = False  # It's a new item
+                needs_update = False
 
-        # **🔥 CREATE COMBINED ARTWORK WITH TRANSLATIONS**
         artwork_payload = create_combined_artwork(base_key, grouped_item)
         media_urls = []
-        
-        # Upload media files from all language versions
+
         for file_path in grouped_item['files']:
             if file_path.suffix == '.html':
-                continue  # HTML bestanden niet uploaden naar storage
-                
+                continue
             try:
-                blob = bucket.blob(f"{artwork_payload['category']}/{file_path.name}")
+                # Use medium for storage path
+                medium_folder = medium if medium in VALID_MEDIUMS else 'other'
+                blob = bucket.blob(f"{medium_folder}/{file_path.name}")
                 blob.upload_from_filename(str(file_path))
-                blob.make_public() # Maak het bestand publiek toegankelijk
+                blob.make_public()
                 media_urls.append(blob.public_url)
-                print(f"  ☁️ {file_path.name}")
-                storage_operations['uploaded'].append(file_path.name)
+                print(f"  ☁️ {medium_folder}/{file_path.name}")
+                storage_operations['uploaded'].append(f"{medium_folder}/{file_path.name}")
             except Exception as e:
-                print(f"  ❌ {file_path.name} - {e}")
-                storage_operations['failed'].append(f"{file_path.name}: {e}")
-        
-        # Apply media URL normalization
-        artwork_payload = normalize_artwork_payload(artwork_payload, media_urls, base_key)
+                print(f"  ❌ {medium_folder}/{file_path.name} - {e}")
+                storage_operations['failed'].append(f"{medium_folder}/{file_path.name}: {e}")
 
-        # Set record creation/update date
+        artwork_payload = normalize_artwork_payload(artwork_payload, media_urls, base_key)
         artwork_payload['recordCreationDate'] = local_modified
 
-        # Save to Firebase
+        # Save to Firebase under artwall/{medium}/{base_key}
         try:
-            artworks_ref.child(base_key).set(artwork_payload)
+            artwall_ref.child(medium).child(base_key).set(artwork_payload)
             if needs_update:
                 print(f"  ✅ Database bijgewerkt")
                 database_operations['updated'].append(f"{title} {lang_display}")
@@ -561,8 +555,8 @@ def sync_to_firebase(force_update: bool = False):
         except Exception as e:
             print(f"  ❌ Database operatie mislukt: {e}")
             database_operations['failed'].append(f"{title} {lang_display}: {e}")
-            
-        print()  # Empty line for spacing
+
+        print()
 
     # Summary report
     print("🎉 Synchronisatie voltooid!")
