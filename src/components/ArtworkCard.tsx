@@ -2,31 +2,30 @@ import React from 'react';
 import { FaBookOpen, FaPaintBrush, FaMusic, FaAlignLeft } from 'react-icons/fa';
 import styled, { useTheme } from 'styled-components';
 import { Artwork, ArtworkMedium } from '@/types';
+import cardSizesJson from '@/constants/card-sizes.json';
+
+type CardSizesType = {
+  [key: string]: { gridColumn: number; gridRow: number };
+};
+const cardSizes: CardSizesType = cardSizesJson;
 
 interface CardContainerProps {
   medium: ArtworkMedium;
 }
 
 
-const getGridSpan = (medium: ArtworkMedium, rowSpan: number = 1) => {
-    switch(medium) {
-        case 'writing':
-            return `grid-column: span 2; grid-row: span ${rowSpan};`;
-        case 'audio':
-            return `grid-column: span 1.5; grid-row: span ${rowSpan};`;
-        case 'sculpture':
-        case 'drawing':
-        default:
-            return 'grid-column: span 1; grid-row: span 1;';
-    }
+// Get grid span from cardSizes.json by subtype, fallback to default
+const getGridSpan = (subtype: string) => {
+  const size = cardSizes[subtype] || cardSizes['default'];
+  return `grid-column: span ${size.gridColumn}; grid-row: span ${size.gridRow};`;
 };
 
-const CardContainer = styled.div<CardContainerProps & { $rowSpan?: number; $blank?: boolean }>`
+const CardContainer = styled.div<CardContainerProps & { $subtype?: string; $blank?: boolean }>`
   perspective: 1000px;
   width: 100%;
   border-radius: 12px;
   /* Remove explicit height, let grid control it */
-  ${props => getGridSpan(props.medium, props.$rowSpan)}
+  ${({ $subtype }) => getGridSpan($subtype || 'default')}
 
   @media (max-width: 768px) {
       grid-column: span 2;
@@ -205,17 +204,13 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin }: ArtworkCardProps) => {
     const formattedDate = new Date(artwork.year, (artwork.month || 1) - 1, artwork.day || 1)
       .toLocaleDateString('nl-NL', { month: 'short', year: 'numeric' });
 
-    // Determine rowSpan for special subtypes: only 'novel' and 'song' get larger size
-    let rowSpan = 1;
+    // Use subtype for sizing, default to drawing size
     const subtype = (artwork.subtype || '').toLowerCase();
-    if (subtype === 'novel' || subtype === 'song') {
-      rowSpan = 2;
-    }
 
     // Only render prose cover if medium is writing and artwork has coverImageUrl
     if (artwork.medium === 'writing' && artwork.coverImageUrl) {
       return (
-        <CardContainer medium={artwork.medium} $rowSpan={rowSpan} onClick={onSelect}>
+        <CardContainer medium={artwork.medium} $subtype={subtype} onClick={onSelect}>
           <CardInner>
             <CardFront medium={artwork.medium}>
               <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
@@ -258,14 +253,14 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin }: ArtworkCardProps) => {
     if (artwork.language3) availableLanguages.push(artwork.language3);
 
     return (
-      <CardContainer medium={artwork.medium} $rowSpan={rowSpan} onClick={onSelect}>
+      <CardContainer medium={artwork.medium} $subtype={subtype} onClick={onSelect}>
         <CardInner>
           <CardFront medium={artwork.medium}>
             <div>
               <CardTitle>{artwork.title}</CardTitle>
               {availableLanguages.length > 1 && (
                 <LanguageIndicator>
-                  {availableLanguages.map(lang => (
+                  {availableLanguages.filter(lang => lang && lang.trim() !== '').map(lang => (
                     <LanguageTag key={lang}>{lang.toUpperCase()}</LanguageTag>
                   ))}
                 </LanguageIndicator>
