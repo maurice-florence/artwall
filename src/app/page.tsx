@@ -158,6 +158,7 @@ export default function HomePage() {
             <MainContent $isSidebarOpen={isSidebarOpen}>
             <Header 
               onToggleSidebar={() => setSidebarOpen(!isSidebarOpen)}
+              isSidebarOpen={isSidebarOpen}
               selectedMedium={selectedMedium}
               setSelectedMedium={setSelectedMedium}
               selectedYear={selectedYear}

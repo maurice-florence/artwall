@@ -95,6 +95,7 @@ def parse_metadata_from_filename(filename: str) -> Dict[str, Any]:
         'day': int(date_str[6:8]),
         'category': category,
         'title': title
+        # Do NOT generate description here
     }
 
 def parse_html_metadata(html_content: str) -> Dict[str, Any]:

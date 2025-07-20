@@ -121,17 +121,17 @@ const themeOptions: { name: ThemeName; color: string; label: string }[] = [
 ];
 
 const Sidebar = ({ isOpen, allArtworks }: SidebarProps) => {
-    // Sidebar intro text explaining the app
+    // Sidebar intro text explaining the app (always visible)
     return (
         <SidebarContainer $isOpen={isOpen}>
-            <div style={{ padding: '2rem 1rem', fontSize: '1.1rem', color: '#444' }}>
-                <h2 style={{ fontSize: '1.3rem', marginBottom: '1rem' }}>Welkom bij Kunstmuur</h2>
-                <p>
+            <div style={{ padding: '2rem 1rem' }}>
+                <h2 style={{ fontSize: '1.3rem', marginBottom: '1rem', color: '#444' }}>Welkom bij Kunstmuur</h2>
+                <IntroText>
                     Dit is een digitale kunstmuur waar je een overzicht vindt van alle werken, gesorteerd op jaar en medium. Gebruik de knoppen bovenaan om te filteren op medium, of zoek op titel/omschrijving. Klik op een werk voor meer details, media en vertalingen.
-                </p>
-                <p style={{ marginTop: '1rem', fontStyle: 'italic', color: '#888' }}>
+                </IntroText>
+                <IntroText style={{ marginTop: '1rem', fontStyle: 'italic', color: '#888' }}>
                     Je kunt altijd terugkeren naar het volledige overzicht door de filter op 'Alle mediums' te zetten.
-                </p>
+                </IntroText>
             </div>
         </SidebarContainer>
     );

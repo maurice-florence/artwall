@@ -578,12 +578,7 @@ def process_enex_files(source_dir: pathlib.Path, dest_dir: pathlib.Path):
                             if key == 'version':
                                 meta_lang['language'] = lang_code
 
-                        # --- Auto-generate description if empty (per translation from its own content) ---
-                        if not meta_lang.get('description') or not str(meta_lang.get('description')).strip():
-                            auto_description = extract_auto_description(content_html, category=meta.get('subtype'))
-                            if auto_description:
-                                meta_lang['description'] = auto_description
-                                print(f"    📝 Auto-description ({lang_code}): {auto_description[:50]}{'...' if len(auto_description) > 50 else ''}")
+                        # Do not auto-generate description. Only use if present in metadata.
 
                         filename_lang = generate_filename(meta, lang=lang_code)
                         file_path = medium_folder / f"{filename_lang}.html"
@@ -700,11 +695,7 @@ def process_enex_files(source_dir: pathlib.Path, dest_dir: pathlib.Path):
                                 primary_lang = meta.get('language1', 'en')
                                 meta_with_lang['language'] = primary_lang
 
-                        if not meta_with_lang.get('description') or not str(meta_with_lang.get('description')).strip():
-                            auto_description = extract_auto_description(main_content_html)
-                            if auto_description:
-                                meta_with_lang['description'] = auto_description
-                                print(f"    📝 Auto-description: {auto_description[:50]}{'...' if len(auto_description) > 50 else ''}")
+                        # Do not auto-generate description. Only use if present in metadata.
 
                         base_filename = generate_filename(meta)
                         html_path = medium_folder / f"{base_filename}.html"

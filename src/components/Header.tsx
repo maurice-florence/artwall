@@ -1,6 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
-import { FaGripLines, FaPenNib, FaBookOpen, FaPaintBrush, FaMusic, FaAlignLeft, FaImage, FaVideo, FaEllipsisH, FaCube } from 'react-icons/fa';
+import { FaArrowLeft, FaArrowRight, FaPenNib, FaBookOpen, FaPaintBrush, FaMusic, FaAlignLeft, FaImage, FaVideo, FaEllipsisH, FaCube } from 'react-icons/fa';
 import ThemeSwitcher from './ThemeSwitcher'; // Importeren
 import { MEDIUMS, MEDIUM_LABELS, SUBTYPE_LABELS } from '@/constants/medium';
 
@@ -87,6 +87,7 @@ const MediumIconButton = styled.button<{ $selected?: boolean }>`
 
 interface HeaderProps {
   onToggleSidebar: () => void;
+  isSidebarOpen: boolean;
   selectedMedium: string;
   setSelectedMedium: (med: string) => void;
   selectedYear: string;
@@ -99,6 +100,7 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({
   onToggleSidebar,
+  isSidebarOpen,
   selectedMedium,
   setSelectedMedium,
   selectedYear,
@@ -109,51 +111,54 @@ const Header: React.FC<HeaderProps> = ({
   setSearchTerm
 }) => {
 
+  // Filter icons left, appearance icons right
   return (
     <HeaderWrapper>
-      <div style={{ display: 'flex', alignItems: 'center', flex: '0 0 auto' }}>
-        <ToggleButton onClick={onToggleSidebar} title="Toggle Sidebar">
-          <FaGripLines />
-        </ToggleButton>
-        <IconsWrapper style={{ marginLeft: '2rem', marginRight: 0 }}>
-          {/* 'All' button to deselect medium filter */}
-          <MediumIconButton
-            key="all"
-            $selected={selectedMedium === 'all'}
-            title="Alle mediums"
-            aria-label="Alle mediums"
-            onClick={() => setSelectedMedium('all')}
-          >
-            <FaEllipsisH />
-          </MediumIconButton>
-          {(availableMediums.length > 0 ? availableMediums : MEDIUMS).map((med) => (
-            <MediumIconButton
-              key={med}
-              $selected={selectedMedium === med}
-              title={MEDIUM_LABELS[med as keyof typeof MEDIUM_LABELS]}
-              aria-label={MEDIUM_LABELS[med as keyof typeof MEDIUM_LABELS]}
-              onClick={() => setSelectedMedium(selectedMedium === med ? 'all' : med)}
-            >
-              {MEDIUM_ICONS[med as keyof typeof MEDIUM_ICONS]}
-            </MediumIconButton>
-          ))}
-        </IconsWrapper>
-        {/* Year filter dropdown placeholder */}
-        <div style={{ marginLeft: '2rem' }}></div>
-        <input
-          type="text"
-          value={searchTerm}
-          onChange={e => setSearchTerm(e.target.value)}
-          placeholder="Zoeken..."
-          style={{ padding: '0.4rem 0.8rem', borderRadius: 4, border: '1px solid #ccc', fontSize: '1rem', marginLeft: '2rem' }}
-        />
-      </div>
       <CenteredTitleWrapper>
         <Title>Kunstmuur</Title>
       </CenteredTitleWrapper>
-      <RightSection>
-        <ThemeSwitcher />
-      </RightSection>
+      <div style={{ width: '100%' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <ToggleButton onClick={onToggleSidebar} title="Toggle Sidebar">
+              {isSidebarOpen ? <FaArrowLeft /> : <FaArrowRight />}
+            </ToggleButton>
+            <IconsWrapper>
+              {/* 'All' button to deselect medium filter */}
+              <MediumIconButton
+                key="all"
+                $selected={selectedMedium === 'all'}
+                title="Alle mediums"
+                aria-label="Alle mediums"
+                onClick={() => setSelectedMedium('all')}
+              >
+                <FaEllipsisH />
+              </MediumIconButton>
+              {([...(availableMediums.length > 0 ? availableMediums : MEDIUMS).filter(m => m !== 'other'), 'other']).map((med) => (
+                <MediumIconButton
+                  key={med}
+                  $selected={selectedMedium === med}
+                  title={MEDIUM_LABELS[med as keyof typeof MEDIUM_LABELS]}
+                  aria-label={MEDIUM_LABELS[med as keyof typeof MEDIUM_LABELS]}
+                  onClick={() => setSelectedMedium(selectedMedium === med ? 'all' : med)}
+                >
+                  {MEDIUM_ICONS[med as keyof typeof MEDIUM_ICONS]}
+                </MediumIconButton>
+              ))}
+            </IconsWrapper>
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              placeholder="Zoeken..."
+              style={{ padding: '0.4rem 0.8rem', borderRadius: 4, border: '1px solid #ccc', fontSize: '1rem', marginLeft: '2rem' }}
+            />
+          </div>
+          <RightSection>
+            <ThemeSwitcher />
+          </RightSection>
+        </div>
+      </div>
     </HeaderWrapper>
   );
 };

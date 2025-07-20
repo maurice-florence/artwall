@@ -209,11 +209,25 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin }: ArtworkCardProps) => {
     if (artwork.language1 && artwork.language1.trim() !== '') availableLanguages.push(artwork.language1);
     if (artwork.language2 && artwork.language2.trim() !== '') availableLanguages.push(artwork.language2);
     if (artwork.language3 && artwork.language3.trim() !== '') availableLanguages.push(artwork.language3);
-    // Helper to generate unique key for language tags
-    const getLangKey = (lang: string, idx: number) => lang && lang.trim() !== '' ? lang : `empty-${idx}`;
+    // Helper to generate unique key for language tags, even for empty or duplicate codes
+    const getLangKey = (lang: string, idx: number) => {
+      const safeLang = (lang || '').trim();
+      if (!safeLang) return `empty-${idx}`;
+      // Add index to all keys to guarantee uniqueness
+      return `${safeLang}-${idx}`;
+    };
 
     // Use subtype for sizing, default to drawing size
     const subtype = (artwork.subtype || '').toLowerCase();
+
+    // Determine which text to show on card back: description or content
+    const hasDescription = artwork.description && artwork.description.trim() !== '';
+    const cardText = hasDescription ? artwork.description : (artwork.content || '');
+
+    // Calculate max lines based on card size (default: 8, novel: 16, song: 10)
+    let maxLines = 8;
+    if (subtype === 'novel') maxLines = 16;
+    if (subtype === 'song') maxLines = 10;
 
     // Only render prose cover if medium is writing and artwork has coverImageUrl
     if (artwork.medium === 'writing' && artwork.coverImageUrl) {
@@ -234,14 +248,14 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin }: ArtworkCardProps) => {
             </CardFront>
             <CardBack>
               <p style={{
-                maxHeight: '10em',
+                maxHeight: `${maxLines * 1.25}em`,
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
                 display: '-webkit-box',
-                WebkitLineClamp: 8,
+                WebkitLineClamp: maxLines,
                 WebkitBoxOrient: 'vertical',
                 whiteSpace: 'normal',
-              }}>{artwork.description}</p>
+              }}>{cardText}</p>
             </CardBack>
           </CardInner>
         </CardContainer>
@@ -279,14 +293,14 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin }: ArtworkCardProps) => {
           </CardFront>
           <CardBack>
             <p style={{
-              maxHeight: '5em',
+              maxHeight: `${maxLines * 1.25}em`,
               overflow: 'hidden',
               textOverflow: 'ellipsis',
               display: '-webkit-box',
-              WebkitLineClamp: 4,
+              WebkitLineClamp: maxLines,
               WebkitBoxOrient: 'vertical',
               whiteSpace: 'normal',
-            }}>{artwork.description}</p>
+            }}>{cardText}</p>
           </CardBack>
         </CardInner>
       </CardContainer>
