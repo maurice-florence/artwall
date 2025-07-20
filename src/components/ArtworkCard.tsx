@@ -204,6 +204,14 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin }: ArtworkCardProps) => {
     const formattedDate = new Date(artwork.year, (artwork.month || 1) - 1, artwork.day || 1)
       .toLocaleDateString('nl-NL', { month: 'short', year: 'numeric' });
 
+    // Language indicator rendering (fix duplicate key error)
+    const availableLanguages: string[] = [];
+    if (artwork.language1 && artwork.language1.trim() !== '') availableLanguages.push(artwork.language1);
+    if (artwork.language2 && artwork.language2.trim() !== '') availableLanguages.push(artwork.language2);
+    if (artwork.language3 && artwork.language3.trim() !== '') availableLanguages.push(artwork.language3);
+    // Helper to generate unique key for language tags
+    const getLangKey = (lang: string, idx: number) => lang && lang.trim() !== '' ? lang : `empty-${idx}`;
+
     // Use subtype for sizing, default to drawing size
     const subtype = (artwork.subtype || '').toLowerCase();
 
@@ -246,11 +254,7 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin }: ArtworkCardProps) => {
       return null;
     }
 
-    // Get available languages
-    const availableLanguages = [];
-    if (artwork.language1) availableLanguages.push(artwork.language1);
-    if (artwork.language2) availableLanguages.push(artwork.language2);
-    if (artwork.language3) availableLanguages.push(artwork.language3);
+    // availableLanguages already declared above
 
     return (
       <CardContainer medium={artwork.medium} $subtype={subtype} onClick={onSelect}>
@@ -260,8 +264,8 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin }: ArtworkCardProps) => {
               <CardTitle>{artwork.title}</CardTitle>
               {availableLanguages.length > 1 && (
                 <LanguageIndicator>
-                  {availableLanguages.filter(lang => lang && lang.trim() !== '').map(lang => (
-                    <LanguageTag key={lang}>{lang.toUpperCase()}</LanguageTag>
+                  {availableLanguages.filter(lang => lang && lang.trim() !== '').map((lang, idx) => (
+                    <LanguageTag key={getLangKey(lang, idx)}>{lang.toUpperCase()}</LanguageTag>
                   ))}
                 </LanguageIndicator>
               )}

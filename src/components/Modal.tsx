@@ -217,6 +217,8 @@ const Modal: React.FC<ModalProps> = ({
   if (item.language1) availableLanguages.push(item.language1);
   if (item.language2) availableLanguages.push(item.language2);
   if (item.language3) availableLanguages.push(item.language3);
+  // Helper to generate unique key for language tags
+  const getLangKey = (lang: string, idx: number) => lang && lang.trim() !== '' ? lang : `empty-${idx}`;
 
   // Get current translation
   const getCurrentTranslation = () => {
@@ -315,9 +317,9 @@ const Modal: React.FC<ModalProps> = ({
         {/* Language Switcher */}
         {availableLanguages.length > 1 && (
           <LanguageSwitcher>
-            {availableLanguages.map((lang) => (
+            {availableLanguages.map((lang, idx) => (
               <LanguageButton
-                key={lang}
+                key={getLangKey(lang, idx)}
                 $active={currentLanguage === lang}
                 onClick={() => setCurrentLanguage(lang)}
               >
