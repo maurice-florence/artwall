@@ -83,7 +83,7 @@ const CardFooter = styled.div`
 
 const mediumFields: Record<string, string[]> = {
   'drawing': ['title', 'year', 'month', 'day', 'description', 'coverImageUrl'],
-  'writing': ['title', 'year', 'month', 'day', 'description', 'content'],
+  'writing': ['title', 'year', 'month', 'day', 'description', 'content', 'coverImageUrl'],
   'audio': ['title', 'year', 'month', 'day', 'description', 'lyrics', 'audioFile', 'soundcloudUrl'],
   'sculpture': ['title', 'year', 'month', 'day', 'description', 'coverImageUrl'],
   'other': ['title', 'year', 'month', 'day', 'description', 'content', 'mediaUrl'],

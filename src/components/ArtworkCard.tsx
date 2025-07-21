@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { FaBookOpen, FaPaintBrush, FaMusic, FaAlignLeft } from 'react-icons/fa';
 import styled, { useTheme } from 'styled-components';
 import { Artwork, ArtworkMedium } from '@/types';
@@ -276,39 +276,18 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin }: ArtworkCardProps) => {
     if (subtype === 'novel') maxLines = 16;
     if (subtype === 'song') maxLines = 10;
 
-    // Only render prose cover if medium is writing and artwork has coverImageUrl
-    if (artwork.medium === 'writing' && artwork.coverImageUrl) {
-      return (
-        <CardContainer medium={artwork.medium} $subtype={subtype} onClick={onSelect} data-testid={`artwork-card-${artwork.id}`}>
-          <CardInner>
-            <CardFront medium={artwork.medium}>
-              <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-                <CardTitle data-testid={`artwork-title-${artwork.id}`} style={{ marginBottom: '0.5rem' }}>{artwork.title}</CardTitle>
-                <ProzaImage src={artwork.coverImageUrl} alt={artwork.title} style={{ maxHeight: `calc(100% - 3.5rem)` }} />
-                <CardFooter style={{ marginTop: '0.5rem', justifyContent: 'space-between' }}>
-                  <span>{formattedDate}</span>
-                  <CardCategory>
-                    {iconMap[artwork.medium]}
-                  </CardCategory>
-                </CardFooter>
-              </div>
-            </CardFront>
-            <CardBack>
-              <p data-testid={`artwork-back-content-${artwork.id}`} style={{
-                maxHeight: `${maxLines * 1.25}em`,
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                display: '-webkit-box',
-                WebkitLineClamp: maxLines,
-                WebkitBoxOrient: 'vertical',
-                whiteSpace: 'normal',
-              }}>{cardText}</p>
-            </CardBack>
-          </CardInner>
-        </CardContainer>
-      );
+    // Accept either a single string or an array of strings for images
+    let images: string[] = [];
+    if (Array.isArray(artwork.coverImageUrl)) {
+      images = artwork.coverImageUrl;
+    } else if (artwork.coverImageUrl) {
+      images = [artwork.coverImageUrl];
+    } else if (Array.isArray(artwork.mediaUrls) && artwork.mediaUrls.length > 0) {
+      images = artwork.mediaUrls;
     }
-    // (remove duplicate declaration)
+
+    // Slider state for all cards with images, only on card back
+    const [currentImage, setCurrentImage] = useState(0);
 
     // Blank card rendering
     const blank = !artwork.title && !artwork.description && !artwork.coverImageUrl;
@@ -316,29 +295,37 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin }: ArtworkCardProps) => {
       return null;
     }
 
-    // availableLanguages already declared above
-
+    // Card front: always show title, language, date, icon, and a large preview image (no slider)
+    // Card back: show image slider if images, then text
     return (
       <CardContainer medium={artwork.medium} $subtype={subtype} onClick={onSelect} data-testid={`artwork-card-${artwork.id}`}>
         <CardInner>
           <CardFront medium={artwork.medium}>
-            <div>
-              <CardTitle data-testid={`artwork-title-${artwork.id}`}>{artwork.title}</CardTitle>
+            <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+              <CardTitle data-testid={`artwork-title-${artwork.id}`} style={{ marginBottom: '0.5rem', flexShrink: 0 }}>{artwork.title}</CardTitle>
+              <div style={{ flex: 1, minHeight: 0, minWidth: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                {images.length > 0 && (
+                  artwork.medium === 'writing' ? (
+                    <ProzaImage src={images[0]} alt={artwork.title} style={{ height: '100%', width: '100%', objectFit: 'contain', borderRadius: 8, minHeight: 0, minWidth: 0 }} />
+                  ) : (
+                    <CardImage src={images[0]} alt={artwork.title} style={{ height: '100%', width: '100%', objectFit: 'contain', borderRadius: 8, minHeight: 0, minWidth: 0 }} />
+                  )
+                )}
+              </div>
               {availableLanguages.length > 1 && (
-                <LanguageIndicator data-testid={`artwork-languages-${artwork.id}`}>
+                <LanguageIndicator data-testid={`artwork-languages-${artwork.id}`}> 
                   {availableLanguages.filter((lang: string) => lang && lang.trim() !== '').map((lang: string, idx: number) => (
                     <LanguageTag key={getLangKey(lang, idx)}>{lang.toUpperCase()}</LanguageTag>
                   ))}
                 </LanguageIndicator>
               )}
-              {/* Description removed from front; now only on back */}
+              <CardFooter style={{ marginTop: '0.5rem', justifyContent: 'space-between', flexShrink: 0 }}>
+                <span>{formattedDate}</span>
+                <CardCategory>
+                  {iconMap[artwork.medium]}
+                </CardCategory>
+              </CardFooter>
             </div>
-            <CardFooter>
-              <span>{formattedDate}</span>
-              <CardCategory>
-                {getArtworkIcon(artwork)}
-              </CardCategory>
-            </CardFooter>
           </CardFront>
           <CardBack>
             <div
@@ -347,7 +334,6 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin }: ArtworkCardProps) => {
               style={{
                 maxHeight: `${maxLines * 1.25}em`,
                 WebkitLineClamp: maxLines,
-                // The rest is handled by styled-component above
                 '--max-lines': maxLines,
               } as React.CSSProperties}
             >
@@ -357,6 +343,9 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin }: ArtworkCardProps) => {
         </CardInner>
       </CardContainer>
     );
+    // (remove duplicate declaration)
+
+    // availableLanguages already declared above
 };
 
 const DeleteButton = styled.button`
