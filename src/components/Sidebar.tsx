@@ -13,6 +13,7 @@ import { FaGripLines } from 'react-icons/fa'; // <-- Import the new icon
 type SidebarProps = {
     isOpen: boolean;
     allArtworks: Artwork[];
+    openModal?: () => void;
 }
 
 const SidebarContainer = styled.aside<{$isOpen: boolean}>`
@@ -120,18 +121,31 @@ const themeOptions: { name: ThemeName; color: string; label: string }[] = [
   { name: 'dark', color: darkModeTheme.accent, label: 'Donker' },
 ];
 
-const Sidebar = ({ isOpen, allArtworks }: SidebarProps) => {
-    // Sidebar intro text explaining the app (always visible)
+const Sidebar = ({ isOpen, allArtworks, openModal }: SidebarProps) => {
     return (
-        <SidebarContainer $isOpen={isOpen}>
+        <SidebarContainer $isOpen={isOpen} data-testid="sidebar">
             <div style={{ padding: '2rem 1rem' }}>
-                <h2 style={{ fontSize: '1.3rem', marginBottom: '1rem', color: '#444' }}>Welkom bij Kunstmuur</h2>
-                <IntroText>
+                <h2 data-testid="sidebar-title" style={{ fontSize: '1.3rem', marginBottom: '1rem', color: '#444' }}>Welkom bij Kunstmuur</h2>
+                <IntroText data-testid="sidebar-intro">
                     Dit is een digitale kunstmuur waar je een overzicht vindt van alle werken, gesorteerd op jaar en medium. Gebruik de knoppen bovenaan om te filteren op medium, of zoek op titel/omschrijving. Klik op een werk voor meer details, media en vertalingen.
                 </IntroText>
-                <IntroText style={{ marginTop: '1rem', fontStyle: 'italic', color: '#888' }}>
+                <IntroText data-testid="sidebar-intro-italic" style={{ marginTop: '1rem', fontStyle: 'italic', color: '#888' }}>
                     Je kunt altijd terugkeren naar het volledige overzicht door de filter op 'Alle mediums' te zetten.
                 </IntroText>
+                <div data-testid="artwork-list">
+                  {allArtworks && allArtworks.length > 0 ? (
+                    <ul>
+                      {allArtworks.map(artwork => (
+                        <li key={artwork.id} data-testid={`artwork-title-${artwork.id}`}>{artwork.title}</li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p data-testid="no-artworks">Geen werken gevonden.</p>
+                  )}
+                </div>
+                {openModal && (
+                  <button data-testid="open-adminmodal" onClick={openModal}>Open Admin Modal</button>
+                )}
             </div>
         </SidebarContainer>
     );

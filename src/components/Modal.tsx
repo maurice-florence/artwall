@@ -311,58 +311,63 @@ const Modal: React.FC<ModalProps> = ({
         <CloseButton onClick={handleClose} aria-label="Sluit modal">
           <FaTimes />
         </CloseButton>
-        <h2>{translation.title}</h2>
-        <p style={{ marginTop: '0.25rem', opacity: 0.8 }}>({formattedDateStr})</p>
+        <div role="dialog" data-testid="modal">
+          <h2 data-testid="modal-title">{item.title}</h2>
+          <p data-testid="modal-date" style={{ marginTop: '0.25rem', opacity: 0.8 }}>({formattedDateStr})</p>
 
-        {/* Language Switcher */}
-        {availableLanguages.length > 1 && (
-          <LanguageSwitcher>
-            {availableLanguages.map((lang, idx) => (
-              <LanguageButton
-                key={getLangKey(lang, idx)}
-                $active={currentLanguage === lang}
-                onClick={() => setCurrentLanguage(lang)}
-              >
-                {lang.toUpperCase()}
-              </LanguageButton>
-            ))}
-          </LanguageSwitcher>
-        )}
-
-        <StyledHr />
-
-        <MediaTextContainer>
-          {/* Display content for all mediums */}
-          {translation.content && (
-            <TextContainer
-              style={{ marginTop: '1rem', whiteSpace: 'pre-wrap' }}
-              dangerouslySetInnerHTML={{ __html: parseContent(translation.content) }}
-            />
-          )}
-
-          {/* Display lower-resolution cover image */}
-          {item.coverImageUrl && (
-            <ImageContainer>
-              <ResponsiveImage
-                src={item.coverImageUrl}
-                alt="Cover Image"
-                style={{ maxWidth: '300px', maxHeight: '300px' }} // Lower resolution for faster loading
-                onClick={() => window.open(item.coverImageUrl, '_blank')} // Open full resolution on click
-              />
-            </ImageContainer>
-          )}
-
-          {/* Display additional media */}
-          {item.mediaUrls && item.mediaUrls.length > 0 && (
-            <ImageContainer>
-              {item.mediaUrls.map((url, index) => (
-                <a href={url} target="_blank" rel="noopener noreferrer" key={index}>
-                  <ResponsiveImage src={url} alt={`Media ${index + 1}`} />
-                </a>
+          {/* Language Switcher */}
+          {availableLanguages.length > 1 && (
+            <LanguageSwitcher data-testid="modal-language-switcher">
+              {availableLanguages.map((lang, idx) => (
+                <LanguageButton
+                  key={getLangKey(lang, idx)}
+                  $active={currentLanguage === lang}
+                  onClick={() => setCurrentLanguage(lang)}
+                  data-testid={`modal-language-btn-${lang}`}
+                >
+                  {lang.toUpperCase()}
+                </LanguageButton>
               ))}
-            </ImageContainer>
+            </LanguageSwitcher>
           )}
-        </MediaTextContainer>
+
+          <StyledHr />
+
+          <MediaTextContainer>
+            {/* Display content for all mediums */}
+            {translation.content && (
+              <TextContainer
+                data-testid="modal-content"
+                style={{ marginTop: '1rem', whiteSpace: 'pre-wrap' }}
+                dangerouslySetInnerHTML={{ __html: parseContent(translation.content) }}
+              />
+            )}
+
+            {/* Display lower-resolution cover image */}
+            {item.coverImageUrl && (
+              <ImageContainer>
+                <ResponsiveImage
+                  src={item.coverImageUrl}
+                  alt="Cover Image"
+                  style={{ maxWidth: '300px', maxHeight: '300px' }}
+                  onClick={() => window.open(item.coverImageUrl, '_blank')}
+                  data-testid="modal-cover-image"
+                />
+              </ImageContainer>
+            )}
+
+            {/* Display additional media */}
+            {item.mediaUrls && item.mediaUrls.length > 0 && (
+              <ImageContainer>
+                {item.mediaUrls.map((url, index) => (
+                  <a href={url} target="_blank" rel="noopener noreferrer" key={index}>
+                    <ResponsiveImage src={url} alt={`Media ${index + 1}`} data-testid={`modal-media-image-${index}`} />
+                  </a>
+                ))}
+              </ImageContainer>
+            )}
+          </MediaTextContainer>
+        </div>
       </ModalContent>
     </ModalBackdrop>,
     document.body

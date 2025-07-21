@@ -110,27 +110,27 @@ const Header: React.FC<HeaderProps> = ({
   searchTerm,
   setSearchTerm
 }) => {
-
-  // Filter icons left, appearance icons right
   return (
-    <HeaderWrapper>
-      <CenteredTitleWrapper>
-        <Title>Kunstmuur</Title>
+    <HeaderWrapper data-testid="header">
+      {/* First row: centered title */}
+      <CenteredTitleWrapper data-testid="header-title-row">
+        <Title data-testid="header-title">Kunstmuur</Title>
       </CenteredTitleWrapper>
-      <div style={{ width: '100%' }}>
+      {/* Second row: filters, icons, search, theme */}
+      <div style={{ width: '100%' }} data-testid="header-controls-row">
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <ToggleButton onClick={onToggleSidebar} title="Toggle Sidebar">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }} data-testid="header-filters">
+            <ToggleButton onClick={onToggleSidebar} title="Toggle Sidebar" data-testid="header-toggle-sidebar">
               {isSidebarOpen ? <FaArrowLeft /> : <FaArrowRight />}
             </ToggleButton>
-            <IconsWrapper>
-              {/* 'All' button to deselect medium filter */}
+            <IconsWrapper data-testid="header-medium-icons">
               <MediumIconButton
                 key="all"
                 $selected={selectedMedium === 'all'}
                 title="Alle mediums"
                 aria-label="Alle mediums"
                 onClick={() => setSelectedMedium('all')}
+                data-testid="header-medium-all"
               >
                 <FaEllipsisH />
               </MediumIconButton>
@@ -141,6 +141,7 @@ const Header: React.FC<HeaderProps> = ({
                   title={MEDIUM_LABELS[med as keyof typeof MEDIUM_LABELS]}
                   aria-label={MEDIUM_LABELS[med as keyof typeof MEDIUM_LABELS]}
                   onClick={() => setSelectedMedium(selectedMedium === med ? 'all' : med)}
+                  data-testid={`header-medium-${med}`}
                 >
                   {MEDIUM_ICONS[med as keyof typeof MEDIUM_ICONS]}
                 </MediumIconButton>
@@ -152,9 +153,10 @@ const Header: React.FC<HeaderProps> = ({
               onChange={e => setSearchTerm(e.target.value)}
               placeholder="Zoeken..."
               style={{ padding: '0.4rem 0.8rem', borderRadius: 4, border: '1px solid #ccc', fontSize: '1rem', marginLeft: '2rem' }}
+              data-testid="header-search"
             />
           </div>
-          <RightSection>
+          <RightSection data-testid="header-theme-switcher">
             <ThemeSwitcher />
           </RightSection>
         </div>

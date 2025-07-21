@@ -4,7 +4,7 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { ThemeProvider } from 'styled-components';
 import { atelierTheme } from '@/themes';
-import { CategorySpecificFields } from '../components/CategorySpecificFields';
+import { CategorySpecificFields } from '../components';
 import { ArtworkFormData } from '@/types';
 import { vi } from 'vitest'; // ✅ Add this import
 
@@ -28,7 +28,7 @@ describe('CategorySpecificFields', () => {
     content: '',
     isHidden: false,
     version: '01',
-    language: 'nl',
+    language1: 'nl',
     tags: [],
     lyrics: '',
     chords: '',
@@ -42,7 +42,6 @@ describe('CategorySpecificFields', () => {
     mediaUrls: [],
     location1: '',
     location2: '',
-    language1: '',
     language2: '',
     language3: '',
     url1: '',
@@ -62,19 +61,18 @@ describe('CategorySpecificFields', () => {
 
   it('renders music fields for music category', () => {
     renderWithTheme(<CategorySpecificFields {...mockProps} />);
-    
-    expect(screen.getByLabelText('Tekst')).toBeInTheDocument();
-    expect(screen.getByLabelText('Akkoorden')).toBeInTheDocument();
-    expect(screen.getByLabelText('SoundCloud Embed URL')).toBeInTheDocument();
-    expect(screen.getByLabelText('SoundCloud Track URL')).toBeInTheDocument();
+    expect(screen.getByLabelText(/tekst/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/akkoorden/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/soundcloud embed url/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/soundcloud track url/i)).toBeInTheDocument();
   });
 
   it('renders media fields for image category', () => {
     const imageFormData = { ...mockFormData, category: 'image' as const };
     renderWithTheme(<CategorySpecificFields {...mockProps} formData={imageFormData} />);
     
-    expect(screen.getByLabelText('Media Type')).toBeInTheDocument();
-    expect(screen.getByLabelText('Media URL')).toBeInTheDocument();
+    expect(screen.getByLabelText(/media type/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/media url/i)).toBeInTheDocument();
   });
 
   it('renders nothing for categories without specific fields', () => {

@@ -4,7 +4,7 @@ import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { ThemeProvider } from 'styled-components';
 import { atelierTheme } from '@/themes';
-import { BasicInfoForm } from '../components/BasicInfoForm';
+import { BasicInfoForm } from '../components';
 import { ArtworkFormData } from '@/types';
 import { vi } from 'vitest'; // ✅ Add this import
 
@@ -28,7 +28,7 @@ describe('BasicInfoForm', () => {
     content: '',
     isHidden: false,
     version: '01',
-    language: 'nl',
+    language1: 'nl',
     tags: [],
     lyrics: '',
     chords: '',
@@ -42,7 +42,6 @@ describe('BasicInfoForm', () => {
     mediaUrls: [],
     location1: '',
     location2: '',
-    language1: '',
     language2: '',
     language3: '',
     url1: '',
@@ -63,9 +62,9 @@ describe('BasicInfoForm', () => {
   it('renders basic info fields', () => {
     renderWithTheme(<BasicInfoForm {...mockProps} />);
     
-    expect(screen.getByLabelText('Titel *')).toBeInTheDocument();
-    expect(screen.getByLabelText('Categorie *')).toBeInTheDocument();
-    expect(screen.getByLabelText('Jaar *')).toBeInTheDocument();
+    expect(screen.getByLabelText('Titel')).toBeInTheDocument();
+    expect(screen.getByLabelText('Medium *')).toBeInTheDocument();
+    expect(screen.getByLabelText('Jaar')).toBeInTheDocument();
     expect(screen.getByLabelText('Maand')).toBeInTheDocument();
     expect(screen.getByLabelText('Dag')).toBeInTheDocument();
   });
@@ -73,7 +72,7 @@ describe('BasicInfoForm', () => {
   it('calls updateField when title changes', () => {
     renderWithTheme(<BasicInfoForm {...mockProps} />);
     
-    const titleInput = screen.getByLabelText('Titel *');
+    const titleInput = screen.getByLabelText('Titel');
     fireEvent.change(titleInput, { target: { value: 'New Title' } });
     
     expect(mockProps.updateField).toHaveBeenCalledWith('title', 'New Title');
@@ -84,9 +83,17 @@ describe('BasicInfoForm', () => {
       ...mockProps,
       errors: { title: 'Titel is verplicht' }
     };
-    
     renderWithTheme(<BasicInfoForm {...propsWithErrors} />);
-    
-    expect(screen.getByText('Titel is verplicht')).toBeInTheDocument();
+    // Use a custom matcher to allow for error message in nested elements
+    expect(
+      screen.getByText((content, node) => {
+        const hasText = (n: Element | null) => n?.textContent === 'Titel is verplicht';
+        const nodeHasText = hasText(node);
+        const childrenDontHaveText = Array.from(node?.children || []).every(
+          (child) => !hasText(child as Element)
+        );
+        return nodeHasText && childrenDontHaveText;
+      })
+    ).toBeInTheDocument();
   });
 });

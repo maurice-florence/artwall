@@ -17,7 +17,8 @@ vi.mock('firebase/database', () => ({
   ref: vi.fn(),
   push: vi.fn(),
   update: vi.fn(),
-  get: vi.fn()
+  get: vi.fn(),
+  onValue: vi.fn(),
 }));
 
 const renderWithTheme = (component: React.ReactElement) => {
@@ -46,12 +47,11 @@ describe('AdminModal', () => {
 
   it('validates required fields', async () => {
     renderWithTheme(<AdminModal {...mockProps} />);
-    
-    const submitButton = screen.getByRole('button', { name: /opslaan/i });
+    const submitButton = screen.getByRole('button', { name: /opslaan|save/i });
     fireEvent.click(submitButton);
-    
     await waitFor(() => {
-      expect(screen.getByText('Titel is verplicht')).toBeInTheDocument();
+      expect(screen.getByText(/titel is verplicht/i)).toBeInTheDocument();
+      expect(screen.getByText(/voer een geldig jaar in/i)).toBeInTheDocument();
     });
   });
 

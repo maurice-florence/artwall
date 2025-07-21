@@ -98,94 +98,96 @@ const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, artworkToEdit 
           ×
         </CloseButton>
         
-        <h2>{artworkToEdit ? 'Kunstwerk Bewerken' : 'Nieuw Kunstwerk'}</h2>
-        
-        <form onSubmit={onSubmit}>
-          <FormWrapper>
-            {showDraftRecovery && (
-              <DraftRecovery
-                onLoadDraft={handleLoadDraft}
-                onClearDraft={handleClearDraft}
-                onDismiss={handleDismissDraft}
+        <div data-testid="adminmodal">
+          <h2 data-testid="form-title">{artworkToEdit ? 'Kunstwerk Bewerken' : 'Nieuw Kunstwerk'}</h2>
+          
+          <form onSubmit={onSubmit}>
+            <FormWrapper>
+              {showDraftRecovery && (
+                <DraftRecovery
+                  onLoadDraft={handleLoadDraft}
+                  onClearDraft={handleClearDraft}
+                  onDismiss={handleDismissDraft}
+                />
+              )}
+              
+              <SmartFormIndicator
+                smartState={smartState}
+                nextSuggestedField={getNextSuggestedField()}
+                totalFields={smartState.visibleFields.length}
+                completedFields={smartState.visibleFields.filter(field => {
+                  const value = formData[field];
+                  return value && (typeof value !== 'string' || value.trim() !== '');
+                }).length}
               />
-            )}
-            
-            <SmartFormIndicator
-              smartState={smartState}
-              nextSuggestedField={getNextSuggestedField()}
-              totalFields={smartState.visibleFields.length}
-              completedFields={smartState.visibleFields.filter(field => {
-                const value = formData[field];
-                return value && (typeof value !== 'string' || value.trim() !== '');
-              }).length}
-            />
-            
-            <BasicInfoForm 
-              formData={formData}
-              errors={errors}
-              updateField={updateField}
-              isFieldLoading={isFieldLoading}
-              shouldShowField={shouldShowField}
-              isFieldRequired={isFieldRequired}
-              shouldAnimateField={shouldAnimateField}
-              getContextualHelpText={getContextualHelpText}
-              getSmartSuggestions={getSmartSuggestions}
-            />
-            
-            <CategorySpecificFields
-              formData={formData}
-              errors={errors}
-              updateField={updateField}
-              isFieldLoading={isFieldLoading}
-              shouldShowField={shouldShowField}
-              isFieldRequired={isFieldRequired}
-              shouldAnimateField={shouldAnimateField}
-              getContextualHelpText={getContextualHelpText}
-              getSmartSuggestions={getSmartSuggestions}
-            />
-            
-            <MediaUploadSection
-              formData={formData}
-              errors={errors}
-              updateField={updateField}
-              isFieldLoading={isFieldLoading}
-              shouldShowField={shouldShowField}
-              isFieldRequired={isFieldRequired}
-              shouldAnimateField={shouldAnimateField}
-              getContextualHelpText={getContextualHelpText}
-              getSmartSuggestions={getSmartSuggestions}
-            />
-            
-            <MetadataSection
-              formData={formData}
-              errors={errors}
-              updateField={updateField}
-              isFieldLoading={isFieldLoading}
-              shouldShowField={shouldShowField}
-              isFieldRequired={isFieldRequired}
-              shouldAnimateField={shouldAnimateField}
-              getContextualHelpText={getContextualHelpText}
-              getSmartSuggestions={getSmartSuggestions}
-            />
-            
-            {errors.general && (
-              <ErrorMessage>{errors.general}</ErrorMessage>
-            )}
-            
-            {message && (
-              <SuccessMessage>{message}</SuccessMessage>
-            )}
-            
-            <ButtonGroup>
-              <Button type="submit" disabled={isLoading}>
-                {isLoading ? 'Bezig met opslaan...' : 'Opslaan'}
-              </Button>
-              <SecondaryButton type="button" onClick={handleClose}>
-                Annuleren
-              </SecondaryButton>
-            </ButtonGroup>
-          </FormWrapper>
-        </form>
+              
+              <BasicInfoForm 
+                formData={formData}
+                errors={errors}
+                updateField={updateField}
+                isFieldLoading={isFieldLoading}
+                shouldShowField={shouldShowField}
+                isFieldRequired={isFieldRequired}
+                shouldAnimateField={shouldAnimateField}
+                getContextualHelpText={getContextualHelpText}
+                getSmartSuggestions={getSmartSuggestions}
+              />
+              
+              <CategorySpecificFields
+                formData={formData}
+                errors={errors}
+                updateField={updateField}
+                isFieldLoading={isFieldLoading}
+                shouldShowField={shouldShowField}
+                isFieldRequired={isFieldRequired}
+                shouldAnimateField={shouldAnimateField}
+                getContextualHelpText={getContextualHelpText}
+                getSmartSuggestions={getSmartSuggestions}
+              />
+              
+              <MediaUploadSection
+                formData={formData}
+                errors={errors}
+                updateField={updateField}
+                isFieldLoading={isFieldLoading}
+                shouldShowField={shouldShowField}
+                isFieldRequired={isFieldRequired}
+                shouldAnimateField={shouldAnimateField}
+                getContextualHelpText={getContextualHelpText}
+                getSmartSuggestions={getSmartSuggestions}
+              />
+              
+              <MetadataSection
+                formData={formData}
+                errors={errors}
+                updateField={updateField}
+                isFieldLoading={isFieldLoading}
+                shouldShowField={shouldShowField}
+                isFieldRequired={isFieldRequired}
+                shouldAnimateField={shouldAnimateField}
+                getContextualHelpText={getContextualHelpText}
+                getSmartSuggestions={getSmartSuggestions}
+              />
+              
+              {errors.general && (
+                <ErrorMessage>{errors.general}</ErrorMessage>
+              )}
+              
+              {message && (
+                <SuccessMessage>{message}</SuccessMessage>
+              )}
+              
+              <ButtonGroup>
+                <Button type="submit" disabled={isLoading}>
+                  {isLoading ? 'Bezig met opslaan...' : 'Opslaan'}
+                </Button>
+                <SecondaryButton type="button" onClick={handleClose}>
+                  Annuleren
+                </SecondaryButton>
+              </ButtonGroup>
+            </FormWrapper>
+          </form>
+        </div>
       </ModalContent>
     </ModalBackdrop>
   );

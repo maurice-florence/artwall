@@ -232,11 +232,11 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin }: ArtworkCardProps) => {
     // Only render prose cover if medium is writing and artwork has coverImageUrl
     if (artwork.medium === 'writing' && artwork.coverImageUrl) {
       return (
-        <CardContainer medium={artwork.medium} $subtype={subtype} onClick={onSelect}>
+        <CardContainer medium={artwork.medium} $subtype={subtype} onClick={onSelect} data-testid={`artwork-card-${artwork.id}`}>
           <CardInner>
             <CardFront medium={artwork.medium}>
               <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-                <CardTitle style={{ marginBottom: '0.5rem' }}>{artwork.title}</CardTitle>
+                <CardTitle data-testid={`artwork-title-${artwork.id}`} style={{ marginBottom: '0.5rem' }}>{artwork.title}</CardTitle>
                 <ProzaImage src={artwork.coverImageUrl} alt={artwork.title} style={{ maxHeight: `calc(100% - 3.5rem)` }} />
                 <CardFooter style={{ marginTop: '0.5rem', justifyContent: 'space-between' }}>
                   <span>{formattedDate}</span>
@@ -247,7 +247,7 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin }: ArtworkCardProps) => {
               </div>
             </CardFront>
             <CardBack>
-              <p style={{
+              <p data-testid={`artwork-back-content-${artwork.id}`} style={{
                 maxHeight: `${maxLines * 1.25}em`,
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
@@ -261,6 +261,7 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin }: ArtworkCardProps) => {
         </CardContainer>
       );
     }
+    // (remove duplicate declaration)
 
     // Blank card rendering
     const blank = !artwork.title && !artwork.description && !artwork.coverImageUrl;
@@ -271,17 +272,20 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin }: ArtworkCardProps) => {
     // availableLanguages already declared above
 
     return (
-      <CardContainer medium={artwork.medium} $subtype={subtype} onClick={onSelect}>
+      <CardContainer medium={artwork.medium} $subtype={subtype} onClick={onSelect} data-testid={`artwork-card-${artwork.id}`}>
         <CardInner>
           <CardFront medium={artwork.medium}>
             <div>
-              <CardTitle>{artwork.title}</CardTitle>
+              <CardTitle data-testid={`artwork-title-${artwork.id}`}>{artwork.title}</CardTitle>
               {availableLanguages.length > 1 && (
-                <LanguageIndicator>
-                  {availableLanguages.filter(lang => lang && lang.trim() !== '').map((lang, idx) => (
+                <LanguageIndicator data-testid={`artwork-languages-${artwork.id}`}>
+                  {availableLanguages.filter((lang: string) => lang && lang.trim() !== '').map((lang: string, idx: number) => (
                     <LanguageTag key={getLangKey(lang, idx)}>{lang.toUpperCase()}</LanguageTag>
                   ))}
                 </LanguageIndicator>
+              )}
+              {artwork.description && (
+                <div data-testid={`artwork-description-${artwork.id}`}>{artwork.description}</div>
               )}
             </div>
             <CardFooter>
@@ -292,7 +296,7 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin }: ArtworkCardProps) => {
             </CardFooter>
           </CardFront>
           <CardBack>
-            <p style={{
+            <p data-testid={`artwork-back-content-${artwork.id}`} style={{
               maxHeight: `${maxLines * 1.25}em`,
               overflow: 'hidden',
               textOverflow: 'ellipsis',

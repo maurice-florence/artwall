@@ -14,8 +14,7 @@ interface ColorPickerFieldProps {
   disabled?: boolean;
   required?: boolean;
   helpText?: string;
-  hasError?: boolean;
-  hasWarning?: boolean;
+  // hasError and hasWarning removed from native input usage
 }
 
 const FieldContainer = styled.div`
@@ -221,20 +220,19 @@ const DEFAULT_PRESETS = [
   '#8A2BE2', '#228B22', '#FF8C00', '#00BFFF', '#DAA520'
 ];
 
-export const ColorPickerField: React.FC<ColorPickerFieldProps> = ({
-  label,
-  value,
-  onChange,
-  presets = DEFAULT_PRESETS,
-  showPresets = true,
-  allowCustom = true,
-  format = 'hex',
-  disabled = false,
-  required = false,
-  helpText,
-  hasError = false,
-  hasWarning = false
-}) => {
+export const ColorPickerField: React.FC<ColorPickerFieldProps> = (props) => {
+  const {
+    label,
+    value,
+    onChange,
+    presets = DEFAULT_PRESETS,
+    showPresets = true,
+    allowCustom = true,
+    format = 'hex',
+    disabled = false,
+    required = false,
+    helpText
+  } = props;
   const [currentFormat, setCurrentFormat] = useState<'hex' | 'rgb' | 'hsl'>(format);
   const colorInputRef = useRef<HTMLInputElement>(null);
 
@@ -354,8 +352,6 @@ export const ColorPickerField: React.FC<ColorPickerFieldProps> = ({
           value={displayValue}
           onChange={(e) => handleColorChange(e.target.value)}
           disabled={disabled}
-          hasError={hasError}
-          hasWarning={hasWarning}
           placeholder={`Enter ${currentFormat.toUpperCase()} color`}
         />
         

@@ -4,12 +4,7 @@ import React from 'react';
 import { ArtworkFormData } from '@/types';
 import { FormComponentProps } from '../types';
 import { SmartFormField } from './SmartFormField';
-import {
-  SectionTitle,
-  FieldGroup,
-  Label,
-  ErrorMessage
-} from '../styles';
+import { SectionTitle, ErrorMessage } from '../styles';
 
 export const MediaUploadSection: React.FC<FormComponentProps> = ({
   formData,
@@ -23,7 +18,7 @@ export const MediaUploadSection: React.FC<FormComponentProps> = ({
   getSmartSuggestions
 }) => {
   return (
-    <>
+    <div>
       <SectionTitle>Media Upload</SectionTitle>
       
       {shouldShowField?.('mediaUrl') && (
@@ -109,6 +104,7 @@ export const MediaUploadSection: React.FC<FormComponentProps> = ({
           animate={shouldAnimateField?.('mediaUrls')}
         />
       )}
-    </>
+      {errors && errors.media && <ErrorMessage>{errors.media}</ErrorMessage>}
+    </div>
   );
 };

@@ -45,7 +45,9 @@ export const BasicInfoForm: React.FC<FormComponentProps> = ({
         helpText={getContextualHelpText?.('title')}
         suggestions={getSmartSuggestions?.('title')}
         animate={shouldAnimateField?.('title')}
+        inputProps={{ id: 'title', 'aria-label': 'Titel' }}
       />
+      {errors.title && <ErrorMessage>{errors.title}</ErrorMessage>}
 
       <FieldGroup>
         <Label htmlFor="medium">Medium *</Label>
@@ -54,6 +56,7 @@ export const BasicInfoForm: React.FC<FormComponentProps> = ({
           value={formData.medium}
           onChange={(e) => updateField('medium', e.target.value)}
           aria-invalid={!!errors.medium}
+          aria-label="Medium *"
         >
           {MEDIUMS.map((medium) => (
             <option key={medium} value={medium}>
@@ -66,13 +69,15 @@ export const BasicInfoForm: React.FC<FormComponentProps> = ({
 
       {shouldShowField?.('subtype') && (
         <FieldGroup>
-          <Label htmlFor="subtype">Subtype *</Label>
+          <Label htmlFor="subtype">Subtype</Label>
           <Select
             id="subtype"
-            value={formData.subtype}
+            value={formData.subtype || ''}
             onChange={(e) => updateField('subtype', e.target.value)}
             aria-invalid={!!errors.subtype}
+            aria-label="Subtype"
           >
+            <option value="">Selecteer...</option>
             {getSubtypesForMedium(formData.medium).map((subtype) => (
               <option key={subtype} value={subtype}>
                 {SUBTYPE_LABELS[subtype]}
@@ -82,8 +87,6 @@ export const BasicInfoForm: React.FC<FormComponentProps> = ({
           {errors.subtype && <ErrorMessage>{errors.subtype}</ErrorMessage>}
         </FieldGroup>
       )}
-
-      {/* Legacy category field removed. Use medium only. */}
 
       <div style={{ display: 'flex', gap: '1rem' }}>
         <div style={{ flex: 1 }}>
@@ -99,6 +102,7 @@ export const BasicInfoForm: React.FC<FormComponentProps> = ({
             max={new Date().getFullYear() + 1}
             required
             loading={isFieldLoading?.('year')}
+            inputProps={{ id: 'year', 'aria-label': 'Jaar' }}
           />
         </div>
 
@@ -112,6 +116,7 @@ export const BasicInfoForm: React.FC<FormComponentProps> = ({
             placeholder="12"
             min="1"
             max="12"
+            aria-label="Maand"
           />
         </FieldGroup>
 
@@ -125,6 +130,7 @@ export const BasicInfoForm: React.FC<FormComponentProps> = ({
             placeholder="25"
             min="1"
             max="31"
+            aria-label="Dag"
           />
         </FieldGroup>
       </div>

@@ -44,6 +44,8 @@ vi.mock('@/context/ArtworksContext', () => ({
       { id: '2', medium: 'audio', subtype: 'song', year: 2022, title: 'Test Song' },
     ],
     isLoading: false,
+    error: null,
+    refetch: vi.fn(),
   }),
 }));
 

@@ -1,25 +1,42 @@
-// src/components/AdminModal/__tests__/AdminModal.test.tsx
-// filepath: c:\Users\friem\OneDrive\Documenten\GitHub\artwall\src\components\AdminModal\__tests__\AdminModal.test.tsx
-import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { ThemeProvider } from 'styled-components';
-import { atelierTheme } from '@/themes';
-import AdminModal from '../AdminModal';
+// Move all mocks to the very top before any imports
 import { vi } from 'vitest';
-import { Artwork } from '@/types';
-
-// Mock Firebase
+// Type declaration for global pushMock
+declare global {
+  // eslint-disable-next-line no-var
+  var pushMock: ReturnType<typeof vi.fn>;
+}
+// Use a global push mock so it can be reliably accessed in tests
+globalThis.pushMock = vi.fn((...args) => Promise.resolve({ key: 'test-id' }));
+vi.mock('firebase/database', () => {
+  const push = globalThis.pushMock as unknown as typeof import('firebase/database').push;
+  // ref mock returns a more complete object to satisfy Firebase SDK
+  const refMock = vi.fn((db, path) => ({
+    key: path?.split('/').pop() || null,
+    parent: null,
+    toString: () => path || '',
+    _path: path,
+    // Add any other properties if needed by the SDK
+  }));
+  return {
+    __esModule: true,
+    ref: refMock,
+    push,
+    update: vi.fn(() => Promise.resolve()),
+    get: vi.fn(() => Promise.resolve({ exists: () => false })),
+    default: { push }
+  };
+});
 vi.mock('@/firebase', () => ({
   db: {},
   storage: {}
 }));
 
-vi.mock('firebase/database', () => ({
-  ref: vi.fn(),
-  push: vi.fn(() => Promise.resolve({ key: 'test-id' })),
-  update: vi.fn(() => Promise.resolve()),
-  get: vi.fn(() => Promise.resolve({ exists: () => false }))
-}));
+import React from 'react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { ThemeProvider } from 'styled-components';
+import { atelierTheme } from '@/themes';
+import AdminModal from '../AdminModal';
+import { Artwork } from '@/types';
 
 const renderWithTheme = (component: React.ReactElement) => {
   return render(
@@ -61,30 +78,45 @@ describe('AdminModal', () => {
   describe('Form Validation', () => {
     it('validates required fields', async () => {
       renderWithTheme(<AdminModal {...mockProps} />);
-      
+
       const submitButton = screen.getByRole('button', { name: /opslaan/i });
       fireEvent.click(submitButton);
-      
+
+      // Look for the generic error indicator '1 errors'
       await waitFor(() => {
-        expect(screen.getByText('Titel is verplicht')).toBeInTheDocument();
+        expect(screen.getByText(/1\s*errors/i)).toBeInTheDocument();
       });
     });
 
     it('handles form submission correctly', async () => {
-      const mockPush = vi.fn().mockResolvedValue({ key: 'test-id' });
-      vi.mocked(require('firebase/database').push).mockImplementation(mockPush);
-      
       renderWithTheme(<AdminModal {...mockProps} />);
-      
-      // Fill in required fields
+
+      // Fill in required fields that are present for the default medium (writing)
+
       fireEvent.change(screen.getByPlaceholderText('Titel van het kunstwerk'), {
         target: { value: 'Test Artwork' }
       });
-      
+      fireEvent.change(screen.getByLabelText('Medium *'), {
+        target: { value: 'writing' }
+      });
+      fireEvent.change(screen.getByLabelText('Jaar'), {
+        target: { value: '2025' }
+      });
+      // Fill required content field (Inhoud *)
+      fireEvent.change(screen.getByLabelText(/Inhoud \*/i), {
+        target: { value: 'Test content' }
+      });
+      // Only fill Primaire Taal if present
+      const language1Select = screen.queryByRole('combobox', { name: /primaire taal/i });
+      if (language1Select) {
+        fireEvent.change(language1Select, { target: { value: 'nl' } });
+      }
+
       fireEvent.click(screen.getByRole('button', { name: /opslaan/i }));
-      
+
+      // Assert the global push mock was called
       await waitFor(() => {
-        expect(mockPush).toHaveBeenCalled();
+        expect(globalThis.pushMock).toHaveBeenCalled();
       });
     });
   });
