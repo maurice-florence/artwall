@@ -1,0 +1,13 @@
+# Python requirements for artwall project
+# Add your dependencies below
+firebase-admin
+requests
+pytest
+pyyaml
+google-cloud-storage
+google-cloud-firestore
+google-api-core
+httpx
+pytest-cov
+types-requests
+types-pyyaml
