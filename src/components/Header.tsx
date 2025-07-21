@@ -98,6 +98,7 @@ interface HeaderProps {
   setSearchTerm: (term: string) => void;
 }
 
+
 const Header: React.FC<HeaderProps> = ({
   onToggleSidebar,
   isSidebarOpen,
@@ -113,53 +114,55 @@ const Header: React.FC<HeaderProps> = ({
   return (
     <HeaderWrapper data-testid="header">
       {/* First row: centered title */}
-      <CenteredTitleWrapper data-testid="header-title-row">
-        <Title data-testid="header-title">Kunstmuur</Title>
-      </CenteredTitleWrapper>
-      {/* Second row: filters, icons, search, theme */}
-      <div style={{ width: '100%' }} data-testid="header-controls-row">
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }} data-testid="header-filters">
-            <ToggleButton onClick={onToggleSidebar} title="Toggle Sidebar" data-testid="header-toggle-sidebar">
-              {isSidebarOpen ? <FaArrowLeft /> : <FaArrowRight />}
-            </ToggleButton>
-            <IconsWrapper data-testid="header-medium-icons">
-              <MediumIconButton
-                key="all"
-                $selected={selectedMedium === 'all'}
-                title="Alle mediums"
-                aria-label="Alle mediums"
-                onClick={() => setSelectedMedium('all')}
-                data-testid="header-medium-all"
-              >
-                <FaEllipsisH />
-              </MediumIconButton>
-              {([...(availableMediums.length > 0 ? availableMediums : MEDIUMS).filter(m => m !== 'other'), 'other']).map((med) => (
+      <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <CenteredTitleWrapper data-testid="header-title-row">
+          <Title data-testid="header-title">Kunstmuur</Title>
+        </CenteredTitleWrapper>
+        {/* Second row: filters, icons, search, theme */}
+        <div style={{ width: '100%' }} data-testid="header-controls-row">
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }} data-testid="header-filters">
+              <ToggleButton onClick={onToggleSidebar} title="Toggle Sidebar" data-testid="header-toggle-sidebar">
+                {isSidebarOpen ? <FaArrowLeft /> : <FaArrowRight />}
+              </ToggleButton>
+              <IconsWrapper data-testid="header-medium-icons">
                 <MediumIconButton
-                  key={med}
-                  $selected={selectedMedium === med}
-                  title={MEDIUM_LABELS[med as keyof typeof MEDIUM_LABELS]}
-                  aria-label={MEDIUM_LABELS[med as keyof typeof MEDIUM_LABELS]}
-                  onClick={() => setSelectedMedium(selectedMedium === med ? 'all' : med)}
-                  data-testid={`header-medium-${med}`}
+                  key="all"
+                  $selected={selectedMedium === 'all'}
+                  title="Alle mediums"
+                  aria-label="Alle mediums"
+                  onClick={() => setSelectedMedium('all')}
+                  data-testid="header-medium-all"
                 >
-                  {MEDIUM_ICONS[med as keyof typeof MEDIUM_ICONS]}
+                  <FaEllipsisH />
                 </MediumIconButton>
-              ))}
-            </IconsWrapper>
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={e => setSearchTerm(e.target.value)}
-              placeholder="Zoeken..."
-              style={{ padding: '0.4rem 0.8rem', borderRadius: 4, border: '1px solid #ccc', fontSize: '1rem', marginLeft: '2rem' }}
-              data-testid="header-search"
-            />
+                {([...(availableMediums.length > 0 ? availableMediums : MEDIUMS).filter(m => m !== 'other'), 'other']).map((med) => (
+                  <MediumIconButton
+                    key={med}
+                    $selected={selectedMedium === med}
+                    title={MEDIUM_LABELS[med as keyof typeof MEDIUM_LABELS]}
+                    aria-label={MEDIUM_LABELS[med as keyof typeof MEDIUM_LABELS]}
+                    onClick={() => setSelectedMedium(selectedMedium === med ? 'all' : med)}
+                    data-testid={`header-medium-${med}`}
+                  >
+                    {MEDIUM_ICONS[med as keyof typeof MEDIUM_ICONS]}
+                  </MediumIconButton>
+                ))}
+              </IconsWrapper>
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)}
+                placeholder="Zoeken..."
+                style={{ padding: '0.4rem 0.8rem', borderRadius: 4, border: '1px solid #ccc', fontSize: '1rem', marginLeft: '2rem' }}
+                data-testid="header-search"
+              />
+            </div> {/* <-- Close filters/icons/search row */}
+            <RightSection data-testid="header-theme-switcher">
+              <ThemeSwitcher />
+            </RightSection>
           </div>
-          <RightSection data-testid="header-theme-switcher">
-            <ThemeSwitcher />
-          </RightSection>
-        </div>
+        </div> {/* <-- Close the column flex div for title and toolbar */}
       </div>
     </HeaderWrapper>
   );

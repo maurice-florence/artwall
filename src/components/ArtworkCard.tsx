@@ -78,6 +78,28 @@ const CardBack = styled(CardFace)`
   align-items: center;
   text-align: center;
   font-size: 0.9rem;
+  /* border removed */
+  box-sizing: border-box;
+
+  .card-back-content {
+    flex: 1 1 100%;
+    width: 100%;
+    max-height: 100%;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: var(--max-lines, 8);
+    -webkit-box-orient: vertical;
+    white-space: pre-line;
+    text-overflow: ellipsis;
+    word-break: break-word;
+    position: relative;
+    padding: 0.5rem;
+    margin: 0;
+    /* No background, border-radius, or box-shadow for invisibility */
+    font-size: 1em;
+    align-items: stretch;
+    justify-content: flex-start;
+  }
 `;
 
 const TitleOverlay = styled.div`
@@ -221,8 +243,33 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin }: ArtworkCardProps) => {
     const subtype = (artwork.subtype || '').toLowerCase();
 
     // Determine which text to show on card back: description or content
+    // Only show description on back, never on front
     const hasDescription = artwork.description && artwork.description.trim() !== '';
-    const cardText = hasDescription ? artwork.description : (artwork.content || '');
+    // If using content, replace <br> with newlines, then strip other HTML tags
+    const stripHtml = (html: string) =>
+      html
+        .replace(/<br\s*\/?>/gi, '\n') // Replace <br> and <br/> with newlines
+        .replace(/<[^>]+>/g, ''); // Remove all other HTML tags
+
+    // Remove the title from the first line of content if present
+    const removeTitleFromContent = (content: string, title: string) => {
+      const lines = content.split(/\r?\n/);
+      // If the first line matches the title (case-insensitive, trimmed), and the second line is empty, remove both
+      if (
+        lines.length > 2 &&
+        lines[0].trim().toLowerCase() === title.trim().toLowerCase() &&
+        lines[1].trim() === ''
+      ) {
+        return lines.slice(2).join('\n');
+      }
+      return content;
+    };
+
+    const cardText = hasDescription
+      ? artwork.description.trim()
+      : (artwork.content
+          ? removeTitleFromContent(stripHtml(artwork.content), artwork.title || '').trim()
+          : '');
 
     // Calculate max lines based on card size (default: 8, novel: 16, song: 10)
     let maxLines = 8;
@@ -284,9 +331,7 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin }: ArtworkCardProps) => {
                   ))}
                 </LanguageIndicator>
               )}
-              {artwork.description && (
-                <div data-testid={`artwork-description-${artwork.id}`}>{artwork.description}</div>
-              )}
+              {/* Description removed from front; now only on back */}
             </div>
             <CardFooter>
               <span>{formattedDate}</span>
@@ -296,15 +341,18 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin }: ArtworkCardProps) => {
             </CardFooter>
           </CardFront>
           <CardBack>
-            <p data-testid={`artwork-back-content-${artwork.id}`} style={{
-              maxHeight: `${maxLines * 1.25}em`,
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              display: '-webkit-box',
-              WebkitLineClamp: maxLines,
-              WebkitBoxOrient: 'vertical',
-              whiteSpace: 'normal',
-            }}>{cardText}</p>
+            <div
+              className="card-back-content"
+              data-testid={`artwork-back-content-${artwork.id}`}
+              style={{
+                maxHeight: `${maxLines * 1.25}em`,
+                WebkitLineClamp: maxLines,
+                // The rest is handled by styled-component above
+                '--max-lines': maxLines,
+              } as React.CSSProperties}
+            >
+              {cardText}
+            </div>
           </CardBack>
         </CardInner>
       </CardContainer>

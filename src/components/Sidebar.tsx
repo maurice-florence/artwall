@@ -23,6 +23,7 @@ const SidebarContainer = styled.aside<{$isOpen: boolean}>`
   left: 0;
   bottom: 0;
   background-color: ${({ theme }) => theme.cardBg};
+  color: ${({ theme }) => theme.cardText || theme.text};
   border-right: 1px solid #ddd;
   padding: 2rem;
   overflow-y: auto;
