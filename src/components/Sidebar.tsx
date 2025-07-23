@@ -22,14 +22,14 @@ const SidebarContainer = styled.aside<{$isOpen: boolean}>`
   top: 0;
   left: 0;
   bottom: 0;
-  background-color: ${({ theme }) => theme.cardBg};
-  color: ${({ theme }) => theme.cardText || theme.text};
+  background-color: ${({ theme }) => theme.body || '#f5f5f5'};
+  color: ${({ theme }) => theme.text || '#222'};
   border-right: 1px solid #ddd;
   padding: 2rem;
   overflow-y: auto;
-  transform: ${props => props.$isOpen ? 'translateX(0)' : 'translateX(-100%)'};
-  transition: transform 0.3s ease-in-out;
   z-index: 101;
+  transform: ${props => props.$isOpen ? 'translateX(0)' : 'translateX(-100%)'};
+  transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
 
   @media (max-width: 1024px) {
     box-shadow: 2px 0 10px rgba(0,0,0,0.1);
@@ -38,7 +38,7 @@ const SidebarContainer = styled.aside<{$isOpen: boolean}>`
 
 const SectionTitle = styled.h3`
     font-family: 'Lora', serif;
-    color: ${({ theme }) => theme.accent};
+    color: ${({ theme }) => theme.accentText || theme.accent};
     border-bottom: 2px solid ${({ theme }) => theme.accent};
     padding-bottom: 0.5rem;
     margin-top: 1.5rem;
@@ -47,7 +47,7 @@ const SectionTitle = styled.h3`
 
 const IntroText = styled.p`
   line-height: 1.7;
-  color: ${({ theme }) => theme.text};
+  color: ${({ theme }) => theme.text || '#222'};
   font-size: 0.9rem;
 `;
 
@@ -123,9 +123,18 @@ const themeOptions: { name: ThemeName; color: string; label: string }[] = [
 ];
 
 const Sidebar = ({ isOpen, allArtworks, openModal }: SidebarProps) => {
+    // Import medium-subtypes.json
+    const mediumSubtypes = {
+      drawing: ["digital", "marker", "other", "pencil"],
+      writing: ["essay", "novel", "other", "poem", "prosepoem", "shortstory"],
+      audio: ["beat", "electronic", "other", "rap", "song", "soundpoem"],
+      sculpture: ["clay", "other", "wood"],
+      other: ["other"]
+    };
+
     return (
         <SidebarContainer $isOpen={isOpen} data-testid="sidebar">
-            <div style={{ padding: '2rem 1rem' }}>
+            <div>
                 <h2 data-testid="sidebar-title" style={{ fontSize: '1.3rem', marginBottom: '1rem', color: '#444' }}>Welkom bij Kunstmuur</h2>
                 <IntroText data-testid="sidebar-intro">
                     Dit is een digitale kunstmuur waar je een overzicht vindt van alle werken, gesorteerd op jaar en medium. Gebruik de knoppen bovenaan om te filteren op medium, of zoek op titel/omschrijving. Klik op een werk voor meer details, media en vertalingen.
@@ -133,17 +142,19 @@ const Sidebar = ({ isOpen, allArtworks, openModal }: SidebarProps) => {
                 <IntroText data-testid="sidebar-intro-italic" style={{ marginTop: '1rem', fontStyle: 'italic', color: '#888' }}>
                     Je kunt altijd terugkeren naar het volledige overzicht door de filter op 'Alle mediums' te zetten.
                 </IntroText>
-                <div data-testid="artwork-list">
-                  {allArtworks && allArtworks.length > 0 ? (
-                    <ul>
-                      {allArtworks.map(artwork => (
-                        <li key={artwork.id} data-testid={`artwork-title-${artwork.id}`}>{artwork.title}</li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p data-testid="no-artworks">Geen werken gevonden.</p>
-                  )}
-                </div>
+                <SectionTitle>Mediums & Subtypes</SectionTitle>
+                <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                  {Object.entries(mediumSubtypes).map(([medium, subtypes]) => (
+                    <li key={medium} style={{ marginBottom: '1.2rem' }}>
+                      <strong style={{ color: '#E07A5F', fontSize: '1rem' }}>{medium.charAt(0).toUpperCase() + medium.slice(1)}</strong>
+                      <ul style={{ margin: '0.5rem 0 0 1rem', padding: 0, fontSize: '0.95rem', color: '#555' }}>
+                        {subtypes.map(sub => (
+                          <li key={sub} style={{ marginBottom: '0.2rem' }}>{sub}</li>
+                        ))}
+                      </ul>
+                    </li>
+                  ))}
+                </ul>
                 {openModal && (
                   <button data-testid="open-adminmodal" onClick={openModal}>Open Admin Modal</button>
                 )}

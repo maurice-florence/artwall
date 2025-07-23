@@ -42,7 +42,7 @@ export default function HomePage() {
     const [selectedItem, setSelectedItem] = useState<Artwork | null>(null);
     const [editItem, setEditItem] = useState<Artwork | null>(null);
     const [isAdmin, setIsAdmin] = useState(false);
-    const [isSidebarOpen, setSidebarOpen] = useState(false);
+    const [isSidebarOpen, setSidebarOpen] = useState(false); // Sidebar closed by default
     const [showNewEntryModal, setShowNewEntryModal] = useState(false);
     const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
     const [artworkToEdit, setArtworkToEdit] = useState<Artwork | null>(null);
@@ -155,6 +155,11 @@ export default function HomePage() {
 
     return (
         <PageLayout>
+            <Sidebar 
+              isOpen={isSidebarOpen}
+              allArtworks={allArtworks}
+              openModal={() => setIsAdminModalOpen(true)}
+            />
             <MainContent $isSidebarOpen={isSidebarOpen}>
             <Header 
               onToggleSidebar={() => setSidebarOpen(!isSidebarOpen)}

@@ -258,11 +258,14 @@ const Modal: React.FC<ModalProps> = ({
     const mediaTags = doc.querySelectorAll('en-media');
     mediaTags.forEach((tag) => {
       const hash = tag.getAttribute('hash');
-      const type = tag.getAttribute('type');
       const img = document.createElement('img');
       img.src = `https://firebasestorage.googleapis.com/v0/b/artwall-by-jr.appspot.com/o/${hash}?alt=media`;
-      img.alt = 'Media';
+      img.alt = '';
       img.style.maxWidth = '100%';
+      // Remove any text nodes that may follow the <img> (e.g. 'Media')
+      if (tag.nextSibling && tag.nextSibling.nodeType === Node.TEXT_NODE && tag.nextSibling.textContent?.trim() === 'Media') {
+        tag.nextSibling.textContent = '';
+      }
       tag.replaceWith(img);
     });
     return doc.body.innerHTML;
