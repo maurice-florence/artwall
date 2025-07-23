@@ -160,13 +160,11 @@ export const earthTheme = {
   textSecondary: '#6b7280',
 };
 
+
 export const themes = {
-  atelier: atelierTheme,
   blueprint: blueprintTheme,
   dark: darkModeTheme,
-  nature: natureTheme,
-  earth: earthTheme,
 };
 
 export type Theme = typeof atelierTheme;
-export type ThemeName = 'atelier' | 'blueprint' | 'dark' | 'nature' | 'earth';
+export type ThemeName = 'blueprint' | 'dark';

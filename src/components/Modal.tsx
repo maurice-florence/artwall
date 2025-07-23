@@ -264,7 +264,7 @@ const Modal: React.FC<ModalProps> = ({
       img.style.maxWidth = '100%';
       // Remove any text nodes that may follow the <img> (e.g. 'Media')
       if (tag.nextSibling && tag.nextSibling.nodeType === Node.TEXT_NODE && tag.nextSibling.textContent?.trim() === 'Media') {
-        tag.nextSibling.textContent = '';
+        tag.parentNode?.removeChild(tag.nextSibling);
       }
       tag.replaceWith(img);
     });

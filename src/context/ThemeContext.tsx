@@ -15,8 +15,8 @@ interface ThemeContextType {
 
 // Geef een default waarde die overeenkomt met de interface
 export const ThemeContext = createContext<ThemeContextType>({
-  theme: 'atelier',
-  themeObject: atelierTheme,
+  theme: 'blueprint',
+  themeObject: blueprintTheme,
   toggleTheme: () => console.warn('no theme provider'),
   updateThemeColor: () => console.warn('no theme provider'),
   cardHeight: 280,
@@ -25,18 +25,15 @@ export const ThemeContext = createContext<ThemeContextType>({
 });
 
 const themes: Record<ThemeName, Theme> = {
-  atelier: atelierTheme,
   blueprint: blueprintTheme,
   dark: darkModeTheme,
-  nature: require('../themes').natureTheme,
-  earth: require('../themes').earthTheme,
 };
 
 export const ThemeProvider = ({ children }: { children: ReactNode }) => {
-  const [theme, setTheme] = useState<ThemeName>('atelier');
-  const [themeObject, setThemeObject] = useState<Theme>(themes['atelier']);
-  const [cardHeight, setCardHeight] = useState<number>(themes['atelier'].cardHeight || 280);
-  const [gridGap] = useState<number>(themes['atelier'].gridGap || 24);
+  const [theme, setTheme] = useState<ThemeName>('blueprint');
+  const [themeObject, setThemeObject] = useState<Theme>(themes['blueprint']);
+  const [cardHeight, setCardHeight] = useState<number>(themes['blueprint'].cardHeight || 280);
+  const [gridGap] = useState<number>(themes['blueprint'].gridGap || 24);
 
   const toggleTheme = (themeName: ThemeName) => {
     setTheme(themeName);

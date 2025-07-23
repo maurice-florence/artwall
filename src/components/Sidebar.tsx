@@ -38,7 +38,7 @@ const SidebarContainer = styled.aside<{$isOpen: boolean}>`
 
 const SectionTitle = styled.h3`
     font-family: 'Lora', serif;
-    color: ${({ theme }) => theme.accentText || theme.accent};
+    color: ${({ theme }) => theme.text || '#444'};
     border-bottom: 2px solid ${({ theme }) => theme.accent};
     padding-bottom: 0.5rem;
     margin-top: 1.5rem;
@@ -117,47 +117,34 @@ const ColorLabel = styled.label`
 `;
 
 const themeOptions: { name: ThemeName; color: string; label: string }[] = [
-  { name: 'atelier', color: atelierTheme.accent, label: 'Atelier' },
   { name: 'blueprint', color: blueprintTheme.accent, label: 'Blueprint' },
   { name: 'dark', color: darkModeTheme.accent, label: 'Donker' },
 ];
 
 const Sidebar = ({ isOpen, allArtworks, openModal }: SidebarProps) => {
-    // Import medium-subtypes.json
-    const mediumSubtypes = {
-      drawing: ["digital", "marker", "other", "pencil"],
-      writing: ["essay", "novel", "other", "poem", "prosepoem", "shortstory"],
-      audio: ["beat", "electronic", "other", "rap", "song", "soundpoem"],
-      sculpture: ["clay", "other", "wood"],
-      other: ["other"]
-    };
+    // Medium/subtypes list removed as requested.
+const AboutImage = styled.img`
+  display: block;
+  max-width: 180px;
+  height: auto;
+  margin: 2rem auto 1.5rem auto;
+  border-radius: 16px;
+  border: 4px double #111;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.13);
+`;
 
     return (
         <SidebarContainer $isOpen={isOpen} data-testid="sidebar">
             <div>
-                <h2 data-testid="sidebar-title" style={{ fontSize: '1.3rem', marginBottom: '1rem', color: '#444' }}>Welkom bij Kunstmuur</h2>
-                <IntroText data-testid="sidebar-intro">
-                    Dit is een digitale kunstmuur waar je een overzicht vindt van alle werken, gesorteerd op jaar en medium. Gebruik de knoppen bovenaan om te filteren op medium, of zoek op titel/omschrijving. Klik op een werk voor meer details, media en vertalingen.
+                <AboutImage src="/20120515_drawing_jan_01.jpg" alt="About artwork" />
+                <SectionTitle>About</SectionTitle>
+                <IntroText>
+                  In the swirling mists of digital legend, there exists a figure known as <b>Onbevangene</b>.<br/><br/>
+                  Born from a cosmic collision between a sketchbook and a quantum computer, The Friem is rumored to have once debugged a painting and painted a bug, all before breakfast.
+                  Their hobbies include: teaching neural networks to appreciate dada poetry, inventing new colors that only exist on Tuesdays, and composing symphonies for silent keyboards.
+                  Some say The Friem can refactor reality itself, and that their favorite snack is the elusive Schrödinger’s Stroopwafel—simultaneously eaten and uneaten.
+                  Welcome to the Artwall, where The Friem’s creative entropy is carefully curated for the delight of future generations (and the occasional befuddled AI).
                 </IntroText>
-                <IntroText data-testid="sidebar-intro-italic" style={{ marginTop: '1rem', fontStyle: 'italic', color: '#888' }}>
-                    Je kunt altijd terugkeren naar het volledige overzicht door de filter op 'Alle mediums' te zetten.
-                </IntroText>
-                <SectionTitle>Mediums & Subtypes</SectionTitle>
-                <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-                  {Object.entries(mediumSubtypes).map(([medium, subtypes]) => (
-                    <li key={medium} style={{ marginBottom: '1.2rem' }}>
-                      <strong style={{ color: '#E07A5F', fontSize: '1rem' }}>{medium.charAt(0).toUpperCase() + medium.slice(1)}</strong>
-                      <ul style={{ margin: '0.5rem 0 0 1rem', padding: 0, fontSize: '0.95rem', color: '#555' }}>
-                        {subtypes.map(sub => (
-                          <li key={sub} style={{ marginBottom: '0.2rem' }}>{sub}</li>
-                        ))}
-                      </ul>
-                    </li>
-                  ))}
-                </ul>
-                {openModal && (
-                  <button data-testid="open-adminmodal" onClick={openModal}>Open Admin Modal</button>
-                )}
             </div>
         </SidebarContainer>
     );

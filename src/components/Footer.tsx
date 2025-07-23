@@ -19,7 +19,23 @@ const LastUpdatedText = styled.p`
   color: #999;
 `;
 
-const Footer: React.FC = () => {
+interface FooterProps {
+  onAddNewArtwork?: () => void;
+}
+
+const AddArtworkButton = styled.button`
+  background: ${({ theme }) => theme.accent};
+  color: ${({ theme }) => theme.accentText};
+  border: none;
+  border-radius: 6px;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  cursor: pointer;
+  margin-bottom: 1rem;
+  margin-top: 1rem;
+`;
+
+const Footer: React.FC<FooterProps> = ({ onAddNewArtwork }) => {
   const { artworks: appArtworks } = useArtworks();
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [lastUpdatedText, setLastUpdatedText] = useState<string>("");
@@ -79,6 +95,11 @@ const Footer: React.FC = () => {
 
   return (
     <FooterWrapper>
+      {onAddNewArtwork && (
+        <AddArtworkButton onClick={onAddNewArtwork}>
+          + Nieuw kunstwerk toevoegen
+        </AddArtworkButton>
+      )}
       {lastUpdated && (
         <LastUpdatedText>
           Laatst bijgewerkt: {lastUpdatedText}

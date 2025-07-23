@@ -22,16 +22,12 @@ const ThemeSwitcher: React.FC = () => {
 
   return (
     <SwitcherContainer>
-      <ThemeButton color="#E07A5F" onClick={() => toggleTheme('atelier')} title="Atelier Thema" />
       <ThemeButton
         color="#2E86C1"
         onClick={() => toggleTheme('blueprint')}
         title="Blueprint Thema"
       />
       <ThemeButton color="#1E2732" onClick={() => toggleTheme('dark')} title="Dark Mode" />
-      <ThemeButton color="#7FB77E" onClick={() => toggleTheme('nature')} title="Nature Thema" />
-      <ThemeButton color="#795548" onClick={() => toggleTheme('earth')} title="Earth Thema" />
-      {/* <ThemeButton color="#FFD700" onClick={() => toggleTheme('custom')} title="Custom Theme (soon)" /> */}
     </SwitcherContainer>
   );
 };

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { FaBookOpen, FaPaintBrush, FaMusic, FaAlignLeft } from 'react-icons/fa';
+// import Waveform from '@wavesurfer/react';
+import { FaBookOpen, FaPaintBrush, FaMusic, FaAlignLeft, FaEllipsisH } from 'react-icons/fa';
 import styled, { useTheme } from 'styled-components';
 import { Artwork, ArtworkMedium } from '@/types';
 import cardSizesJson from '@/constants/card-sizes.json';
@@ -9,9 +10,8 @@ type CardSizesType = {
 };
 const cardSizes: CardSizesType = cardSizesJson;
 
-interface CardContainerProps {
-  medium: ArtworkMedium;
-}
+
+
 
 
 // Get grid span from cardSizes.json by subtype, fallback to default
@@ -20,16 +20,16 @@ const getGridSpan = (subtype: string) => {
   return `grid-column: span ${size.gridColumn}; grid-row: span ${size.gridRow};`;
 };
 
-const CardContainer = styled.div<CardContainerProps & { $subtype?: string; $blank?: boolean }>`
+const CardContainer = styled.div<{ $medium: ArtworkMedium; $subtype?: string; $blank?: boolean }>`
   perspective: 1000px;
   width: 100%;
   border-radius: 12px;
   /* Remove explicit height, let grid control it */
-  ${({ $subtype }) => getGridSpan($subtype || 'default')}
+  ${props => getGridSpan(props.$subtype || 'default')}
 
   @media (max-width: 768px) {
-      grid-column: span 2;
-      grid-row: span 1;
+    grid-column: span 2;
+    grid-row: span 1;
   }
 `;
 
@@ -59,8 +59,8 @@ const CardFace = styled.div`
   flex-direction: column;
 `;
 
-// Use a transient prop ($coverImageUrl) to avoid passing it to the DOM
-const CardFront = styled(CardFace)<{ medium: ArtworkMedium }>`
+// Use a transient prop ($medium) to avoid passing it to the DOM
+const CardFront = styled(CardFace)<{ $medium: ArtworkMedium }>`
   background: ${({ theme }) => theme.cardBg};
   color: ${({ theme }) => theme.cardText};
   padding: 1.5rem;
@@ -183,7 +183,7 @@ const iconMap: { [key in ArtworkMedium]?: React.JSX.Element } = {
   audio: <FaMusic />,
   drawing: <FaPaintBrush />,
   sculpture: <FaPaintBrush />,
-  other: <FaAlignLeft />,
+  other: <FaEllipsisH />,
 };
 
 // Add a helper to get the correct icon for audio
@@ -286,6 +286,54 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin }: ArtworkCardProps) => {
       images = artwork.mediaUrls;
     }
 
+    // For audio: get the first available mediaUrl (mediaUrl or mediaUrls)
+    let audioUrl: string | undefined = undefined;
+    if (artwork.mediaUrl) {
+      audioUrl = artwork.mediaUrl;
+    } else if (Array.isArray(artwork.mediaUrls) && artwork.mediaUrls.length > 0) {
+      audioUrl = artwork.mediaUrls[0];
+    }
+
+
+    // Generate a random bar waveform SVG as a React component
+    const RandomBarWaveform: React.FC<{ width?: number; height?: number; bars?: number }> = ({ width = 180, height = 48, bars = 48 }) => {
+      const barWidth = width / bars;
+      // More randomness: combine sine, random, and some per-bar noise
+      const barsArray = Array.from({ length: bars }, (_, i) => {
+        // Sine base for "audio-like" shape
+        const base = Math.sin((i / (bars - 1)) * Math.PI * 2) * 0.5 + 0.5;
+        // Add more noise: random, and a second random for extra variation
+        const noise = (Math.random() - 0.5) * 0.7 + (Math.random() - 0.5) * 0.5;
+        // Mix base and noise, with more weight on noise
+        const mixed = 0.5 * base + 0.5 * (0.5 + noise);
+        const barHeight = Math.max(4, Math.min(height, mixed * height * (0.7 + Math.random() * 0.7)));
+        return barHeight;
+      });
+      const waveColor = theme.accent || '#1F618D';
+      const bgColor = theme.cardBg || '#fff';
+      return (
+        <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ width: '100%', height }}>
+          <rect x="0" y="0" width={width} height={height} fill={bgColor} />
+          {barsArray.map((barHeight, i) => {
+            const x = i * barWidth + barWidth / 2;
+            const y = (height - barHeight) / 2;
+            return (
+              <rect
+                key={i}
+                x={x - barWidth / 4}
+                y={y}
+                width={barWidth / 2}
+                height={barHeight}
+                rx={barWidth / 6}
+                fill={waveColor}
+                opacity={0.85}
+              />
+            );
+          })}
+        </svg>
+      );
+    };
+
     // Slider state for all cards with images, only on card back
     const [currentImage, setCurrentImage] = useState(0);
 
@@ -295,22 +343,25 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin }: ArtworkCardProps) => {
       return null;
     }
 
-    // Card front: always show title, language, date, icon, and a large preview image (no slider)
-    // Card back: show image slider if images, then text
+    // Card front: only show title, image/waveform, language, and footer. No extra text under the title for any medium.
     return (
-      <CardContainer medium={artwork.medium} $subtype={subtype} onClick={onSelect} data-testid={`artwork-card-${artwork.id}`}>
+      <CardContainer $medium={artwork.medium} $subtype={subtype} onClick={onSelect} data-testid={`artwork-card-${artwork.id}`}>
         <CardInner>
-          <CardFront medium={artwork.medium}>
+          <CardFront $medium={artwork.medium}>
             <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
               <CardTitle data-testid={`artwork-title-${artwork.id}`} style={{ marginBottom: '0.5rem', flexShrink: 0 }}>{artwork.title}</CardTitle>
               <div style={{ flex: 1, minHeight: 0, minWidth: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                {images.length > 0 && (
+                {artwork.medium === 'audio' ? (
+                  <div style={{ width: '100%', height: 60, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <RandomBarWaveform width={180} height={48} bars={48} />
+                  </div>
+                ) : images.length > 0 ? (
                   artwork.medium === 'writing' ? (
-                    <ProzaImage src={images[0]} alt={artwork.title} style={{ height: '100%', width: '100%', objectFit: 'contain', borderRadius: 8, minHeight: 0, minWidth: 0 }} />
+                    <ProzaImage src={images[0]} alt={artwork.title} />
                   ) : (
-                    <CardImage src={images[0]} alt={artwork.title} style={{ height: '100%', width: '100%', objectFit: 'contain', borderRadius: 8, minHeight: 0, minWidth: 0 }} />
+                    <CardImage src={images[0]} alt={artwork.title} />
                   )
-                )}
+                ) : null}
               </div>
               {availableLanguages.length > 1 && (
                 <LanguageIndicator data-testid={`artwork-languages-${artwork.id}`}> 

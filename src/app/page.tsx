@@ -174,9 +174,6 @@ export default function HomePage() {
               setSearchTerm={setSearchTerm}
             />
                 <CollageContainer>
-                    <CardContainer medium="writing" onClick={handleAdd} style={{ border: '2px dashed #E07A5F', background: '#fff', color: '#E07A5F', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 64 }} title="Voeg een nieuwe kaart toe" key="plus-card">
-                        +
-                    </CardContainer>
                     {timelineItems.map((item: TimelineItem) => {
                         if ('type' in item && item.type === 'year-marker') {
                             return <YearMarkerCard key={item.id} year={item.year} />;
@@ -190,7 +187,7 @@ export default function HomePage() {
                         return null;
                     })}
                 </CollageContainer>
-                <Footer />
+                <Footer onAddNewArtwork={handleAdd} />
             </MainContent>
 
             {selectedItem && (

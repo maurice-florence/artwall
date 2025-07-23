@@ -1,7 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
-import { FaArrowLeft, FaArrowRight, FaPenNib, FaBookOpen, FaPaintBrush, FaMusic, FaAlignLeft, FaImage, FaVideo, FaEllipsisH, FaCube } from 'react-icons/fa';
-import { FaGlobe } from 'react-icons/fa';
+import { FaArrowLeft, FaArrowRight, FaPenNib, FaBookOpen, FaPaintBrush, FaMusic, FaAlignLeft, FaImage, FaVideo, FaEllipsisH, FaCube, FaGlobe } from 'react-icons/fa';
 import ThemeSwitcher from './ThemeSwitcher'; // Importeren
 import { MEDIUMS, MEDIUM_LABELS, SUBTYPE_LABELS } from '@/constants/medium';
 
@@ -73,7 +72,7 @@ const MEDIUM_ICONS: Record<string, React.ReactNode> = {
   'writing': <FaPenNib />,
   'drawing': <FaPaintBrush />,
   'sculpture': <FaCube />,
-  'other': <FaGlobe />,
+  'other': <FaEllipsisH />,
 };
 
 const MediumIconButton = styled.button<{ $selected?: boolean }>`
