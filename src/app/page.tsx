@@ -11,7 +11,7 @@ import {
 } from '@/app/HomePage.styles';
 import Modal from '@/components/Modal';
 import Footer from '@/components/Footer';
-import Sidebar from '@/components/Sidebar';
+// import Sidebar from '@/components/Sidebar';
 import Header from '@/components/Header';
 import ArtworkCard, { CardContainer } from '@/components/ArtworkCard';
 import YearMarkerCard from '@/components/YearMarker';
@@ -42,7 +42,7 @@ export default function HomePage() {
     const [selectedItem, setSelectedItem] = useState<Artwork | null>(null);
     const [editItem, setEditItem] = useState<Artwork | null>(null);
     const [isAdmin, setIsAdmin] = useState(false);
-    const [isSidebarOpen, setSidebarOpen] = useState(false); // Sidebar closed by default
+    // const [isSidebarOpen, setSidebarOpen] = useState(false); // Sidebar removed
     const [showNewEntryModal, setShowNewEntryModal] = useState(false);
     const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
     const [artworkToEdit, setArtworkToEdit] = useState<Artwork | null>(null);
@@ -155,15 +155,9 @@ export default function HomePage() {
 
     return (
         <PageLayout>
-            <Sidebar 
-              isOpen={isSidebarOpen}
-              allArtworks={allArtworks}
-              openModal={() => setIsAdminModalOpen(true)}
-            />
-            <MainContent $isSidebarOpen={isSidebarOpen}>
+            {/* Sidebar removed */}
+            <MainContent>
             <Header 
-              onToggleSidebar={() => setSidebarOpen(!isSidebarOpen)}
-              isSidebarOpen={isSidebarOpen}
               selectedMedium={selectedMedium}
               setSelectedMedium={setSelectedMedium}
               selectedYear={selectedYear}

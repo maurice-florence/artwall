@@ -7,16 +7,10 @@ export const PageLayout = styled.div`
   background-color: ${({ theme }) => theme.body};
 `;
 
-export const MainContent = styled.div<{ $isSidebarOpen: boolean }>`
+export const MainContent = styled.div`
   flex-grow: 1;
-  transition: margin-left 0.3s ease-in-out, width 0.3s ease-in-out;
-  margin-left: ${props => props.$isSidebarOpen ? '350px' : '0'};
-  width: ${props => props.$isSidebarOpen ? 'calc(100% - 350px)' : '100%'};
-
-  @media (max-width: 1024px) {
-    margin-left: 0;
-    width: 100%;
-  }
+  width: 100%;
+  transition: none;
 `;
 
 export const CollageContainer = styled.main`

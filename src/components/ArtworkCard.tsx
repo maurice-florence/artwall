@@ -1,13 +1,16 @@
 import React, { useState } from 'react';
 // import Waveform from '@wavesurfer/react';
-import { FaBookOpen, FaPaintBrush, FaMusic, FaAlignLeft, FaEllipsisH } from 'react-icons/fa';
+import { FaBookOpen, FaPaintBrush, FaMusic, FaAlignLeft, FaEllipsisH, FaImage } from 'react-icons/fa';
 import styled, { useTheme } from 'styled-components';
 import { Artwork, ArtworkMedium } from '@/types';
 import cardSizesJson from '@/constants/card-sizes.json';
 
-type CardSizesType = {
-  [key: string]: { gridColumn: number; gridRow: number };
-};
+interface CardSizesType {
+  default: { gridColumn: number; gridRow: number };
+  novel: { gridColumn: number; gridRow: number };
+  song: { gridColumn: number; gridRow: number };
+  // Add other keys as needed
+}
 const cardSizes: CardSizesType = cardSizesJson;
 
 
@@ -16,20 +19,27 @@ const cardSizes: CardSizesType = cardSizesJson;
 
 // Get grid span from cardSizes.json by subtype, fallback to default
 const getGridSpan = (subtype: string) => {
-  const size = cardSizes[subtype] || cardSizes['default'];
+  const size = (subtype in cardSizes ? (cardSizes as any)[subtype] : cardSizes['default']);
   return `grid-column: span ${size.gridColumn}; grid-row: span ${size.gridRow};`;
 };
 
 const CardContainer = styled.div<{ $medium: ArtworkMedium; $subtype?: string; $blank?: boolean }>`
   perspective: 1000px;
   width: 100%;
-  border-radius: 12px;
+  max-width: 480px;
+  border-radius: 10px;
   /* Remove explicit height, let grid control it */
   ${props => getGridSpan(props.$subtype || 'default')}
+  min-height: 110px;
+  font-size: 0.75rem;
 
   @media (max-width: 768px) {
     grid-column: span 2;
     grid-row: span 1;
+    min-width: 0;
+    max-width: 100vw;
+    min-height: 80px;
+    font-size: 0.7rem;
   }
 `;
 
@@ -49,6 +59,7 @@ const CardInner = styled.div`
 const CardFace = styled.div`
   position: absolute;
   width: 100%;
+  max-width: 480px;
   height: 100%;
   -webkit-backface-visibility: hidden; /* Safari */
   backface-visibility: hidden;
@@ -63,7 +74,8 @@ const CardFace = styled.div`
 const CardFront = styled(CardFace)<{ $medium: ArtworkMedium }>`
   background: ${({ theme }) => theme.cardBg};
   color: ${({ theme }) => theme.cardText};
-  padding: 1.5rem;
+  padding: 0.7rem;
+  font-size: 0.75rem;
   justify-content: space-between;
   display: flex;
   flex-direction: column;
@@ -73,11 +85,11 @@ const CardBack = styled(CardFace)`
   background: ${({ theme }) => theme.accent};
   color: ${({ theme }) => theme.accentText};
   transform: rotateY(180deg);
-  padding: 1.5rem;
+  padding: 0.7rem;
   justify-content: center;
   align-items: center;
   text-align: center;
-  font-size: 0.9rem;
+  font-size: 0.7rem;
   /* border removed */
   box-sizing: border-box;
 
@@ -93,10 +105,9 @@ const CardBack = styled(CardFace)`
     text-overflow: ellipsis;
     word-break: break-word;
     position: relative;
-    padding: 0.5rem;
+    padding: 0;
     margin: 0;
-    /* No background, border-radius, or box-shadow for invisibility */
-    font-size: 1em;
+    font-size: 0.9em;
     align-items: stretch;
     justify-content: flex-start;
   }
@@ -110,7 +121,7 @@ const TitleOverlay = styled.div`
 
 const CardTitle = styled.h3`
   font-family: 'Lora', serif;
-  font-size: 1.3rem;
+  font-size: 1.1rem;
   margin: 0;
   font-weight: bold;
   color: ${({ theme }) => theme.cardText};
@@ -169,8 +180,7 @@ const CardImage = styled.img<{ $fillAvailable?: boolean }>`
 
 const ProzaImage = styled.img`
   width: 100%;
-  flex: 1 1 auto;
-  height: 0;
+  height: auto;
   min-height: 0;
   min-width: 0;
   object-fit: contain;
@@ -298,13 +308,9 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin }: ArtworkCardProps) => {
     // Generate a random bar waveform SVG as a React component
     const RandomBarWaveform: React.FC<{ width?: number; height?: number; bars?: number }> = ({ width = 180, height = 48, bars = 48 }) => {
       const barWidth = width / bars;
-      // More randomness: combine sine, random, and some per-bar noise
       const barsArray = Array.from({ length: bars }, (_, i) => {
-        // Sine base for "audio-like" shape
         const base = Math.sin((i / (bars - 1)) * Math.PI * 2) * 0.5 + 0.5;
-        // Add more noise: random, and a second random for extra variation
         const noise = (Math.random() - 0.5) * 0.7 + (Math.random() - 0.5) * 0.5;
-        // Mix base and noise, with more weight on noise
         const mixed = 0.5 * base + 0.5 * (0.5 + noise);
         const barHeight = Math.max(4, Math.min(height, mixed * height * (0.7 + Math.random() * 0.7)));
         return barHeight;
@@ -334,6 +340,76 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin }: ArtworkCardProps) => {
       );
     };
 
+    // Generate a random abstract figure SVG for drawing/sculpture
+    const RandomFigureSVG: React.FC = () => {
+      const width = 120;
+      const height = 60;
+      const figureColor = theme.accent || '#1F618D';
+      const bgColor = theme.cardBg || '#fff';
+      // All shapes will fit within the SVG bounds (0,0)-(120,60)
+      // Random ellipses
+      const ellipses = Array.from({ length: 2 + Math.floor(Math.random() * 2) }, (_, i) => {
+        const rx = 20 + Math.random() * 30; // max 50
+        const ry = 10 + Math.random() * 20; // max 30
+        const cx = rx + Math.random() * (width - 2 * rx); // always inside
+        const cy = ry + Math.random() * (height - 2 * ry); // always inside
+        const rot = Math.random() * 360;
+        return (
+          <ellipse
+            key={`ellipse-${i}`}
+            cx={cx}
+            cy={cy}
+            rx={rx}
+            ry={ry}
+            fill={figureColor}
+            opacity={0.18 + Math.random() * 0.18}
+            transform={`rotate(${rot} ${cx} ${cy})`}
+          />
+        );
+      });
+      // Random lines
+      const lines = Array.from({ length: 2 + Math.floor(Math.random() * 2) }, (_, i) => {
+        const x1 = Math.random() * width;
+        const y1 = Math.random() * height;
+        const x2 = Math.random() * width;
+        const y2 = Math.random() * height;
+        return (
+          <line
+            key={`line-${i}`}
+            x1={x1}
+            y1={y1}
+            x2={x2}
+            y2={y2}
+            stroke={figureColor}
+            strokeWidth={2 + Math.random() * 3}
+            opacity={0.4 + Math.random() * 0.3}
+            strokeLinecap="round"
+          />
+        );
+      });
+      // Random polygon (triangle or quad)
+      const nPoints = 3 + Math.floor(Math.random() * 2);
+      const points = Array.from({ length: nPoints }, () => {
+        const x = 10 + Math.random() * (width - 20);
+        const y = 10 + Math.random() * (height - 20);
+        return `${x},${y}`;
+      }).join(' ');
+      return (
+        <svg
+          viewBox="0 0 120 60"
+          width="100%"
+          height="100%"
+          style={{ display: 'block', width: '100%', height: '100%' }}
+          preserveAspectRatio="none"
+        >
+          <rect x="0" y="0" width={120} height={60} fill={bgColor} />
+          {ellipses}
+          {lines}
+          <polygon points={points} fill={figureColor} opacity={0.22 + Math.random() * 0.18} />
+        </svg>
+      );
+    };
+
     // Slider state for all cards with images, only on card back
     const [currentImage, setCurrentImage] = useState(0);
 
@@ -349,19 +425,28 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin }: ArtworkCardProps) => {
         <CardInner>
           <CardFront $medium={artwork.medium}>
             <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-              <CardTitle data-testid={`artwork-title-${artwork.id}`} style={{ marginBottom: '0.5rem', flexShrink: 0 }}>{artwork.title}</CardTitle>
-              <div style={{ flex: 1, minHeight: 0, minWidth: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div style={{ borderRadius: 4, marginBottom: '0.5rem', flexShrink: 0 }}>
+                <CardTitle data-testid={`artwork-title-${artwork.id}`}>{artwork.title}</CardTitle>
+              </div>
+              {/* Image or waveform, always between title and footer */}
+              <div style={{ flex: 1, minHeight: 0, minWidth: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 4 }}>
                 {artwork.medium === 'audio' ? (
                   <div style={{ width: '100%', height: 60, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <RandomBarWaveform width={180} height={48} bars={48} />
                   </div>
+                ) : artwork.medium === 'writing' ? (
+                  <div style={{ width: '100%', height: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: 0, padding: 0 }}>
+                    <FaAlignLeft size={26} color={theme.accent || '#1F618D'} />
+                  </div>
                 ) : images.length > 0 ? (
-                  artwork.medium === 'writing' ? (
-                    <ProzaImage src={images[0]} alt={artwork.title} />
-                  ) : (
-                    <CardImage src={images[0]} alt={artwork.title} />
-                  )
-                ) : null}
+                  <div style={{ width: '100%', height: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: 0, padding: 0 }}>
+                    <FaImage size={26} color={theme.accent || '#1F618D'} />
+                  </div>
+                ) : (
+                  <div style={{ width: '100%', height: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: 0, padding: 0 }}>
+                    <FaImage size={26} color={theme.accent || '#1F618D'} />
+                  </div>
+                )}
               </div>
               {availableLanguages.length > 1 && (
                 <LanguageIndicator data-testid={`artwork-languages-${artwork.id}`}> 

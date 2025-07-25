@@ -91,8 +91,6 @@ const MediumIconButton = styled.button<{ $selected?: boolean }>`
 `;
 
 interface HeaderProps {
-  onToggleSidebar: () => void;
-  isSidebarOpen: boolean;
   selectedMedium: string;
   setSelectedMedium: (med: string) => void;
   selectedYear: string;
@@ -105,8 +103,6 @@ interface HeaderProps {
 
 
 const Header: React.FC<HeaderProps> = ({
-  onToggleSidebar,
-  isSidebarOpen,
   selectedMedium,
   setSelectedMedium,
   selectedYear,
@@ -119,9 +115,6 @@ const Header: React.FC<HeaderProps> = ({
   return (
     <HeaderWrapper data-testid="header">
       <TitleRow data-testid="header-title-row">
-        <ToggleButton onClick={onToggleSidebar} title="Toggle Sidebar" data-testid="header-toggle-sidebar">
-          {isSidebarOpen ? <FaArrowLeft /> : <FaArrowRight />}
-        </ToggleButton>
         <CenteredTitleWrapper>
           <Title data-testid="header-title">Kunstmuur</Title>
         </CenteredTitleWrapper>

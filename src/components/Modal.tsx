@@ -30,7 +30,7 @@ const ModalBackdrop = styled.div.attrs({
 const ModalContent = styled.div`
   background: ${({ theme }) => theme.cardBg};
   color: ${({ theme }) => theme.cardText};
-  padding: 2rem 3rem;
+  padding: 1.2rem 2rem;
   border-radius: 8px;
   width: 90%;
   max-width: 900px;
@@ -43,10 +43,11 @@ const ModalContent = styled.div`
 
   h2 {
     color: ${({ theme }) => theme.text};
+    font-size: 1.1rem;
   }
 
   @media (max-width: 600px) {
-    padding: 1rem;
+    padding: 0.8rem;
     max-width: 100vw;
     max-height: 95vh;
   }
