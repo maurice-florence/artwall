@@ -1,9 +1,43 @@
 import React, { useState } from 'react';
-// import Waveform from '@wavesurfer/react';
-import { FaBookOpen, FaPaintBrush, FaMusic, FaAlignLeft, FaEllipsisH, FaImage } from 'react-icons/fa';
+import { FaBookOpen, FaPaintBrush, FaMusic, FaAlignLeft, FaEllipsisH, FaImage, FaPenNib, FaCube } from 'react-icons/fa';
 import styled, { useTheme } from 'styled-components';
 import { Artwork, ArtworkMedium } from '@/types';
 import cardSizesJson from '@/constants/card-sizes.json';
+
+// Top-level GeneratedTextLinesSVG for poetry/prosepoetry: lines of text
+const GeneratedTextLinesSVG: React.FC<{ width?: number; height?: number; lines?: number }> = ({ width = 120, height = 48, lines = 6 }) => {
+  const theme = useTheme();
+  const lineSpacing = height / (lines + 1);
+  const minLen = width * 0.4;
+  const maxLen = width * 0.9;
+  const accent = theme.accent || '#1F618D';
+  const bg = theme.cardBg || '#fff';
+  return (
+    <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ width: '100%', height }}>
+      <rect x="0" y="0" width={width} height={height} fill={bg} />
+      {Array.from({ length: lines }).map((_, i) => {
+        // Randomize line length and y offset for a hand-drawn feel
+        const len = minLen + Math.random() * (maxLen - minLen);
+        const y = lineSpacing * (i + 1) + (Math.random() - 0.5) * 2;
+        return (
+          <rect
+            key={i}
+            x={width * 0.05}
+            y={y}
+            width={len}
+            height={4 + Math.random() * 2}
+            rx={2}
+            fill={accent}
+            opacity={0.7 + Math.random() * 0.2}
+          />
+        );
+      })}
+    </svg>
+  );
+};
+
+
+
 
 interface CardSizesType {
   default: { gridColumn: number; gridRow: number };
@@ -18,7 +52,12 @@ const cardSizes: CardSizesType = cardSizesJson;
 
 
 // Get grid span from cardSizes.json by subtype, fallback to default
-const getGridSpan = (subtype: string) => {
+const getGridSpan = (subtype: string, medium?: ArtworkMedium) => {
+  if (medium === 'audio') {
+    // Always use 'song' size for all audio cards
+    const size = cardSizes['song'];
+    return `grid-column: span ${size.gridColumn}; grid-row: span ${size.gridRow};`;
+  }
   const size = (subtype in cardSizes ? (cardSizes as any)[subtype] : cardSizes['default']);
   return `grid-column: span ${size.gridColumn}; grid-row: span ${size.gridRow};`;
 };
@@ -29,7 +68,7 @@ const CardContainer = styled.div<{ $medium: ArtworkMedium; $subtype?: string; $b
   max-width: 480px;
   border-radius: 10px;
   /* Remove explicit height, let grid control it */
-  ${props => getGridSpan(props.$subtype || 'default')}
+  ${props => getGridSpan(props.$subtype || 'default', props.$medium)}
   min-height: 110px;
   font-size: 0.75rem;
 
@@ -188,17 +227,27 @@ const ProzaImage = styled.img`
   display: block;
 `;
 
-const iconMap: { [key in ArtworkMedium]?: React.JSX.Element } = {
-  writing: <FaBookOpen />,
+// Match header icons for medium categories
+const iconMap: { [key: string]: React.JSX.Element } = {
+  poetry: <FaPenNib />,
+  prose: <FaBookOpen />,
+  prosepoetry: <FaAlignLeft />,
+  writing: <FaPenNib />,
   audio: <FaMusic />,
+  song: <FaMusic />,
   drawing: <FaPaintBrush />,
-  sculpture: <FaPaintBrush />,
+  sculpture: <FaCube />,
   other: <FaEllipsisH />,
 };
 
-// Add a helper to get the correct icon for audio
+// Helper to get the correct icon for a card
 const getArtworkIcon = (artwork: Artwork) => {
-  return iconMap[artwork.medium] || null;
+  // Prefer subtype-specific icon if available
+  if (artwork.subtype && iconMap[artwork.subtype.toLowerCase()]) {
+    return iconMap[artwork.subtype.toLowerCase()];
+  }
+  // Fallback to medium icon
+  return iconMap[artwork.medium] || iconMap['other'];
 };
 
 const truncateText = (text: string, maxLength: number) => {
@@ -228,6 +277,8 @@ const LanguageTag = styled.span`
   font-size: 0.65rem;
   font-weight: 500;
 `;
+
+
 
 const ArtworkCard = ({ artwork, onSelect, isAdmin }: ArtworkCardProps) => {
     const theme = useTheme();
@@ -434,6 +485,24 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin }: ArtworkCardProps) => {
                   <div style={{ width: '100%', height: 60, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <RandomBarWaveform width={180} height={48} bars={48} />
                   </div>
+                ) : artwork.medium === 'writing' && subtype === 'novel' && images.length > 0 ? (
+                  <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: 0, padding: 0 }}>
+                    <img 
+                      src={images[0]} 
+                      alt={artwork.title || 'cover'} 
+                      style={{
+                        height: '100%',
+                        width: '100%',
+                        objectFit: 'contain',
+                        borderRadius: 4,
+                        display: 'block',
+                      }}
+                    />
+                  </div>
+                ) : artwork.medium === 'writing' && (subtype === 'poetry' || subtype === 'prosepoetry') ? (
+                  <div style={{ width: '100%', height: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: 0, padding: 0 }}>
+                    <GeneratedTextLinesSVG width={120} height={48} lines={6} />
+                  </div>
                 ) : artwork.medium === 'writing' ? (
                   <div style={{ width: '100%', height: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: 0, padding: 0 }}>
                     <FaAlignLeft size={26} color={theme.accent || '#1F618D'} />
@@ -458,7 +527,7 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin }: ArtworkCardProps) => {
               <CardFooter style={{ marginTop: '0.5rem', justifyContent: 'space-between', flexShrink: 0 }}>
                 <span>{formattedDate}</span>
                 <CardCategory>
-                  {iconMap[artwork.medium]}
+                  {getArtworkIcon(artwork)}
                 </CardCategory>
               </CardFooter>
             </div>
