@@ -1,18 +1,15 @@
 // src/components/AdminModal/components/MetadataSection.tsx
 // filepath: c:\Users\friem\OneDrive\Documenten\GitHub\artwall\src\components\AdminModal\components\MetadataSection.tsx
-import React from 'react';
-import { ArtworkFormData } from '@/types';
-import { FormComponentProps } from '../types';
+
+import { SectionTitle, FieldGroup, Label, Select, CheckboxGroup, Checkbox, ErrorMessage } from '../styles';
 import { SmartFormField } from './SmartFormField';
-import {
-  SectionTitle,
-  FieldGroup,
-  Label,
-  Select,
-  CheckboxGroup,
-  Checkbox,
-  ErrorMessage
-} from '../styles';
+import type { FormComponentProps } from '../types';
+import styled from 'styled-components';
+
+const FlexRow = styled.div`
+  display: flex;
+  gap: 1rem;
+`;
 
 export const MetadataSection: React.FC<FormComponentProps> = ({
   formData,
@@ -29,7 +26,7 @@ export const MetadataSection: React.FC<FormComponentProps> = ({
     <>
       <SectionTitle>Metadata</SectionTitle>
       
-      <div style={{ display: 'flex', gap: '1rem' }}>
+      <FlexRow>
         {shouldShowField?.('version') && (
           <SmartFormField
             label="Versie"
@@ -69,7 +66,7 @@ export const MetadataSection: React.FC<FormComponentProps> = ({
             suggestions={getSmartSuggestions?.('language1')}
           />
         )}
-      </div>
+      </FlexRow>
 
       {shouldShowField?.('language2') && (
         <SmartFormField

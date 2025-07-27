@@ -244,14 +244,26 @@ export const SmartFormField: React.FC<SmartFormFieldProps> = ({
       );
   }
 
+
+
+const RequiredAsterisk = styled.span`
+  color: #dc2626;
+`;
+
+const HelpText = styled.div`
+  font-size: 0.9em;
+  color: #666;
+  margin-top: 0.25em;
+`;
+
   return (
     <FieldContainer>
       <StyledLabel htmlFor={inputId}>
         {label}
-        {required && <span style={{ color: '#dc2626' }}> *</span>}
+        {required && <RequiredAsterisk> *</RequiredAsterisk>}
       </StyledLabel>
       {inputElement}
-      {helpText && <div style={{ fontSize: '0.9em', color: '#666', marginTop: '0.25em' }}>{helpText}</div>}
+      {helpText && <HelpText>{helpText}</HelpText>}
     </FieldContainer>
   );
 };

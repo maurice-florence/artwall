@@ -2,7 +2,7 @@
 // filepath: c:\Users\friem\OneDrive\Documenten\GitHub\artwall\src\components\AdminModal\AdminModal.tsx
 "use client";
 
-import React from "react";
+import React, { useRef, useEffect } from "react";
 import { AdminModalProps } from './types';
 import { useAdminModal } from './hooks/useAdminModal';
 import { 
@@ -51,10 +51,21 @@ const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, artworkToEdit 
   } = useAdminModal(artworkToEdit);
 
   const [showDraftRecovery, setShowDraftRecovery] = React.useState(false);
+  const modalRef = useRef<HTMLDivElement>(null);
+  const firstInputRef = useRef<HTMLInputElement>(null);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (isOpen && !artworkToEdit && hasDraft) {
       setShowDraftRecovery(true);
+    }
+    // Focus trap: focus first input when modal opens
+    if (isOpen && modalRef.current) {
+      const focusable = modalRef.current.querySelectorAll<HTMLElement>(
+        'input, select, textarea, button, [tabindex]:not([tabindex="-1"])'
+      );
+      if (focusable.length) {
+        focusable[0].focus();
+      }
     }
   }, [isOpen, artworkToEdit, hasDraft]);
 
@@ -93,14 +104,18 @@ const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, artworkToEdit 
 
   return (
     <ModalBackdrop onClick={handleClose}>
-      <ModalContent onClick={(e) => e.stopPropagation()}>
+      <ModalContent
+        ref={modalRef}
+        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="adminmodal-title"
+      >
         <CloseButton onClick={handleClose} aria-label="Sluiten">
           ×
         </CloseButton>
-        
         <div data-testid="adminmodal">
-          <h2 data-testid="form-title">{artworkToEdit ? 'Kunstwerk Bewerken' : 'Nieuw Kunstwerk'}</h2>
-          
+          <h2 id="adminmodal-title" data-testid="form-title">{artworkToEdit ? 'Kunstwerk Bewerken' : 'Nieuw Kunstwerk'}</h2>
           <form onSubmit={onSubmit}>
             <FormWrapper>
               {showDraftRecovery && (

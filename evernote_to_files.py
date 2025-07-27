@@ -467,6 +467,35 @@ def process_enex_files(source_dir: pathlib.Path, dest_dir: pathlib.Path):
     subtype_counts = {}  # Track notes per medium/subtype combination
     
     print("\n--- Starten van Conversie & Generatie ---")
+
+    # --- Duplicate title detection ---
+    all_titles = []
+    title_counts = {}
+    # First pass: collect all titles
+    for enex_file in enex_files:
+        try:
+            enex_content = enex_file.read_text('utf-8')
+            note_contents = re.findall(r'<note>(.*?)</note>', enex_content, re.DOTALL)
+        except Exception:
+            continue
+        for note_str in note_contents:
+            try:
+                note_xml = f"<note>{note_str}</note>"
+                note = ET.fromstring(note_xml)
+                note_title_raw = note.findtext('title', 'Onbekende Titel')
+                all_titles.append(note_title_raw)
+                title_counts[note_title_raw] = title_counts.get(note_title_raw, 0) + 1
+            except Exception:
+                continue
+
+    # Build a dict to track the next number for each duplicate title
+    duplicate_title_next_number = {}
+    for title, count in title_counts.items():
+        if count > 1:
+            print(f"⚠️  Dubbele titel gevonden: '{title}' komt {count} keer voor. Titels worden genummerd.")
+            duplicate_title_next_number[title] = 1
+
+    # Second pass: process notes, renaming duplicates
     for enex_file in enex_files:
         print(f"\n🔄 Verwerken van {enex_file.name} ({enex_file.stat().st_size / (1024*1024):.1f} MB)...")
         
@@ -489,19 +518,34 @@ def process_enex_files(source_dir: pathlib.Path, dest_dir: pathlib.Path):
             try:
                 note_xml = f"<note>{note_str}</note>"
                 note = ET.fromstring(note_xml)
-                
                 note_title_raw = note.findtext('title', 'Onbekende Titel')
+
+                # --- Duplicate title renaming logic ---
+                original_title = note_title_raw
+                if title_counts.get(original_title, 0) > 1:
+                    # If this is the first occurrence, leave as is, else append number
+                    if duplicate_title_next_number[original_title] == 1:
+                        # First occurrence, keep as is
+                        new_title = original_title
+                    else:
+                        new_title = f"{original_title} {duplicate_title_next_number[original_title]}"
+                        print(f"⚠️  Titel '{original_title}' hernoemd naar '{new_title}' vanwege duplicaat.")
+                    # Update for next occurrence
+                    duplicate_title_next_number[original_title] += 1
+                    note_title_raw = new_title
 
                 content_xml = note.findtext('content', '')
                 meta, main_content_html = extract_metadata_and_content(content_xml)
-                
+                if meta is not None:
+                    meta['title'] = note_title_raw
+
                 # --- Basis validatie ---
                 if meta is None:
                     raise ValueError(main_content_html)
-                
+
                 # Get resources for auto-detection
                 resources = note.findall('resource')
-                
+
                 # Auto-detect medium/subtype if not provided
                 if 'medium' not in meta or 'subtype' not in meta:
                     detected_medium, detected_subtype = auto_detect_medium_subtype_from_content(main_content_html, resources)
@@ -511,7 +555,7 @@ def process_enex_files(source_dir: pathlib.Path, dest_dir: pathlib.Path):
                     if 'subtype' not in meta:
                         meta['subtype'] = detected_subtype
                         print(f"    🔍 Auto-detected subtype: {detected_subtype}")
-                        
+
                     # Set legacy category based on detected medium
                     if 'category' not in meta:
                         # Legacy mapping removed. Use only new medium/subtype logic or fallback

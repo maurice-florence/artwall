@@ -1,5 +1,6 @@
-// src/utils/index.ts
-// Utility functions for the project
+
+export * from './performance';
+export * from './validation';
 
 export function formatDate(date: Date | string): string {
   const d = typeof date === 'string' ? new Date(date) : date;

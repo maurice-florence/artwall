@@ -1,3 +1,7 @@
+// Validation errors for forms
+export interface ValidationErrors {
+  [key: string]: string;
+}
 // Use centralized types from src/constants/medium.ts
 import { ArtworkMedium, ArtworkSubtype } from '@/constants/medium';
 export type { ArtworkMedium, ArtworkSubtype };

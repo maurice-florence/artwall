@@ -14,7 +14,18 @@ import {
   Checkbox,
   ErrorMessage
 } from '../styles';
+import { ValidationMessage } from './ValidationMessage';
 import { SmartFormField } from './SmartFormField';
+import styled from 'styled-components';
+
+const FlexRow = styled.div`
+  display: flex;
+  gap: 1rem;
+`;
+
+const FlexItem = styled.div`
+  flex: 1;
+`;
 
 export const BasicInfoForm: React.FC<FormComponentProps> = ({
   formData,
@@ -48,6 +59,9 @@ export const BasicInfoForm: React.FC<FormComponentProps> = ({
         inputProps={{ id: 'title', 'aria-label': 'Titel' }}
       />
       {errors.title && <ErrorMessage>{errors.title}</ErrorMessage>}
+      {formData.title && formData.title.length < 3 && !errors.title && (
+        <ValidationMessage type="warning" message="Titel is erg kort, overweeg een beschrijvendere titel" />
+      )}
 
       <FieldGroup>
         <Label htmlFor="medium">Medium *</Label>
@@ -88,8 +102,8 @@ export const BasicInfoForm: React.FC<FormComponentProps> = ({
         </FieldGroup>
       )}
 
-      <div style={{ display: 'flex', gap: '1rem' }}>
-        <div style={{ flex: 1 }}>
+      <FlexRow>
+        <FlexItem>
           <SmartFormField
             label="Jaar"
             field="year"
@@ -104,9 +118,8 @@ export const BasicInfoForm: React.FC<FormComponentProps> = ({
             loading={isFieldLoading?.('year')}
             inputProps={{ id: 'year', 'aria-label': 'Jaar' }}
           />
-        </div>
-
-        <FieldGroup style={{ flex: 1 }}>
+        </FlexItem>
+        <FieldGroup as={FlexItem}>
           <Label htmlFor="month">Maand</Label>
           <Input
             id="month"
@@ -119,8 +132,7 @@ export const BasicInfoForm: React.FC<FormComponentProps> = ({
             aria-label="Maand"
           />
         </FieldGroup>
-
-        <FieldGroup style={{ flex: 1 }}>
+        <FieldGroup as={FlexItem}>
           <Label htmlFor="day">Dag</Label>
           <Input
             id="day"
@@ -133,7 +145,7 @@ export const BasicInfoForm: React.FC<FormComponentProps> = ({
             aria-label="Dag"
           />
         </FieldGroup>
-      </div>
+      </FlexRow>
 
       <SmartFormField
         label="Beschrijving"

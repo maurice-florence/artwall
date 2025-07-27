@@ -1,3 +1,9 @@
+const StyledLabel = styled.label`
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: inherit;
+`;
 // src/components/AdminModal/components/FileUpload.tsx
 // filepath: c:\Users\friem\OneDrive\Documenten\GitHub\artwall\src\components\AdminModal\components\FileUpload.tsx
 import React, { useCallback, useState } from 'react';
@@ -271,14 +277,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
 
   return (
     <div>
-      <label style={{ 
-        display: 'block', 
-        marginBottom: '8px', 
-        fontWeight: 500,
-        color: 'inherit'
-      }}>
-        {label}
-      </label>
+      <StyledLabel>{label}</StyledLabel>
       
       <DropZone
         isDragging={isDragging}

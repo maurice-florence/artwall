@@ -154,6 +154,8 @@ const Header: React.FC<HeaderProps> = ({
               placeholder="Zoeken..."
               style={{ padding: '0.4rem 0.8rem', borderRadius: 4, border: '1px solid #ccc', fontSize: '1rem', marginLeft: '2rem' }}
               data-testid="header-search"
+              aria-label="Zoek in kunstwerken"
+              role="searchbox"
             />
           </div> {/* <-- Close filters/icons/search row */}
           <RightSection data-testid="header-theme-switcher">

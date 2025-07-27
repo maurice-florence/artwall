@@ -1,15 +1,11 @@
 // src/components/AdminModal/types.ts
 // filepath: c:\Users\friem\OneDrive\Documenten\GitHub\artwall\src\components\AdminModal\types.ts
-import { Artwork, ArtworkFormData } from '@/types';
+import type { Artwork, ArtworkFormData, ValidationErrors } from '@/types';
 
 export interface AdminModalProps {
   isOpen: boolean;
   onClose: () => void;
   artworkToEdit?: Artwork | null;
-}
-
-export interface ValidationErrors {
-  [key: string]: string;
 }
 
 export interface FormComponentProps {
@@ -38,8 +34,8 @@ export interface FormState {
   isLoading: boolean;
   error: string;
   success: string;
-  validation: ValidationErrors; // ✅ Keep as ValidationErrors for compatibility
+  validation: ValidationErrors;
 }
 
-// Re-export ArtworkFormData for convenience
-export type { ArtworkFormData };
+// Re-export for convenience
+export type { ArtworkFormData, ValidationErrors } from '@/types';
