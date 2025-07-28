@@ -52,7 +52,7 @@ const inputStyles = `
   border: 1px solid #DDDDDD;
   background: 
     ${({ theme }: { theme: import('styled-components').DefaultTheme }) => theme.body};
-  font-family: 'Nunito Sans', sans-serif;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
   font-size: 1rem;
   color: ${({ theme }: { theme: import('styled-components').DefaultTheme }) => theme.text};
   transition: border-color 0.2s;

@@ -10,12 +10,12 @@ export const GlobalStyle = createGlobalStyle<{ theme: DefaultTheme }>`
   body {
     background-color: ${({ theme }) => theme.body};
     color: ${({ theme }) => theme.text};
-    font-family: 'Nunito Sans', sans-serif;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
     line-height: 1.6;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Lora', serif;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
     color: #1E3A8A;
   }
 `;

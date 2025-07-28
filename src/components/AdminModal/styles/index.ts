@@ -58,7 +58,7 @@ export const Label = styled.label`
 `;
 
 export const SectionTitle = styled.h3`
-  font-family: 'Lora', serif;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
   color: #E07A5F;
   margin: 1.5rem 0 1rem 0;
   border-bottom: 2px solid #E07A5F;

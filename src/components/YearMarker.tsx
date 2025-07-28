@@ -11,7 +11,7 @@ const YearCardContainer = styled.div`
     background: ${({ theme }) => theme.body};
     color: ${({ theme }) => theme.accent};
     border-radius: 12px;
-    font-family: 'Lora', serif;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
     font-size: 2.5rem;
     font-weight: bold;
     margin: 0 auto;

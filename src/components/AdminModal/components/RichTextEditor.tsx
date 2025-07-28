@@ -93,7 +93,7 @@ const EditorTextarea = styled.textarea<{ minHeight?: number }>`
   border: none;
   outline: none;
   resize: vertical;
-  font-family: inherit;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
   font-size: 14px;
   line-height: 1.5;
   background-color: transparent;

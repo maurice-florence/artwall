@@ -1,3 +1,4 @@
+// Removed alignment check line
 // ...existing code...
 // ...existing code...
 import React, { useEffect, useState } from 'react';
@@ -30,6 +31,7 @@ const ModalBackdrop = styled.div.attrs({
 const ModalContent = styled.div`
   background: ${({ theme }) => theme.cardBg};
   color: ${({ theme }) => theme.cardText};
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
   padding: 1.2rem 2rem;
   border-radius: 8px;
   width: 90%;
@@ -44,6 +46,7 @@ const ModalContent = styled.div`
   h2 {
     color: ${({ theme }) => theme.text};
     font-size: 1.1rem;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
   }
 
   @media (max-width: 600px) {
@@ -365,7 +368,6 @@ const Modal: React.FC<ModalProps> = ({
                 dangerouslySetInnerHTML={{ __html: parseContent(translation.content) }}
               />
             )}
-
             {/* Display all media (coverImageUrl, mediaUrl, mediaUrls) in the slider */}
             {(() => {
               // Collect all media URLs (coverImageUrl, mediaUrl, mediaUrls, pdfUrl, audioUrl)
@@ -459,10 +461,16 @@ const MediaTextContainer = styled.div`
   display: flex;
   gap: 1.5rem;
   align-items: flex-start;
+  width: 100%;
 `;
 
 const TextContainer = styled.div`
   flex: 1;
+  align-self: flex-start;
+  border: 2px dashed #e07a5f;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-top: 0 !important;
 `;
 
 const ImageContainer = styled.div`
@@ -471,8 +479,12 @@ const ImageContainer = styled.div`
   flex-direction: column;
   gap: 1rem;
   position: relative;
-  align-items: center;
-  justify-content: center;
+  align-items: flex-start;
+  justify-content: flex-start;
+  border: 2px dashed #3d405b;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-top: 0 !important;
 `;
 const ResponsiveImage = styled.img`
   width: 100%;

@@ -7,6 +7,7 @@ import { MEDIUMS, MEDIUM_LABELS, SUBTYPE_LABELS } from '@/constants/medium';
 const HeaderWrapper = styled.header`
   background: ${({ theme }) => theme.headerBg};
   color: ${({ theme }) => theme.headerText};
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
   padding: 1rem 2rem;
   display: flex;
   flex-direction: column;
@@ -23,14 +24,15 @@ const TitleRow = styled.div`
 `;
 
 const Title = styled.h1`
-  font-family: 'Lora', serif;
-  font-size: 2.2rem;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 3.5rem;
   font-weight: bold;
-  color: ${({ theme }) => theme.headerText};
+  color: #fff;
   margin: 0;
 `;
 
 const ToggleButton = styled.button`
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
   background: none;
   border: none;
   color: ${({ theme }) => theme.accent};
@@ -48,18 +50,21 @@ const ToggleButton = styled.button`
 `;
 
 const RightSection = styled.div`
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
     display: flex;
     align-items: center;
     gap: 1.5rem;
 `;
 
 const IconsWrapper = styled.div`
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
   display: flex;
   align-items: center;
   gap: 0.5rem;
 `;
 
 const CenteredTitleWrapper = styled.div`
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
   display: flex;
   align-items: center;
   flex: 1;
@@ -76,6 +81,7 @@ const MEDIUM_ICONS: Record<string, React.ReactNode> = {
 };
 
 const MediumIconButton = styled.button<{ $selected?: boolean }>`
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
   background: none;
   border: none;
   color: ${({ theme, $selected }) => $selected ? theme.accent : theme.headerText};

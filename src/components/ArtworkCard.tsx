@@ -159,7 +159,7 @@ const TitleOverlay = styled.div`
 `;
 
 const CardTitle = styled.h3`
-  font-family: 'Lora', serif;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
   font-size: 1.1rem;
   margin: 0;
   font-weight: bold;
