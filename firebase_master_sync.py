@@ -323,7 +323,7 @@ def group_artworks_by_base_key(items_to_process: Dict[str, Dict[str, Any]]) -> D
                 grouped_items[base_key]['primary_language'] = language
                 grouped_items[base_key]['metadata'] = item_data['metadata'].copy()
                 grouped_items[base_key]['metadata']['language1'] = language
-                print(f"    🎯 Originele taal gevonden: {language} voor {base_key}")
+                # ...existing code...
             elif grouped_items[base_key]['primary_language'] is None:
                 # Fallback: use first language encountered if no original found yet
                 grouped_items[base_key]['primary_language'] = language
@@ -336,7 +336,7 @@ def group_artworks_by_base_key(items_to_process: Dict[str, Dict[str, Any]]) -> D
             first_lang = list(grouped_item['languages'].keys())[0]
             grouped_item['primary_language'] = first_lang
             grouped_item['metadata']['language1'] = first_lang
-            print(f"    ⚠️ Geen originele taal gevonden, gebruik {first_lang} als primair voor {base_key}")
+            # ...existing code...
     
     return grouped_items
 
@@ -472,7 +472,7 @@ def sync_to_firebase(force_update: bool = False):
     # **🔥 HERE'S THE KEY CHANGE: Group items by base key to combine languages**
     print(f"\n🔄 Groeperen van taalversies...")
     grouped_items = group_artworks_by_base_key(items_to_process)
-    print(f"📊 {len(items_to_process)} individuele items gecombineerd tot {len(grouped_items)} unieke kunstwerken")
+    print(f"📊 Samenvatting: {len(items_to_process)} individuele items gecombineerd tot {len(grouped_items)} unieke kunstwerken")
 
     # Tracking variables
     database_operations = {
@@ -489,118 +489,87 @@ def sync_to_firebase(force_update: bool = False):
 
     print(f"\n🔄 Verwerken van gecombineerde items...")
     print("=" * 50)
-    
-    # **🔥 PROCESS GROUPED ITEMS INSTEAD OF INDIVIDUAL ITEMS**
+    processed_count = 0
     for base_key, grouped_item in grouped_items.items():
         primary_lang = grouped_item['primary_language']
         metadata = grouped_item['metadata']
         title = metadata['title']
         local_modified = grouped_item.get('last_modified', 0)
-
-        # Show which languages are being combined
-        available_languages = list(grouped_item['languages'].keys())
-        lang_display = f"({', '.join(available_languages)})"
-
         medium = metadata.get('medium', 'other')
         db_key = f"{medium}/{base_key}"
-
+        needs_update = False
         if db_key in existing_keys and not force_update:
             existing_item = existing_artworks[db_key]
             firebase_modified = existing_item.get('recordCreationDate', 0)
             if local_modified > firebase_modified:
-                print(f"🔄 {title} {lang_display} - Lokale bestanden zijn nieuwer, bijwerken...")
                 needs_update = True
             else:
-                print(f"⏭️  {title} {lang_display} - Geen wijzigingen gedetecteerd")
-                database_operations['skipped'].append(f"{title} {lang_display}")
+                database_operations['skipped'].append(f"{title}")
                 continue
         else:
             if db_key in existing_keys:
-                print(f"🔄 {title} {lang_display} - FORCE UPDATE actief, overschrijven...")
                 needs_update = True
             else:
-                print(f"🆕 {title} {lang_display} - Nieuw gecombineerd item aanmaken...")
                 needs_update = False
-
         artwork_payload = create_combined_artwork(base_key, grouped_item)
         media_urls = []
-
         for file_path in grouped_item['files']:
             if file_path.suffix == '.html':
                 continue
             try:
-                # Use medium for storage path
                 medium_folder = medium if medium in VALID_MEDIUMS else 'other'
                 blob = bucket.blob(f"{medium_folder}/{file_path.name}")
                 blob.upload_from_filename(str(file_path))
                 blob.make_public()
                 media_urls.append(blob.public_url)
-                print(f"  ☁️ {medium_folder}/{file_path.name}")
                 storage_operations['uploaded'].append(f"{medium_folder}/{file_path.name}")
             except Exception as e:
-                print(f"  ❌ {medium_folder}/{file_path.name} - {e}")
                 storage_operations['failed'].append(f"{medium_folder}/{file_path.name}: {e}")
-
         artwork_payload = normalize_artwork_payload(artwork_payload, media_urls, base_key)
         artwork_payload['recordCreationDate'] = local_modified
-
-        # Save to Firebase under artwall/{medium}/{base_key}
         try:
             artwall_ref.child(medium).child(base_key).set(artwork_payload)
             if needs_update:
-                print(f"  ✅ Database bijgewerkt")
-                database_operations['updated'].append(f"{title} {lang_display}")
+                database_operations['updated'].append(f"{title}")
             else:
-                print(f"  ✅ Database entry aangemaakt")
-                database_operations['created'].append(f"{title} {lang_display}")
+                database_operations['created'].append(f"{title}")
         except Exception as e:
-            print(f"  ❌ Database operatie mislukt: {e}")
-            database_operations['failed'].append(f"{title} {lang_display}: {e}")
-
-        print()
+            database_operations['failed'].append(f"{title}: {e}")
+        processed_count += 1
+    print(f"Samenvatting: {processed_count} gecombineerde items verwerkt.")
 
     # Summary report
     print("🎉 Synchronisatie voltooid!")
     print("=" * 50)
-    
+
     print(f"\n📊 DATABASE OPERATIES:")
     print(f"  ✅ Nieuw aangemaakt: {len(database_operations['created'])}")
-    for item in database_operations['created']:
-        print(f"    • {item}")
-    
     print(f"  🔄 Bijgewerkt: {len(database_operations['updated'])}")
-    for item in database_operations['updated']:
-        print(f"    • {item}")
-    
     print(f"  ⏭️  Overgeslagen: {len(database_operations['skipped'])}")
-    for item in database_operations['skipped']:
-        print(f"    • {item}")
-    
-    if database_operations['failed']:
-        print(f"  ❌ Mislukt: {len(database_operations['failed'])}")
-        for item in database_operations['failed']:
-            print(f"    • {item}")
-    
+
     print(f"\n☁️  STORAGE OPERATIES:")
     print(f"  ✅ Geüpload: {len(storage_operations['uploaded'])}")
-    for item in storage_operations['uploaded']:
-        print(f"    • {item}")
-    
-    if storage_operations['failed']:
-        print(f"  ❌ Mislukt: {len(storage_operations['failed'])}")
-        for item in storage_operations['failed']:
-            print(f"    • {item}")
-    
+
     print(f"\n🏁 TOTAAL OVERZICHT:")
     print(f"  📄 HTML bestanden verwerkt: {total_html_files}")
     print(f"  🎨 Media bestanden verwerkt: {total_media_files}")
     print(f"  🗃️  Database items: {len(database_operations['created']) + len(database_operations['updated'])} actief")
     print(f"  ☁️  Storage bestanden: {len(storage_operations['uploaded'])} geüpload")
-    
-    if database_operations['failed'] or storage_operations['failed']:
-        print(f"  ⚠️  Fouten: {len(database_operations['failed']) + len(storage_operations['failed'])}")
+
+    # Print all errors at the end
+    error_count = len(database_operations['failed']) + len(storage_operations['failed'])
+    if error_count:
+        print(f"\n⚠️  Fouten: {error_count}")
+        if database_operations['failed']:
+            print(f"\n❌ Database fouten:")
+            for item in database_operations['failed']:
+                print(f"    • {item}")
+        if storage_operations['failed']:
+            print(f"\n❌ Storage fouten:")
+            for item in storage_operations['failed']:
+                print(f"    • {item}")
     else:
-        print(f"  🎯 Geen fouten!")
+        print(f"\n🎯 Geen fouten!")
 
 # In your sync function, modify the artwork creation
 def create_combined_artwork(base_key: str, grouped_item: Dict[str, Any]) -> Dict[str, Any]:

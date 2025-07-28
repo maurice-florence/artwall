@@ -222,6 +222,7 @@ def extract_metadata_and_content(note_content: str) -> Tuple[Dict[str, Any] | No
             main_content = note_content.split('---META_BEGIN---', 1)[0].strip()
             
             # Parse each line as key: value
+
             for line in meta_block_cleaned.split('\n'):
                 line = line.strip()
                 if ':' in line and not line.startswith('#'):
@@ -229,7 +230,7 @@ def extract_metadata_and_content(note_content: str) -> Tuple[Dict[str, Any] | No
                     key = key.strip()
                     value = value.strip()
 
-                    # Remove only outer quotes, but preserve inner apostrophes and quotes
+                    # Remove outer single or double quotes, but preserve inner quotes
                     if (value.startswith("'") and value.endswith("'")) or (value.startswith('"') and value.endswith('"')):
                         value = value[1:-1]
 
@@ -261,14 +262,8 @@ def extract_metadata_and_content(note_content: str) -> Tuple[Dict[str, Any] | No
                             else:
                                 metadata[key] = ''
                     else:
-                        # Always wrap string values in single quotes for YAML output, escape internal single quotes (never triple quotes)
-                        if isinstance(value, str):
-                            # Escape internal single quotes as two single quotes
-                            safe_value = value.replace("'", "''")
-                            # Only wrap in single quotes, never triple quotes
-                            metadata[key] = f"'{safe_value}'"
-                        else:
-                            metadata[key] = value
+                        # Store string values as-is (no extra wrapping)
+                        metadata[key] = value
             
             # Apply medium/subtype normalization
             if 'medium' in metadata and 'subtype' in metadata:
@@ -373,7 +368,14 @@ def generate_filename(meta: Dict[str, Any], lang: str = None, version: Any = Non
     title = str(meta.get('title', 'untitled')).lower()
     safe_title = re.sub(r'[^a-z0-9]+', '-', title).strip('-')
 
-    filename = f"{date}_{medium}_{subtype}_{safe_title}"
+    # Prevent duplicate subtype in filename (e.g., ..._poem_poem-...)
+    # If safe_title starts with subtype, remove it
+    if safe_title.startswith(subtype + '-'):  # e.g. poem-afronden
+        safe_title = safe_title[len(subtype)+1:]
+
+    filename = f"{date}_{medium}_{subtype}"
+    if safe_title:
+        filename += f"_{safe_title}"
 
     version_int = None
     if version is not None:
@@ -461,7 +463,7 @@ def process_enex_files(source_dir: pathlib.Path, dest_dir: pathlib.Path):
         print("⚠️  Geen .enex bestanden gevonden om te verwerken.")
         return
 
-    report = {'success': [], 'failed': []}
+    report = {'success': [], 'failed': [], 'warnings': []}
     category_counts = {}  # Track notes per category
     medium_counts = {}   # Track notes per medium
     subtype_counts = {}  # Track notes per medium/subtype combination
@@ -471,7 +473,6 @@ def process_enex_files(source_dir: pathlib.Path, dest_dir: pathlib.Path):
     # --- Duplicate title detection ---
     all_titles = []
     title_counts = {}
-    # First pass: collect all titles
     for enex_file in enex_files:
         try:
             enex_content = enex_file.read_text('utf-8')
@@ -488,23 +489,18 @@ def process_enex_files(source_dir: pathlib.Path, dest_dir: pathlib.Path):
             except Exception:
                 continue
 
-    # Build a dict to track the next number for each duplicate title
     duplicate_title_next_number = {}
     for title, count in title_counts.items():
         if count > 1:
             print(f"⚠️  Dubbele titel gevonden: '{title}' komt {count} keer voor. Titels worden genummerd.")
             duplicate_title_next_number[title] = 1
 
-    # Second pass: process notes, renaming duplicates
     for enex_file in enex_files:
         print(f"\n🔄 Verwerken van {enex_file.name} ({enex_file.stat().st_size / (1024*1024):.1f} MB)...")
-        
-        # Check if file is stable (fully written)
         if not wait_for_file_stability(enex_file, max_wait_seconds=120):
             print(f"  ❌ Bestand {enex_file.name} is nog niet stabiel - overslaan")
             report['failed'].append({'title': f"Bestand: {enex_file.name}", 'reason': "Bestand was nog niet volledig geschreven"})
             continue
-        
         try:
             enex_content = enex_file.read_text('utf-8')
             note_contents = re.findall(r'<note>(.*?)</note>', enex_content, re.DOTALL)
@@ -512,142 +508,101 @@ def process_enex_files(source_dir: pathlib.Path, dest_dir: pathlib.Path):
         except Exception as e:
             report['failed'].append({'title': f"Bestand: {enex_file.name}", 'reason': f"Kon bestand niet lezen. Fout: {e}"})
             continue
-
         for note_index, note_str in enumerate(note_contents, 1):
             note_title_raw = "Onbekende Notitie"
             try:
                 note_xml = f"<note>{note_str}</note>"
                 note = ET.fromstring(note_xml)
                 note_title_raw = note.findtext('title', 'Onbekende Titel')
-
-                # --- Duplicate title renaming logic ---
+                # Collect warnings for apostrophe in title
+                if "'" in note_title_raw:
+                    report['warnings'].append(f"⚠️  Titel bevat een apostrof: '{note_title_raw}'. Overweeg deze titel aan te passen.")
+                # Collect warnings for duplicate title renaming
                 original_title = note_title_raw
                 if title_counts.get(original_title, 0) > 1:
-                    # If this is the first occurrence, leave as is, else append number
                     if duplicate_title_next_number[original_title] == 1:
-                        # First occurrence, keep as is
                         new_title = original_title
                     else:
                         new_title = f"{original_title} {duplicate_title_next_number[original_title]}"
-                        print(f"⚠️  Titel '{original_title}' hernoemd naar '{new_title}' vanwege duplicaat.")
-                    # Update for next occurrence
+                        report['warnings'].append(f"⚠️  Titel '{original_title}' hernoemd naar '{new_title}' vanwege duplicaat.")
                     duplicate_title_next_number[original_title] += 1
                     note_title_raw = new_title
-
                 content_xml = note.findtext('content', '')
                 meta, main_content_html = extract_metadata_and_content(content_xml)
                 if meta is not None:
-                    meta['title'] = note_title_raw
-
-                # --- Basis validatie ---
+                    # Always strip everything before and including the first colon and space (': ') in the note title
+                    title_clean = note_title_raw
+                    colon_pos = title_clean.find(': ')
+                    if colon_pos != -1:
+                        title_clean = title_clean[colon_pos + 2:].lstrip()
+                    meta['title'] = title_clean
                 if meta is None:
                     raise ValueError(main_content_html)
-
-                # Get resources for auto-detection
                 resources = note.findall('resource')
-
-                # Auto-detect medium/subtype if not provided
                 if 'medium' not in meta or 'subtype' not in meta:
                     detected_medium, detected_subtype = auto_detect_medium_subtype_from_content(main_content_html, resources)
                     if 'medium' not in meta:
                         meta['medium'] = detected_medium
-                        print(f"    🔍 Auto-detected medium: {detected_medium}")
+                        report['warnings'].append(f"🔍 Auto-detected medium: {detected_medium} for '{note_title_raw}'")
                     if 'subtype' not in meta:
                         meta['subtype'] = detected_subtype
-                        print(f"    🔍 Auto-detected subtype: {detected_subtype}")
-
-                    # Set legacy category based on detected medium
+                        report['warnings'].append(f"🔍 Auto-detected subtype: {detected_subtype} for '{note_title_raw}'")
                     if 'category' not in meta:
-                        # Legacy mapping removed. Use only new medium/subtype logic or fallback
                         meta['category'] = 'other'
-
                 medium = meta.get('medium', 'other')
                 subtype = meta.get('subtype', 'other')
-
-                # --- Pre-processing voor validatie ---
                 translation_delimiter = r'---TRANSLATION_([a-z]{2})---'
                 split_result = re.split(translation_delimiter, main_content_html, flags=re.IGNORECASE)
                 parts = [split_result[i] for i in range(0, len(split_result), 2)]
                 has_translations = len(parts) > 1
                 num_translation_parts = len(parts)
-
                 has_resources = len(resources) > 0
-
-                # --- Uitgebreide validatie ---
                 validation_errors = validate_note_metadata(
                     meta,
-                    medium,  # Use medium instead of legacy category
+                    medium,
                     has_translations=has_translations,
                     num_translation_parts=num_translation_parts,
                     has_resources=has_resources
                 )
-
                 if validation_errors:
                     error_msg = "Validatiefouten: " + "; ".join(validation_errors)
                     raise ValueError(error_msg)
-
-                # Count notes per medium and subtype
                 medium_counts[medium] = medium_counts.get(medium, 0) + 1
                 subtype_key = f"{medium}/{subtype}"
                 subtype_counts[subtype_key] = subtype_counts.get(subtype_key, 0) + 1
-
-                # --- Verwerking ---
                 medium_folder = dest_dir / medium
                 medium_folder.mkdir(parents=True, exist_ok=True)
-
-                created_files_log = []
-
-                # --- Logica voor vertalingen en tekstbestanden ---
+                created_files_count = 0
                 if medium in ['writing', 'audio']:
                     translation_delimiter = r'---TRANSLATION_([a-z]{2})---'
                     split_result = re.split(translation_delimiter, main_content_html, flags=re.IGNORECASE)
-
-                    # re.split with capturing groups returns: [text1, captured_group1, text2, captured_group2, ...]
-                    # We only want the actual text parts (even indices)
                     parts = [split_result[i] for i in range(0, len(split_result), 2)]
-
                     languages_from_meta = [l for l in [meta.get('language1'), meta.get('language2'), meta.get('language3')] if l]
-
                     if len(parts) != len(languages_from_meta):
                         raise ValueError(f"Aantal tekstblokken ({len(parts)}) komt niet overeen met het aantal talen in metadata ({len(languages_from_meta)}). Gevonden delen: {len(parts)}, verwachte talen: {len(languages_from_meta)}")
-
                     for i, lang_code in enumerate(languages_from_meta):
                         content_html = parts[i]
-
-                        # Create ordered metadata with 'language' placed before other language fields
                         meta_lang = {}
                         for key, value in meta.items():
                             meta_lang[key] = value
-                            # Insert 'language' right after 'version' and before 'language1'
                             if key == 'version':
                                 meta_lang['language'] = lang_code
-
-                        # Do not auto-generate description. Only use if present in metadata.
-
                         filename_lang = generate_filename(meta, lang=lang_code)
                         file_path = medium_folder / f"{filename_lang}.html"
                         generate_html_file(meta_lang, content_html, file_path)
-                        print(f"    📄 File saved: {file_path}")
-                        file_status = "Overschreven" if file_path.exists() else "Nieuw"
-                        created_files_log.append(f"{file_path.name} ({file_status})")
-
-                # --- Save all attached resources for all mediums, but only if before ---META_BEGIN--- ---
+                        created_files_count += 1
                 if resources:
-                    # Split note content into three sections: before META_BEGIN, metadata block, after META_END
                     meta_begin_pos = content_xml.find('---META_BEGIN---')
                     meta_end_pos = content_xml.find('---META_END---')
                     before_meta = content_xml[:meta_begin_pos] if meta_begin_pos != -1 else content_xml
                     after_meta = content_xml[meta_end_pos + len('---META_END---'):] if meta_end_pos != -1 else ''
-                    # Only save resources whose base64 data appears in before_meta (not in metadata block or after_meta)
                     for idx, resource in enumerate(resources):
                         data_b64 = resource.findtext('data')
                         if not data_b64:
                             continue
-                        # Only save if data_b64 appears in before_meta, and NOT in metadata block or after_meta
                         in_before = before_meta.find(data_b64) != -1
                         in_meta_block = False
                         in_after = after_meta.find(data_b64) != -1
-                        # Optionally, check metadata block
                         if meta_begin_pos != -1 and meta_end_pos != -1:
                             meta_block = content_xml[meta_begin_pos:meta_end_pos + len('---META_END---')]
                             in_meta_block = meta_block.find(data_b64) != -1
@@ -657,80 +612,67 @@ def process_enex_files(source_dir: pathlib.Path, dest_dir: pathlib.Path):
                         file_name = resource.findtext('file-name', '')
                         ext = ''
                         data_bytes = base64.b64decode(data_b64)
-                        # Detect audio type by binary header
                         if medium == 'audio':
-                            # MIDI: starts with 'MThd'
                             if data_bytes[:4] == b'MThd':
                                 ext = '.midi'
-                            # MP3: starts with ID3 or 0xFFFB/0xFFF3/0xFFFA
                             elif data_bytes[:3] == b'ID3' or (len(data_bytes) > 1 and data_bytes[0] == 0xFF and data_bytes[1] in [0xFB, 0xF3, 0xFA]):
                                 ext = '.mp3'
-                            # WAV: starts with 'RIFF' and 'WAVE' at offset 8
                             elif data_bytes[:4] == b'RIFF' and data_bytes[8:12] == b'WAVE':
                                 ext = '.wav'
-                            # OGG: starts with 'OggS'
                             elif data_bytes[:4] == b'OggS':
                                 ext = '.ogg'
-                            # FLAC: starts with 'fLaC'
                             elif data_bytes[:4] == b'fLaC':
                                 ext = '.flac'
-                            # AAC: ADTS header 0xFFF1 or 0xFFF9
                             elif len(data_bytes) > 1 and data_bytes[0] == 0xFF and data_bytes[1] in [0xF1, 0xF9]:
                                 ext = '.aac'
-                            # M4A: starts with 'ftypM4A' at offset 4
                             elif data_bytes[4:11] == b'ftypM4A':
                                 ext = '.m4a'
                             else:
                                 ext = '.dat'
                         else:
-                            # Use original filename extension if present
                             if file_name and '.' in file_name:
                                 ext = os.path.splitext(file_name)[1].lower()
-                            if not ext:
-                                # Fallback to MIME type detection
-                                if 'jpeg' in mime or 'jpg' in mime:
-                                    ext = '.jpg'
-                                elif 'png' in mime:
-                                    ext = '.png'
-                                elif 'gif' in mime:
-                                    ext = '.gif'
-                                elif 'webp' in mime:
-                                    ext = '.webp'
-                                elif 'mp3' in mime:
-                                    ext = '.mp3'
-                                elif 'wav' in mime:
-                                    ext = '.wav'
-                                elif 'ogg' in mime:
-                                    ext = '.ogg'
-                                elif 'flac' in mime:
-                                    ext = '.flac'
-                                elif 'aac' in mime:
-                                    ext = '.aac'
-                                elif 'm4a' in mime:
-                                    ext = '.m4a'
-                                elif 'mp4' in mime:
-                                    ext = '.mp4'
-                                elif 'webm' in mime:
-                                    ext = '.webm'
-                                elif 'mov' in mime:
-                                    ext = '.mov'
-                                elif 'pdf' in mime:
-                                    ext = '.pdf'
-                                elif 'svg' in mime:
-                                    ext = '.svg'
-                                elif 'audio' in mime:
-                                    ext = '.mp3'
-                                else:
-                                    ext = '.dat'
-
+                        if not ext:
+                            if 'jpeg' in mime or 'jpg' in mime:
+                                ext = '.jpg'
+                            elif 'png' in mime:
+                                ext = '.png'
+                            elif 'gif' in mime:
+                                ext = '.gif'
+                            elif 'webp' in mime:
+                                ext = '.webp'
+                            elif 'mp3' in mime:
+                                ext = '.mp3'
+                            elif 'wav' in mime:
+                                ext = '.wav'
+                            elif 'ogg' in mime:
+                                ext = '.ogg'
+                            elif 'flac' in mime:
+                                ext = '.flac'
+                            elif 'aac' in mime:
+                                ext = '.aac'
+                            elif 'm4a' in mime:
+                                ext = '.m4a'
+                            elif 'mp4' in mime:
+                                ext = '.mp4'
+                            elif 'webm' in mime:
+                                ext = '.webm'
+                            elif 'mov' in mime:
+                                ext = '.mov'
+                            elif 'pdf' in mime:
+                                ext = '.pdf'
+                            elif 'svg' in mime:
+                                ext = '.svg'
+                            elif 'audio' in mime:
+                                ext = '.mp3'
+                            else:
+                                ext = '.dat'
                         version = idx + 1
                         media_filename = generate_filename(meta, version=version)
                         media_path = medium_folder / f"{media_filename}{ext}"
                         media_path.write_bytes(data_bytes)
-                        print(f"    📄 File saved: {media_path}")
-                        media_file_status = "Overschreven" if media_path.exists() else "Nieuw"
-                        created_files_log.append(f"{media_path.name} ({media_file_status})")
-                    # Only generate the main HTML file for non-writing/audio mediums
+                        created_files_count += 1
+                    created_files_log = []
                     if medium not in ['writing', 'audio']:
                         meta_with_lang = {}
                         for key, value in meta.items():
@@ -738,19 +680,14 @@ def process_enex_files(source_dir: pathlib.Path, dest_dir: pathlib.Path):
                             if key == 'version':
                                 primary_lang = meta.get('language1', 'en')
                                 meta_with_lang['language'] = primary_lang
-
-                        # Do not auto-generate description. Only use if present in metadata.
-
                         base_filename = generate_filename(meta)
                         html_path = medium_folder / f"{base_filename}.html"
                         generate_html_file(meta_with_lang, main_content_html, html_path)
-                        print(f"    📄 File saved: {html_path}")
-                        html_file_status = "Overschreven" if html_path.exists() else "Nieuw"
-                        created_files_log.append(f"{html_path.name} ({html_file_status})")
-
+                        created_files_count += 1
                     if not resources:
                         raise ValueError(f"Medium is '{medium}' maar er is geen afbeelding/bestand bijgevoegd.")
 
+                    # Process media files
                     for idx, resource in enumerate(resources):
                         mime = resource.findtext('mime', '')
                         file_name = resource.findtext('file-name', '')
@@ -759,96 +696,57 @@ def process_enex_files(source_dir: pathlib.Path, dest_dir: pathlib.Path):
                         if not data_b64:
                             continue
                         data_bytes = base64.b64decode(data_b64)
-                        # Detect audio type by binary header
-                        if medium == 'audio':
-                            # MIDI: starts with 'MThd'
-                            if data_bytes[:4] == b'MThd':
-                                ext = '.midi'
-                            # MP3: starts with ID3 or 0xFFFB/0xFFF3/0xFFFA
-                            elif data_bytes[:3] == b'ID3' or (len(data_bytes) > 1 and data_bytes[0] == 0xFF and data_bytes[1] in [0xFB, 0xF3, 0xFA]):
+                        if not ext:
+                            if 'jpeg' in mime or 'jpg' in mime:
+                                ext = '.jpg'
+                            elif 'png' in mime:
+                                ext = '.png'
+                            elif 'gif' in mime:
+                                ext = '.gif'
+                            elif 'webp' in mime:
+                                ext = '.webp'
+                            elif 'mp3' in mime:
                                 ext = '.mp3'
-                            # WAV: starts with 'RIFF' and 'WAVE' at offset 8
-                            elif data_bytes[:4] == b'RIFF' and data_bytes[8:12] == b'WAVE':
+                            elif 'wav' in mime:
                                 ext = '.wav'
-                            # OGG: starts with 'OggS'
-                            elif data_bytes[:4] == b'OggS':
+                            elif 'ogg' in mime:
                                 ext = '.ogg'
-                            # FLAC: starts with 'fLaC'
-                            elif data_bytes[:4] == b'fLaC':
+                            elif 'flac' in mime:
                                 ext = '.flac'
-                            # AAC: ADTS header 0xFFF1 or 0xFFF9
-                            elif len(data_bytes) > 1 and data_bytes[0] == 0xFF and data_bytes[1] in [0xF1, 0xF9]:
+                            elif 'aac' in mime:
                                 ext = '.aac'
-                            # M4A: starts with 'ftypM4A' at offset 4
-                            elif data_bytes[4:11] == b'ftypM4A':
+                            elif 'm4a' in mime:
                                 ext = '.m4a'
+                            elif 'mp4' in mime:
+                                ext = '.mp4'
+                            elif 'webm' in mime:
+                                ext = '.webm'
+                            elif 'mov' in mime:
+                                ext = '.mov'
+                            elif 'pdf' in mime:
+                                ext = '.pdf'
+                            elif 'svg' in mime:
+                                ext = '.svg'
+                            elif 'audio' in mime:
+                                ext = '.mp3'
                             else:
                                 ext = '.dat'
-                        else:
-                            # Use original filename extension if present
-                            if file_name and '.' in file_name:
-                                ext = os.path.splitext(file_name)[1].lower()
-                            if not ext:
-                                # Fallback to MIME type detection
-                                if 'jpeg' in mime or 'jpg' in mime:
-                                    ext = '.jpg'
-                                elif 'png' in mime:
-                                    ext = '.png'
-                                elif 'gif' in mime:
-                                    ext = '.gif'
-                                elif 'webp' in mime:
-                                    ext = '.webp'
-                                elif 'mp3' in mime:
-                                    ext = '.mp3'
-                                elif 'wav' in mime:
-                                    ext = '.wav'
-                                elif 'ogg' in mime:
-                                    ext = '.ogg'
-                                elif 'flac' in mime:
-                                    ext = '.flac'
-                                elif 'aac' in mime:
-                                    ext = '.aac'
-                                elif 'm4a' in mime:
-                                    ext = '.m4a'
-                                elif 'mp4' in mime:
-                                    ext = '.mp4'
-                                elif 'webm' in mime:
-                                    ext = '.webm'
-                                elif 'mov' in mime:
-                                    ext = '.mov'
-                                elif 'pdf' in mime:
-                                    ext = '.pdf'
-                                elif 'svg' in mime:
-                                    ext = '.svg'
-                                elif 'audio' in mime:
-                                    ext = '.mp3'
-                                else:
-                                    ext = '.dat'
-
                         version = idx + 1
                         media_filename = generate_filename(meta, version=version)
                         media_path = medium_folder / f"{media_filename}{ext}"
                         media_path.write_bytes(data_bytes)
-                        print(f"    📄 File saved: {media_path}")
-                        media_file_status = "Overschreven" if media_path.exists() else "Nieuw"
-                        created_files_log.append(f"{media_path.name} ({media_file_status})")
-                
-                report['success'].append({'title': meta.get('title', note_title_raw), 'files': created_files_log})
+                        # print(f"    📄 File saved: {media_path}")  # Verbose output removed
+                        # media_file_status = "Overschreven" if media_path.exists() else "Nieuw"
+                        # created_files_log.append(f"{media_path.name} ({media_file_status})")
+
+                    report['success'].append({'title': meta.get('title', note_title_raw), 'files': created_files_log})
 
             except Exception as e:
                 report['failed'].append({'title': note_title_raw, 'reason': str(e)})
 
     # --- Rapportage ---
-    print("\n" + "="*50)
-    print("📊 OVERZICHT GEVONDEN NOTITIES PER CATEGORIE (LEGACY)")
-    print("="*50)
-    if category_counts:
-        for category, count in sorted(category_counts.items()):
-            print(f"  {category:15} : {count:3} notities")
-        print(f"\n  {'TOTAAL':15} : {sum(category_counts.values()):3} notities")
-    else:
-        print("  Geen notities gevonden.")
-    
+    # Legacy category summary removed
+
     print("\n" + "="*50)
     print("🎨 OVERZICHT GEVONDEN NOTITIES PER MEDIUM")
     print("="*50)
@@ -858,7 +756,7 @@ def process_enex_files(source_dir: pathlib.Path, dest_dir: pathlib.Path):
         print(f"\n  {'TOTAAL':15} : {sum(medium_counts.values()):3} notities")
     else:
         print("  Geen notities gevonden.")
-    
+
     print("\n" + "="*50)
     print("🔧 OVERZICHT GEVONDEN NOTITIES PER MEDIUM/SUBTYPE")
     print("="*50)
@@ -868,18 +766,16 @@ def process_enex_files(source_dir: pathlib.Path, dest_dir: pathlib.Path):
         print(f"\n  {'TOTAAL':20} : {sum(subtype_counts.values()):3} notities")
     else:
         print("  Geen notities gevonden.")
-    
-    print("\n" + "="*50)
-    print("✅ SUCCESVOL VERWERKTE NOTITIES")
-    print("="*50)
-    if report['success']:
-        for item in report['success']:
-            print(f"✅ {item['title']}")
-            for file_info in item['files']:
-                print(f"    📄 {file_info}")
-    else:
-        print("  Geen notities succesvol verwerkt.")
-    
+
+    # print("\n" + "="*50)
+    # print("✅ SUCCESVOL VERWERKTE NOTITIES")
+    # print("="*50)
+    # if report['success']:
+    #     for item in report['success']:
+    #         print(f"✅ {item['title']} ({len(item['files'])} bestanden aangemaakt)")
+    # else:
+    #     print("  Geen notities succesvol verwerkt.")
+
     if report['failed']:
         print("\n" + "="*50)
         print("❌ NIET VERWERKTE NOTITIES")
@@ -887,7 +783,14 @@ def process_enex_files(source_dir: pathlib.Path, dest_dir: pathlib.Path):
         for item in report['failed']:
             print(f"❌ {item['title']}")
             print(f"    💬 Reden: {item['reason']}")
-    
+
+    if report['warnings']:
+        print("\n" + "="*50)
+        print("⚠️  WAARSCHUWINGEN & PARSING ISSUES")
+        print("="*50)
+        for warning in report['warnings']:
+            print(warning)
+
     print("\n" + "="*50)
 
 def validate_note_metadata(meta: Dict[str, Any], category: str, has_translations: bool = False, num_translation_parts: int = 0, has_resources: bool = False) -> List[str]:
