@@ -1,21 +1,22 @@
 import { render, screen } from '@testing-library/react';
 import Header from './Header';
+import { vi } from 'vitest';
 
 const mockProps = {
-  onToggleSidebar: jest.fn(),
+  onToggleSidebar: vi.fn(),
   isSidebarOpen: true,
   selectedMedium: 'drawing',
-  setSelectedMedium: jest.fn(),
+  setSelectedMedium: vi.fn(),
   selectedSubtype: 'sketch',
-  setSelectedSubtype: jest.fn(),
+  setSelectedSubtype: vi.fn(),
   searchTerm: '',
-  setSearchTerm: jest.fn(),
+  setSearchTerm: vi.fn(),
   sortOrder: 'asc',
-  setSortOrder: jest.fn(),
+  setSortOrder: vi.fn(),
   filterYear: null,
-  setFilterYear: jest.fn(),
+  setFilterYear: vi.fn(),
   selectedYear: '2020',
-  setSelectedYear: jest.fn(),
+  setSelectedYear: vi.fn(),
   availableMediums: ['drawing', 'writing'],
   availableYears: ['2020', '2021'],
 };

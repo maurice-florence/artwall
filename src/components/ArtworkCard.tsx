@@ -4,37 +4,7 @@ import styled, { useTheme } from 'styled-components';
 import { Artwork, ArtworkMedium } from '@/types';
 import cardSizesJson from '@/constants/card-sizes.json';
 
-// Top-level GeneratedTextLinesSVG for poetry/prosepoetry: lines of text
-const GeneratedTextLinesSVG: React.FC<{ width?: number; height?: number; lines?: number }> = ({ width = 120, height = 48, lines = 6 }) => {
-  const theme = useTheme();
-  const lineSpacing = height / (lines + 1);
-  const minLen = width * 0.4;
-  const maxLen = width * 0.9;
-  const accent = theme.accent || '#1F618D';
-  const bg = theme.cardBg || '#fff';
-  return (
-    <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ width: '100%', height }}>
-      <rect x="0" y="0" width={width} height={height} fill={bg} />
-      {Array.from({ length: lines }).map((_, i) => {
-        // Randomize line length and y offset for a hand-drawn feel
-        const len = minLen + Math.random() * (maxLen - minLen);
-        const y = lineSpacing * (i + 1) + (Math.random() - 0.5) * 2;
-        return (
-          <rect
-            key={i}
-            x={width * 0.05}
-            y={y}
-            width={len}
-            height={4 + Math.random() * 2}
-            rx={2}
-            fill={accent}
-            opacity={0.7 + Math.random() * 0.2}
-          />
-        );
-      })}
-    </svg>
-  );
-};
+// Removed WritingCardSVG import
 
 
 
@@ -356,111 +326,6 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin }: ArtworkCardProps) => {
     }
 
 
-    // Generate a random bar waveform SVG as a React component
-    const RandomBarWaveform: React.FC<{ width?: number; height?: number; bars?: number }> = ({ width = 180, height = 48, bars = 48 }) => {
-      const barWidth = width / bars;
-      const barsArray = Array.from({ length: bars }, (_, i) => {
-        const base = Math.sin((i / (bars - 1)) * Math.PI * 2) * 0.5 + 0.5;
-        const noise = (Math.random() - 0.5) * 0.7 + (Math.random() - 0.5) * 0.5;
-        const mixed = 0.5 * base + 0.5 * (0.5 + noise);
-        const barHeight = Math.max(4, Math.min(height, mixed * height * (0.7 + Math.random() * 0.7)));
-        return barHeight;
-      });
-      const waveColor = theme.accent || '#1F618D';
-      const bgColor = theme.cardBg || '#fff';
-      return (
-        <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ width: '100%', height }}>
-          <rect x="0" y="0" width={width} height={height} fill={bgColor} />
-          {barsArray.map((barHeight, i) => {
-            const x = i * barWidth + barWidth / 2;
-            const y = (height - barHeight) / 2;
-            return (
-              <rect
-                key={i}
-                x={x - barWidth / 4}
-                y={y}
-                width={barWidth / 2}
-                height={barHeight}
-                rx={barWidth / 6}
-                fill={waveColor}
-                opacity={0.85}
-              />
-            );
-          })}
-        </svg>
-      );
-    };
-
-    // Generate a random abstract figure SVG for drawing/sculpture
-    const RandomFigureSVG: React.FC = () => {
-      const width = 120;
-      const height = 60;
-      const figureColor = theme.accent || '#1F618D';
-      const bgColor = theme.cardBg || '#fff';
-      // All shapes will fit within the SVG bounds (0,0)-(120,60)
-      // Random ellipses
-      const ellipses = Array.from({ length: 2 + Math.floor(Math.random() * 2) }, (_, i) => {
-        const rx = 20 + Math.random() * 30; // max 50
-        const ry = 10 + Math.random() * 20; // max 30
-        const cx = rx + Math.random() * (width - 2 * rx); // always inside
-        const cy = ry + Math.random() * (height - 2 * ry); // always inside
-        const rot = Math.random() * 360;
-        return (
-          <ellipse
-            key={`ellipse-${i}`}
-            cx={cx}
-            cy={cy}
-            rx={rx}
-            ry={ry}
-            fill={figureColor}
-            opacity={0.18 + Math.random() * 0.18}
-            transform={`rotate(${rot} ${cx} ${cy})`}
-          />
-        );
-      });
-      // Random lines
-      const lines = Array.from({ length: 2 + Math.floor(Math.random() * 2) }, (_, i) => {
-        const x1 = Math.random() * width;
-        const y1 = Math.random() * height;
-        const x2 = Math.random() * width;
-        const y2 = Math.random() * height;
-        return (
-          <line
-            key={`line-${i}`}
-            x1={x1}
-            y1={y1}
-            x2={x2}
-            y2={y2}
-            stroke={figureColor}
-            strokeWidth={2 + Math.random() * 3}
-            opacity={0.4 + Math.random() * 0.3}
-            strokeLinecap="round"
-          />
-        );
-      });
-      // Random polygon (triangle or quad)
-      const nPoints = 3 + Math.floor(Math.random() * 2);
-      const points = Array.from({ length: nPoints }, () => {
-        const x = 10 + Math.random() * (width - 20);
-        const y = 10 + Math.random() * (height - 20);
-        return `${x},${y}`;
-      }).join(' ');
-      return (
-        <svg
-          viewBox="0 0 120 60"
-          width="100%"
-          height="100%"
-          style={{ display: 'block', width: '100%', height: '100%' }}
-          preserveAspectRatio="none"
-        >
-          <rect x="0" y="0" width={120} height={60} fill={bgColor} />
-          {ellipses}
-          {lines}
-          <polygon points={points} fill={figureColor} opacity={0.22 + Math.random() * 0.18} />
-        </svg>
-      );
-    };
-
     // Slider state for all cards with images, only on card back
     const [currentImage, setCurrentImage] = useState(0);
 
@@ -483,7 +348,7 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin }: ArtworkCardProps) => {
               <div style={{ flex: 1, minHeight: 0, minWidth: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 4 }}>
                 {artwork.medium === 'audio' ? (
                   <div style={{ width: '100%', height: 60, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <RandomBarWaveform width={180} height={48} bars={48} />
+                    {/* SVG removed */}
                   </div>
                 ) : artwork.medium === 'writing' && subtype === 'novel' && images.length > 0 ? (
                   <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: 0, padding: 0 }}>
@@ -501,11 +366,11 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin }: ArtworkCardProps) => {
                   </div>
                 ) : artwork.medium === 'writing' && (subtype === 'poetry' || subtype === 'prosepoetry') ? (
                   <div style={{ width: '100%', height: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: 0, padding: 0 }}>
-                    <GeneratedTextLinesSVG width={120} height={48} lines={6} />
+                    {/* SVG removed */}
                   </div>
-                ) : artwork.medium === 'writing' ? (
+                ) : artwork.medium === 'writing' && subtype !== 'poetry' ? (
                   <div style={{ width: '100%', height: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: 0, padding: 0 }}>
-                    <FaAlignLeft size={26} color={theme.accent || '#1F618D'} />
+                    {/* SVG removed */}
                   </div>
                 ) : images.length > 0 ? (
                   <div style={{ width: '100%', height: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: 0, padding: 0 }}>

@@ -8,8 +8,9 @@ import AdminModal from '@/components/AdminModal';
 import NewEntryModal from '@/components/NewEntryModal';
 import { useArtworks } from '@/context/ArtworksContext';
 import React from 'react';
+import { vi } from 'vitest';
 
-jest.mock('@/context/ArtworksContext');
+vi.mock('@/context/ArtworksContext');
 
 const mockArtworks = [
   {
@@ -36,7 +37,7 @@ const mockArtworks = [
 
 describe('Artwall App Integration', () => {
   beforeEach(() => {
-    (useArtworks as jest.Mock).mockReturnValue({ artworks: mockArtworks, isLoading: false });
+    (useArtworks as vi.Mock).mockReturnValue({ artworks: mockArtworks, isLoading: false });
   });
 
   it('renders HomePage and shows visible artworks', () => {

@@ -21,7 +21,7 @@ const mockArtworks: Artwork[] = [
 
 describe('Sidebar', () => {
   it('renders without crashing and displays artwork title', () => {
-    render(<Sidebar isOpen={true} allArtworks={mockArtworks} />);
+    render(<Sidebar isOpen={true} allArtworks={mockArtworks} onClose={() => {}} />);
     // Use data-testid for Sidebar root and artwork item
     expect(screen.getByTestId('sidebar')).toBeInTheDocument();
     expect(screen.getByTestId('artwork-title-1')).toHaveTextContent('Test');

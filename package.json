@@ -13,8 +13,8 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
+    "@testing-library/jest-dom": "^6.6.4",
     "@wavesurfer/react": "^1.0.11",
-    "csv-parser": "^3.2.0",
     "firebase": "^11.9.1",
     "firebase-admin": "^13.4.0",
     "next": "15.3.4",
@@ -29,9 +29,7 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@next/bundle-analyzer": "^15.3.5",
-    "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.3.0",
-    "@types/jest": "^30.0.0",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
@@ -43,10 +41,7 @@
     "eslint": "^9",
     "eslint-config-next": "15.3.4",
     "identity-obj-proxy": "^3.0.0",
-    "jest": "^30.0.4",
-    "jest-environment-jsdom": "^30.0.4",
     "jsdom": "^26.1.0",
-    "ts-jest": "^29.4.0",
     "ts-node": "^10.9.2",
     "typescript": "^5",
     "vitest": "^3.2.4",
