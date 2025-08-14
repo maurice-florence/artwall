@@ -185,6 +185,9 @@ def extract_metadata_and_content(note_content: str) -> Tuple[Dict[str, Any] | No
         main_content = note_content.split('---META_BEGIN---', 1)[0].strip()
         
         # Convert to lowercase keys
+        # Remove all empty lines before processing
+        # metadata = {str(k).lower(): v for k, v in metadata.items() if v != ''}
+
         metadata = {str(k).lower(): v for k, v in metadata.items()}
         
         # Handle medium/subtype mapping

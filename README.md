@@ -28,6 +28,10 @@ A modern, interactive timeline and archive for creative works, built with Next.j
 - **Statistics** page for quick insights.
 - **Accessible, responsive UI** for all devices.
 - **Dutch/English**: UI and code comments are in English, some labels in Dutch.
+- **React Hot Toast** for notifications.
+- **React Icons** for UI icons.
+- **React Markdown** for rendering markdown content.
+- **Wavesurfer.js** for audio waveform visualization.
 
 ---
 
@@ -53,9 +57,11 @@ The project is organized as follows:
 - `src/components/` — Reusable UI components (cards, modals, sidebar, header, etc.).
 - `src/context/` — Context providers for global state management.
 - `src/types/` — TypeScript types for the app.
-- `src/constants/medium.ts` — App-wide constants (mediums, subtypes, labels).
-- `src/themes.ts` — Theme definitions for styled-components.
-- `src/firebase.ts` — Firebase configuration and exports.
+- `src/constants/` — App-wide constants (categories, mediums, etc.).
+- `src/firebase/` — Firebase configuration and exports.
+- `src/lib/` — Application library files.
+- `src/utils/` — Utility functions.
+- `src/__mocks__/` — Mocks for testing.
 - `public/` — Static assets (SVGs, images).
 
 ### **Key Files**
@@ -64,6 +70,9 @@ The project is organized as follows:
 - `src/components/Modal.tsx` — Modal for displaying artwork details.
 - `src/components/AdminModal.tsx` — Admin interface for editing and adding artworks.
 - `src/firebase.ts` — Firebase initialization and service exports.
+- `src/themes.ts` — Theme definitions for styled-components.
+- `GlobalStyle.ts` — Global CSS styles.
+- `styled.d.ts` — TypeScript definitions for styled-components.
 - `firebase-master-sync.py` — Script for syncing local files with Firebase.
 - `evernote-to-files.py` — Script for converting Evernote `.enex` files to local `.html` files.
 - `firebase-status-checker.py` — Script for checking the status of the database and storage.
@@ -187,6 +196,17 @@ npm run dev
 ```bash
 npm run build && npm start
 ```
+
+---
+
+## Testing
+
+The project uses **Vitest** for unit and integration testing and **Cypress** for end-to-end testing.
+
+- **Run unit tests:** `npm test`
+- **Run tests in watch mode:** `npm run test:watch`
+- **View test coverage:** `npm run test:coverage`
+- **Run Cypress tests:** `npx cypress open` (or `npm run cypress:open` if you add it to scripts)
 
 ---
 
