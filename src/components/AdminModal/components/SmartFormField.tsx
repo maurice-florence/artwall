@@ -6,7 +6,7 @@ export interface SmartFormFieldProps {
   label: string;
   field: keyof ArtworkFormData;
   value: any;
-  onChange: (field: keyof ArtworkFormData, value: any) => void;
+      onChange: (field: keyof ArtworkFormData, value: any) => void;
   type?: 'text' | 'number' | 'url' | 'textarea' | 'select' | 'multiselect' | 'file' | 'richtext' | 'color' | 'date' | 'tags';
   placeholder?: string;
   required?: boolean;

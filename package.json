@@ -15,7 +15,7 @@
   "dependencies": {
     "@testing-library/jest-dom": "^6.6.4",
     "@wavesurfer/react": "^1.0.11",
-    "firebase": "^11.9.1",
+    "firebase": "^11.10.0",
     "firebase-admin": "^13.4.0",
     "next": "15.3.4",
     "react": "^19.0.0",

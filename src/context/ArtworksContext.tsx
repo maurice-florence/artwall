@@ -47,6 +47,7 @@ export const ArtworksProvider: React.FC<{ children: ReactNode }> = ({ children }
           }
         });
       }
+      console.log('Loaded artworks:', loadedArtworks);
       setArtworks(loadedArtworks);
       setIsLoading(false);
     });

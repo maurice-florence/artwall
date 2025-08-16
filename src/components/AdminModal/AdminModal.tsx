@@ -4,6 +4,7 @@
 
 import React, { useRef, useEffect } from "react";
 import { AdminModalProps } from './types';
+import { ArtworkFormData } from '@/types';
 import { useAdminModal } from './hooks/useAdminModal';
 import { 
   BasicInfoForm, 

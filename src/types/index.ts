@@ -87,6 +87,10 @@ export interface ArtworkTranslation {
 
 // Formulier gegevens interface
 export interface ArtworkFormData {
+  id?: string;
+  translations?: { [languageCode: string]: ArtworkTranslation };
+  recordCreationDate?: number;
+  recordLastUpdated?: number;
   title: string;
   year: number;
   month?: number;
