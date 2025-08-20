@@ -1,5 +1,5 @@
 import React, { createContext, useState, ReactNode } from 'react';
-import { atelierTheme, blueprintTheme, darkModeTheme, ThemeName, Theme } from '../themes';
+import { atelierTheme, blueprintTheme, darkModeTheme, tealTheme, ThemeName, Theme } from '../themes';
 import { ThemeProvider as StyledThemeProvider } from 'styled-components';
 
 // Definieer het type voor de waarde van de context
@@ -27,6 +27,7 @@ export const ThemeContext = createContext<ThemeContextType>({
 const themes: Record<ThemeName, Theme> = {
   blueprint: blueprintTheme,
   dark: darkModeTheme,
+  teal: tealTheme,
 };
 
 export const ThemeProvider = ({ children }: { children: ReactNode }) => {

@@ -160,11 +160,43 @@ export const earthTheme = {
   textSecondary: '#6b7280',
 };
 
+export const tealTheme = {
+  body: '#E0F2F1',
+  text: '#004D40',
+  headerBg: '#00796B',
+  headerText: '#FFFFFF',
+  accent: '#00BFA5',
+  accentText: '#FFFFFF',
+  cardBg: '#FFFFFF',
+  cardText: '#004D40',
+  categories: {
+    music: '#00796B',
+    poem: '#00BFA5',
+    prosepoem: '#4DB6AC',
+    prose: '#80CBC4',
+    sculpture: '#26A69A',
+    drawing: '#00897B',
+  },
+  cardBackgrounds: {
+    default: '#FFFFFF',
+    music: 'linear-gradient(135deg, #00796B 0%, #004D40 100%)',
+    poem: 'repeating-linear-gradient(135deg, #e0f2f1 0px, #e0f2f1 8px, #b2dfdb 8px, #ffffff 16px)',
+    prose: 'linear-gradient(120deg, #e0f2f1 0%, #ffffff 100%)',
+    sculpture: 'radial-gradient(circle at 70% 70%, #b2dfdb 60%, #e0f2f1 100%)',
+    drawing: 'repeating-linear-gradient(120deg, #e0f2f1 0px, #e0f2f1 10px, #f8f9f9 10px, #f8f9f9 20px)',
+  },
+  primary: '#00796B',
+  cardHeight: 160,
+  gridGap: 16,
+  border: '#B2DFDB',
+  textSecondary: '#00695C',
+};
 
 export const themes = {
   blueprint: blueprintTheme,
   dark: darkModeTheme,
+  teal: tealTheme,
 };
 
 export type Theme = typeof atelierTheme;
-export type ThemeName = 'blueprint' | 'dark';
+export type ThemeName = 'blueprint' | 'dark' | 'teal';

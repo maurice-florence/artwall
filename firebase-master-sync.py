@@ -18,7 +18,7 @@ import xml.etree.ElementTree as ET
 SOURCE_MEDIA_FOLDER = pathlib.Path('G:/Mijn Drive/Creatief/Artwall')
 
 # Pad naar uw Firebase service account sleutel
-SERVICE_ACCOUNT_KEY_PATH = pathlib.Path(__file__).parent / 'serviceAccountKey_artwall.json'
+SERVICE_ACCOUNT_KEY_PATH = os.getenv('GOOGLE_APPLICATION_CREDENTIALS')
 DATABASE_URL = "https://artwall-by-jr-default-rtdb.europe-west1.firebasedatabase.app/"
 STORAGE_BUCKET = "artwall-by-jr.firebasestorage.app"  # Remove the gs:// prefix
 
@@ -351,6 +351,11 @@ def sync_to_firebase(force_update: bool = False):
     if force_update:
         print("🔄 FORCE UPDATE MODE - Alle bestanden worden overschreven")
     print("=" * 50)
+
+    if not SERVICE_ACCOUNT_KEY_PATH:
+        print("❌ Fout: De omgevingsvariabele GOOGLE_APPLICATION_CREDENTIALS is niet ingesteld.")
+        print("   Stel deze variabele in met het pad naar uw serviceAccountKey_artwall.json bestand.")
+        return
     
     try:
         cred = credentials.Certificate(SERVICE_ACCOUNT_KEY_PATH)
@@ -365,6 +370,7 @@ def sync_to_firebase(force_update: bool = False):
     except Exception as e:
         print(f"❌ Fout bij initialiseren Firebase: {e}")
         return
+
 
     print("\n🔍 Ophalen van bestaande data uit de database...")
     # Use 'artwall' as root and medium as subfolder

@@ -28,6 +28,7 @@ const ThemeSwitcher: React.FC = () => {
         title="Blueprint Thema"
       />
       <ThemeButton color="#1E2732" onClick={() => toggleTheme('dark')} title="Dark Mode" />
+      <ThemeButton color="#00796B" onClick={() => toggleTheme('teal')} title="Teal Theme" />
     </SwitcherContainer>
   );
 };

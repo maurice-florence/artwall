@@ -1,7 +1,7 @@
 // Removed alignment check line
 // ...existing code...
 // ...existing code...
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef, useLayoutEffect } from 'react';
 import styled from 'styled-components';
 import { FaTimes, FaSoundcloud, FaShareAlt, FaTrash } from 'react-icons/fa';
 import ReactMarkdown from 'react-markdown';
@@ -219,6 +219,9 @@ const Modal: React.FC<ModalProps> = ({
   const [currentLanguage, setCurrentLanguage] = useState(item.language1 || 'en');
   // Add state for slider inside Modal component
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
+  const [isStacked, setIsStacked] = useState(false);
+  const textContainerRef = useRef<HTMLDivElement>(null);
+  const imageContainerRef = useRef<HTMLDivElement>(null);
 
   // Get available languages
   const availableLanguages = [];
@@ -248,6 +251,7 @@ const Modal: React.FC<ModalProps> = ({
   };
 
   const translation = getCurrentTranslation();
+  const cleanContent = translation.content ? translation.content.replace(/---VERSION_\d+---/g, '') : '';
 
   const handleClose = () => {
     setCurrentLanguage(item.language1 || 'en');
@@ -291,6 +295,32 @@ const Modal: React.FC<ModalProps> = ({
     if (/mime=application\/pdf/.test(url)) return 'pdf';
     return 'unknown';
   }
+
+  let allMedia: string[] = [];
+  if (item.coverImageUrl) allMedia.push(item.coverImageUrl);
+  if (item.mediaUrl && !allMedia.includes(item.mediaUrl)) allMedia.push(item.mediaUrl);
+  if (item.mediaUrls && Array.isArray(item.mediaUrls)) {
+    item.mediaUrls.forEach(url => {
+      if (url && !allMedia.includes(url)) allMedia.push(url);
+    });
+  }
+  if (item.pdfUrl && !allMedia.includes(item.pdfUrl)) allMedia.push(item.pdfUrl);
+  if (item.audioUrl && !allMedia.includes(item.audioUrl)) allMedia.push(item.audioUrl);
+  allMedia = allMedia.filter(Boolean);
+
+  useLayoutEffect(() => {
+    if (textContainerRef.current && imageContainerRef.current && allMedia.length > 1) {
+        const textHeight = textContainerRef.current.scrollHeight;
+        const mediaHeight = imageContainerRef.current.scrollHeight;
+        if (textHeight > mediaHeight) {
+            setIsStacked(true);
+        } else {
+            setIsStacked(false);
+        }
+    } else {
+        setIsStacked(false);
+    }
+  }, [allMedia, cleanContent]);
 
   useEffect(() => {
     if (isOpen) {
@@ -363,91 +393,56 @@ const Modal: React.FC<ModalProps> = ({
             {/* Display content for all mediums */}
             {translation.content && (
               <TextContainer
+                ref={textContainerRef}
                 data-testid="modal-content"
                 style={{ marginTop: '1rem', whiteSpace: 'pre-wrap' }}
-                dangerouslySetInnerHTML={{ __html: parseContent(translation.content) }}
+                dangerouslySetInnerHTML={{ __html: parseContent(cleanContent) }}
               />
             )}
             {/* Display all media (coverImageUrl, mediaUrl, mediaUrls) in the slider */}
-            {(() => {
-              // Collect all media URLs (coverImageUrl, mediaUrl, mediaUrls, pdfUrl, audioUrl)
-              let allMedia: string[] = [];
-              if (item.coverImageUrl) allMedia.push(item.coverImageUrl);
-              if (item.mediaUrl && !allMedia.includes(item.mediaUrl)) allMedia.push(item.mediaUrl);
-              if (item.mediaUrls && Array.isArray(item.mediaUrls)) {
-                item.mediaUrls.forEach(url => {
-                  if (url && !allMedia.includes(url)) allMedia.push(url);
-                });
-              }
-              if (item.pdfUrl && !allMedia.includes(item.pdfUrl)) allMedia.push(item.pdfUrl);
-              if (item.audioUrl && !allMedia.includes(item.audioUrl)) allMedia.push(item.audioUrl);
-              // Remove empty strings/nulls
-              allMedia = allMedia.filter(Boolean);
-              if (allMedia.length === 0) return null;
-
-              const currentUrl = allMedia[currentMediaIndex];
-              const type = getMediaType(currentUrl);
-
-              return (
-                <ImageContainer style={{ position: 'relative', alignItems: 'center', justifyContent: 'center' }}>
-                  {allMedia.length > 1 && (
-                    <button
-                      style={{ position: 'absolute', left: 0, top: '50%', transform: 'translateY(-50%)', background: 'rgba(0,0,0,0.3)', color: '#fff', border: 'none', borderRadius: '50%', width: 32, height: 32, cursor: 'pointer', zIndex: 2 }}
-                      onClick={ev => { ev.stopPropagation(); setCurrentMediaIndex((currentMediaIndex - 1 + allMedia.length) % allMedia.length); }}
-                      aria-label="Previous media"
-                    >&lt;</button>
-                  )}
-                  {/* Render media by type */}
-                  {type === 'image' && (
-                    <ResponsiveImage
-                      src={currentUrl}
-                      alt={`Media ${currentMediaIndex + 1}`}
-                      data-testid={`modal-media-image-${currentMediaIndex}`}
-                      onClick={() => window.open(currentUrl, '_blank')}
-                    />
-                  )}
-                  {type === 'video' && (
-                    <video
-                      src={currentUrl}
-                      controls
-                      style={{ width: '100%', maxHeight: '70vh', borderRadius: 4, background: '#222' }}
-                      data-testid={`modal-media-video-${currentMediaIndex}`}
-                    />
-                  )}
-                  {type === 'audio' && (
-                    <audio
-                      src={currentUrl}
-                      controls
-                      style={{ width: '100%', borderRadius: 4, background: '#222' }}
-                      data-testid={`modal-media-audio-${currentMediaIndex}`}
-                    />
-                  )}
-                  {type === 'pdf' && (
-                    <iframe
-                      src={currentUrl}
-                      style={{ width: '100%', height: '70vh', border: '1px solid #ddd', borderRadius: 4 }}
-                      title={`PDF ${currentMediaIndex + 1}`}
-                      data-testid={`modal-media-pdf-${currentMediaIndex}`}
-                    />
-                  )}
-                  {type === 'unknown' && (
-                    <div style={{ width: '100%', minHeight: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#888', fontSize: 16 }}>
-                      <span>Onbekend mediabestand</span>
-                    </div>
-                  )}
-                  {allMedia.length > 1 && (
-                    <button
-                      style={{ position: 'absolute', right: 0, top: '50%', transform: 'translateY(-50%)', background: 'rgba(0,0,0,0.3)', color: '#fff', border: 'none', borderRadius: '50%', width: 32, height: 32, cursor: 'pointer', zIndex: 2 }}
-                      onClick={ev => { ev.stopPropagation(); setCurrentMediaIndex((currentMediaIndex + 1) % allMedia.length); }}
-                      aria-label="Next media"
-                    >&gt;</button>
-                  )}
-                  {allMedia.length > 1 && (
-                    <span style={{ position: 'absolute', bottom: 8, right: 16, fontSize: 14, color: '#fff', background: 'rgba(0,0,0,0.3)', borderRadius: 8, padding: '0 8px' }}>{currentMediaIndex + 1}/{allMedia.length}</span>
-                  )}
-                </ImageContainer>
-              );
-            })()}
+            {allMedia.length > 0 &&
+              <ImageContainer ref={imageContainerRef} style={{ position: 'relative', alignItems: 'center', justifyContent: 'center' }}>
+                {isStacked ? (
+                    allMedia.map((url, index) => {
+                        const type = getMediaType(url);
+                        if (type === 'image') return <ResponsiveImage key={index} src={url} alt={`Media ${index + 1}`} onClick={() => window.open(url, '_blank')} />;
+                        if (type === 'video') return <video key={index} src={url} controls style={{ width: '100%', borderRadius: 4, background: '#222' }} />;
+                        if (type === 'audio') return <audio key={index} src={url} controls style={{ width: '100%', borderRadius: 4, background: '#222' }} />;
+                        if (type === 'pdf') return <PdfViewer key={index} src={url} title={`PDF ${index + 1}`} />;
+                        return <div key={index}>Onbekend mediabestand</div>;
+                    })
+                ) : (
+                  <>
+                    {allMedia.length > 1 && (
+                      <button
+                        style={{ position: 'absolute', left: 0, top: '50%', transform: 'translateY(-50%)', background: 'rgba(0,0,0,0.3)', color: '#fff', border: 'none', borderRadius: '50%', width: 32, height: 32, cursor: 'pointer', zIndex: 2 }}
+                        onClick={ev => { ev.stopPropagation(); setCurrentMediaIndex((currentMediaIndex - 1 + allMedia.length) % allMedia.length); }}
+                        aria-label="Previous media"
+                      >&lt;</button>
+                    )}
+                    {(() => {
+                        const currentUrl = allMedia[currentMediaIndex];
+                        const type = getMediaType(currentUrl);
+                        if (type === 'image') return <ResponsiveImage src={currentUrl} alt={`Media ${currentMediaIndex + 1}`} data-testid={`modal-media-image-${currentMediaIndex}`} onClick={() => window.open(currentUrl, '_blank')} />;
+                        if (type === 'video') return <video src={currentUrl} controls style={{ width: '100%', maxHeight: '70vh', borderRadius: 4, background: '#222' }} data-testid={`modal-media-video-${currentMediaIndex}`} />;
+                        if (type === 'audio') return <audio src={currentUrl} controls style={{ width: '100%', borderRadius: 4, background: '#222' }} data-testid={`modal-media-audio-${currentMediaIndex}`} />;
+                        if (type === 'pdf') return <iframe src={currentUrl} style={{ width: '100%', height: '70vh', border: '1px solid #ddd', borderRadius: 4 }} title={`PDF ${currentMediaIndex + 1}`} data-testid={`modal-media-pdf-${currentMediaIndex}`} />;
+                        return <div style={{ width: '100%', minHeight: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#888', fontSize: 16 }}><span>Onbekend mediabestand</span></div>;
+                    })()}
+                    {allMedia.length > 1 && (
+                      <button
+                        style={{ position: 'absolute', right: 0, top: '50%', transform: 'translateY(-50%)', background: 'rgba(0,0,0,0.3)', color: '#fff', border: 'none', borderRadius: '50%', width: 32, height: 32, cursor: 'pointer', zIndex: 2 }}
+                        onClick={ev => { ev.stopPropagation(); setCurrentMediaIndex((currentMediaIndex + 1) % allMedia.length); }}
+                        aria-label="Next media"
+                      >&gt;</button>
+                    )}
+                    {allMedia.length > 1 && (
+                      <span style={{ position: 'absolute', bottom: 8, right: 16, fontSize: 14, color: '#fff', background: 'rgba(0,0,0,0.3)', borderRadius: 8, padding: '0 8px' }}>{currentMediaIndex + 1}/{allMedia.length}</span>
+                    )}
+                  </>
+                )}
+              </ImageContainer>
+            }
           </MediaTextContainer>
         </div>
       </ModalContent>
@@ -467,7 +462,6 @@ const MediaTextContainer = styled.div`
 const TextContainer = styled.div`
   flex: 1;
   align-self: flex-start;
-  border: 2px dashed #e07a5f;
   border-radius: 8px;
   padding: 1rem;
   margin-top: 0 !important;
@@ -481,7 +475,6 @@ const ImageContainer = styled.div`
   position: relative;
   align-items: flex-start;
   justify-content: flex-start;
-  border: 2px dashed #3d405b;
   border-radius: 8px;
   padding: 1rem;
   margin-top: 0 !important;
