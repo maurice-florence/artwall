@@ -9,7 +9,7 @@ import firebase_admin
 SERVICE_ACCOUNT_KEY_PATH = pathlib.Path(__file__).parent / 'serviceAccountKey_artwall.json'
 DATABASE_URL = "https://artwall-by-jr-default-rtdb.europe-west1.firebasedatabase.app/"
 STORAGE_BUCKET = "artwall-by-jr.firebasestorage.app"
-LOCAL_FOLDER = pathlib.Path('G:/Mijn Drive/Creatief/Kunstmuur')
+LOCAL_FOLDER = pathlib.Path('G:/Mijn Drive/Creatief/Artwall')
 
 # --- INITIALIZE FIREBASE ---
 def initialize_firebase():

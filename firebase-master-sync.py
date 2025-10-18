@@ -18,7 +18,7 @@ import xml.etree.ElementTree as ET
 SOURCE_MEDIA_FOLDER = pathlib.Path('G:/Mijn Drive/Creatief/Artwall')
 
 # Pad naar uw Firebase service account sleutel
-SERVICE_ACCOUNT_KEY_PATH = os.getenv('GOOGLE_APPLICATION_CREDENTIALS')
+SERVICE_ACCOUNT_KEY_PATH = pathlib.Path(__file__).parent / 'serviceAccountKey_artwall.json'
 DATABASE_URL = "https://artwall-by-jr-default-rtdb.europe-west1.firebasedatabase.app/"
 STORAGE_BUCKET = "artwall-by-jr.firebasestorage.app"  # Remove the gs:// prefix
 
