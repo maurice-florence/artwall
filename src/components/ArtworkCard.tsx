@@ -93,7 +93,7 @@ const CardFront = styled(CardFace)<{ $medium: ArtworkMedium; $imageUrl?: string;
 
 const CardBack = styled(CardFace)`
   background: ${({ theme }) => theme.accent};
-  color: ${({ theme }) => theme.accentText};
+  color: #FFFFFF;
   transform: rotateY(180deg);
   padding: 0.7rem;
   justify-content: center;
@@ -380,8 +380,8 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin }: ArtworkCardProps) => {
             )}
           </CardFront>
           <CardBack>
-            <CardTitle>{artwork.title}</CardTitle>
-            <CardFooter>
+            <CardTitle style={{ color: '#FFFFFF' }}>{artwork.title}</CardTitle>
+            <CardFooter style={{ color: '#FFFFFF', flexDirection: 'column' }}>
               <span>{formattedDate}</span>
               <CardCategory>
                 {getArtworkIcon(artwork)}
