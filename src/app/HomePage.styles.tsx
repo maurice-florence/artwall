@@ -9,7 +9,8 @@ export const PageLayout = styled.div`
 
 export const MainContent = styled.div`
   flex-grow: 1;
-  width: 100%;
+    width: 100%;
+    padding: 0 180px;
   transition: none;
 `;
 
@@ -19,11 +20,15 @@ export const CollageContainer = styled.main`
   gap: ${({ theme }) => theme.gridGap ? `${theme.gridGap}px` : '24px'};
   
   /* De kern van de nieuwe layout */
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  grid-auto-rows: ${({ theme }) => theme.cardHeight ? `${theme.cardHeight}px` : '280px'};
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  grid-auto-rows: ${({ theme }) => theme.cardHeight ? `${theme.cardHeight}px` : '360px'};
   
   /* Deze regel vertelt de grid om gaten op te vullen! */
-  grid-auto-flow: dense;
+    grid-auto-flow: dense;
+
+  @media (min-width: 1920px) {
+    grid-template-columns: repeat(5, 1fr);
+  }
 `;
 
 // --- Hulp-componenten ---
@@ -35,7 +40,7 @@ const pulse = keyframes`
 `;
 
 export const SkeletonCard = styled.div`
-  height: ${({ theme }) => theme.cardHeight ? `${theme.cardHeight}px` : '280px'};
+  height: ${({ theme }) => theme.cardHeight ? `${theme.cardHeight}px` : '360px'};
   width: 100%;
   border-radius: 12px;
   animation: ${pulse} 1.5s ease-in-out infinite;

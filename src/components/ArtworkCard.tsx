@@ -20,7 +20,6 @@ const cardSizes: CardSizesType = cardSizesJson;
 
 
 
-
 // Get grid span from cardSizes.json by subtype, fallback to default
 const getGridSpan = (subtype: string, medium?: ArtworkMedium) => {
   if (medium === 'audio') {
@@ -39,7 +38,7 @@ const CardContainer = styled.div<{ $medium: ArtworkMedium; $subtype?: string; $b
   border-radius: 10px;
   /* Remove explicit height, let grid control it */
   ${props => getGridSpan(props.$subtype || 'default', props.$medium)}
-  min-height: 110px;
+
   font-size: 0.75rem;
 
   @media (max-width: 768px) {
@@ -80,8 +79,10 @@ const CardFace = styled.div`
 `;
 
 // Use a transient prop ($medium) to avoid passing it to the DOM
-const CardFront = styled(CardFace)<{ $medium: ArtworkMedium }>`
-  background: ${({ theme }) => theme.cardBg};
+const CardFront = styled(CardFace)<{ $medium: ArtworkMedium; $imageUrl?: string; $isWriting?: boolean }>`
+  background: ${({ theme, $imageUrl, $isWriting }) => $isWriting && !$imageUrl ? `url('/paper1.jpg')` : $imageUrl ? `url(${$imageUrl})` : theme.cardBg};
+  background-size: cover;
+  background-position: center;
   color: ${({ theme }) => theme.cardText};
   padding: 0.7rem;
   font-size: 0.75rem;
@@ -101,25 +102,6 @@ const CardBack = styled(CardFace)`
   font-size: 0.7rem;
   /* border removed */
   box-sizing: border-box;
-
-  .card-back-content {
-    flex: 1 1 100%;
-    width: 100%;
-    max-height: 100%;
-    overflow: hidden;
-    display: -webkit-box;
-    -webkit-line-clamp: var(--max-lines, 8);
-    -webkit-box-orient: vertical;
-    white-space: pre-line;
-    text-overflow: ellipsis;
-    word-break: break-word;
-    position: relative;
-    padding: 0;
-    margin: 0;
-    font-size: 0.9em;
-    align-items: stretch;
-    justify-content: flex-start;
-  }
 `;
 
 const TitleOverlay = styled.div`
@@ -248,7 +230,21 @@ const LanguageTag = styled.span`
   font-weight: 500;
 `;
 
-
+const TextOverlay = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  padding: 1rem;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #333;
+  overflow: hidden;
+  white-space: pre-wrap;
+  word-break: break-word;
+`;
 
 const ArtworkCard = ({ artwork, onSelect, isAdmin }: ArtworkCardProps) => {
     const theme = useTheme();
@@ -335,80 +331,62 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin }: ArtworkCardProps) => {
       return null;
     }
 
+    const isWriting = artwork.medium === 'writing';
+    const hasImage = images.length > 0;
+    const imageUrl = hasImage ? images[0] : undefined;
+
     // Card front: only show title, image/waveform, language, and footer. No extra text under the title for any medium.
     return (
       <CardContainer $medium={artwork.medium} $subtype={subtype} onClick={onSelect} data-testid={`artwork-card-${artwork.id}`}>
         <CardInner>
-          <CardFront $medium={artwork.medium}>
-            <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-              <div style={{ borderRadius: 4, marginBottom: '0.5rem', flexShrink: 0 }}>
-                <CardTitle data-testid={`artwork-title-${artwork.id}`}>{artwork.title}</CardTitle>
-              </div>
-              {/* Image or waveform, always between title and footer */}
-              <div style={{ flex: 1, minHeight: 0, minWidth: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 4 }}>
-                {artwork.medium === 'audio' ? (
-                  <div style={{ width: '100%', height: 60, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    {/* SVG removed */}
-                  </div>
-                ) : artwork.medium === 'writing' && subtype === 'novel' && images.length > 0 ? (
-                  <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: 0, padding: 0 }}>
-                    <img 
-                      src={images[0]} 
-                      alt={artwork.title || 'cover'} 
-                      style={{
-                        height: '100%',
-                        width: '100%',
-                        objectFit: 'contain',
-                        borderRadius: 4,
-                        display: 'block',
-                      }}
-                    />
-                  </div>
-                ) : artwork.medium === 'writing' && (subtype === 'poetry' || subtype === 'prosepoetry') ? (
-                  <div style={{ width: '100%', height: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: 0, padding: 0 }}>
-                    {/* SVG removed */}
-                  </div>
-                ) : artwork.medium === 'writing' && subtype !== 'poetry' ? (
-                  <div style={{ width: '100%', height: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: 0, padding: 0 }}>
-                    {/* SVG removed */}
-                  </div>
-                ) : images.length > 0 ? (
-                  <div style={{ width: '100%', height: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: 0, padding: 0 }}>
-                    <FaImage size={26} color={theme.accent || '#1F618D'} />
-                  </div>
-                ) : (
-                  <div style={{ width: '100%', height: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: 0, padding: 0 }}>
-                    <FaImage size={26} color={theme.accent || '#1F618D'} />
-                  </div>
+          <CardFront $medium={artwork.medium} $imageUrl={imageUrl} $isWriting={isWriting}>
+            {isWriting && !hasImage ? (
+              <TextOverlay>{truncateText(cardText, 200)}</TextOverlay>
+            ) : !imageUrl && (
+              <>
+                <div style={{ borderRadius: 4, marginBottom: '0.5rem', flexShrink: 0 }}>
+                  <CardTitle data-testid={`artwork-title-${artwork.id}`}>{artwork.title}</CardTitle>
+                </div>
+                {/* Image or waveform, always between title and footer */}
+                <div style={{ flex: 1, minHeight: 0, minWidth: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 4 }}>
+                  {artwork.medium === 'audio' ? (
+                    <div style={{ width: '100%', height: 60, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      {/* SVG removed */}
+                    </div>
+                  ) : images.length > 0 ? (
+                    <div style={{ width: '100%', height: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: 0, padding: 0 }}>
+                      <FaImage size={26} color={theme.accent || '#1F618D'} />
+                    </div>
+                  ) : (
+                    <div style={{ width: '100%', height: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: 0, padding: 0 }}>
+                      <FaImage size={26} color={theme.accent || '#1F618D'} />
+                    </div>
+                  )}
+                </div>
+                {availableLanguages.length > 1 && (
+                  <LanguageIndicator data-testid={`artwork-languages-${artwork.id}`}> 
+                    {availableLanguages.filter((lang: string) => lang && lang.trim() !== '').map((lang: string, idx: number) => (
+                      <LanguageTag key={getLangKey(lang, idx)}>{lang.toUpperCase()}</LanguageTag>
+                    ))}
+                  </LanguageIndicator>
                 )}
-              </div>
-              {availableLanguages.length > 1 && (
-                <LanguageIndicator data-testid={`artwork-languages-${artwork.id}`}> 
-                  {availableLanguages.filter((lang: string) => lang && lang.trim() !== '').map((lang: string, idx: number) => (
-                    <LanguageTag key={getLangKey(lang, idx)}>{lang.toUpperCase()}</LanguageTag>
-                  ))}
-                </LanguageIndicator>
-              )}
-              <CardFooter style={{ marginTop: '0.5rem', justifyContent: 'space-between', flexShrink: 0 }}>
-                <span>{formattedDate}</span>
-                <CardCategory>
-                  {getArtworkIcon(artwork)}
-                </CardCategory>
-              </CardFooter>
-            </div>
+                <CardFooter style={{ marginTop: '0.5rem', justifyContent: 'space-between', flexShrink: 0 }}>
+                  <span>{formattedDate}</span>
+                  <CardCategory>
+                    {getArtworkIcon(artwork)}
+                  </CardCategory>
+                </CardFooter>
+              </>
+            )}
           </CardFront>
           <CardBack>
-            <div
-              className="card-back-content"
-              data-testid={`artwork-back-content-${artwork.id}`}
-              style={{
-                maxHeight: `${maxLines * 1.25}em`,
-                WebkitLineClamp: maxLines,
-                '--max-lines': maxLines,
-              } as React.CSSProperties}
-            >
-              {cardText}
-            </div>
+            <CardTitle>{artwork.title}</CardTitle>
+            <CardFooter>
+              <span>{formattedDate}</span>
+              <CardCategory>
+                {getArtworkIcon(artwork)}
+              </CardCategory>
+            </CardFooter>
           </CardBack>
         </CardInner>
       </CardContainer>
