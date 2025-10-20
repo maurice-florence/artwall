@@ -1,6 +1,6 @@
 // src/components/AdminModal/utils/firebaseOperations.ts
 // filepath: c:\Users\friem\OneDrive\Documenten\GitHub\artwall\src\components\AdminModal\utils\firebaseOperations.ts
-import { db } from '@/firebase';
+import { db, realtimeDb } from '@/firebase';
 import { ref, update, get } from 'firebase/database';
 
 
@@ -36,7 +36,7 @@ const processMediaUrls = (mediaUrls: string[] | string | undefined): string[] =>
 
 export const createArtwork = async (formData: ArtworkFormData): Promise<OperationResult> => {
   try {
-    const artworksRef = ref(db, 'artworks');
+    const artworksRef = ref(realtimeDb, 'artworks');
 
     // Use the global pushMock if present (for Vitest), otherwise throw in test
     let pushFn: any;
@@ -73,7 +73,7 @@ export const createArtwork = async (formData: ArtworkFormData): Promise<Operatio
 
 export const updateArtwork = async (id: string, formData: Partial<ArtworkFormData>): Promise<OperationResult> => {
   try {
-    const artworkRef = ref(db, `artworks/${id}`);
+    const artworkRef = ref(realtimeDb, `artworks/${id}`);
     
     // Process form data
     const processedData = {
@@ -99,7 +99,7 @@ export const updateArtwork = async (id: string, formData: Partial<ArtworkFormDat
 
 export const fetchArtwork = async (id: string): Promise<OperationResult> => {
   try {
-    const artworkRef = ref(db, `artworks/${id}`);
+    const artworkRef = ref(realtimeDb, `artworks/${id}`);
     const snapshot = await get(artworkRef);
     
     if (snapshot.exists()) {

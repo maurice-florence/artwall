@@ -1,5 +1,5 @@
 // src/utils/firebase-operations.ts
-import { db } from '@/firebase';
+import { db, realtimeDb } from '@/firebase';
 import { ref, push, update, get } from 'firebase/database';
 import { ArtworkFormData } from '@/types';
 
@@ -13,10 +13,10 @@ export const createArtwork = async (artwork: ArtworkFormData): Promise<Operation
   try {
     // Place artwork in artwall/{medium}/{id}
     const medium = artwork.medium || 'other';
-    const artwallRef = ref(db, `artwall/${medium}`);
+    const artwallRef = ref(realtimeDb, `artwall/${medium}`);
     const pushRef = push(artwallRef);
     const newId = pushRef.key;
-    await update(ref(db, `artwall/${medium}/${newId}`), {
+    await update(ref(realtimeDb, `artwall/${medium}/${newId}`), {
       ...artwork,
       id: newId,
       createdAt: Date.now(),
@@ -35,14 +35,14 @@ export const createArtwork = async (artwork: ArtworkFormData): Promise<Operation
 export const updateArtwork = async (id: string, artwork: Partial<ArtworkFormData>): Promise<OperationResult> => {
   try {
     // Find and update artwork in any medium folder
-    const artwallRef = ref(db, 'artwall');
+    const artwallRef = ref(realtimeDb, 'artwall');
     const snapshot = await get(artwallRef);
     const data = snapshot.val();
     let foundRef = null;
     if (data) {
       for (const medium of Object.keys(data)) {
         if (data[medium] && data[medium][id]) {
-          foundRef = ref(db, `artwall/${medium}/${id}`);
+          foundRef = ref(realtimeDb, `artwall/${medium}/${id}`);
           break;
         }
       }
@@ -65,7 +65,7 @@ export const updateArtwork = async (id: string, artwork: Partial<ArtworkFormData
 export const fetchArtwork = async (id: string): Promise<OperationResult> => {
   try {
     // Find artwork in any medium folder
-    const artwallRef = ref(db, 'artwall');
+    const artwallRef = ref(realtimeDb, 'artwall');
     const snapshot = await get(artwallRef);
     const data = snapshot.val();
     let found = null;
