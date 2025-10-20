@@ -6,7 +6,7 @@ const Button = styled.button<{ $visible: boolean }>`
   position: fixed;
   bottom: 20px;
   right: 20px;
-  background-color: ${({ theme }) => theme.accent};
+  background-color: ${({ theme }) => theme.primary};
   color: ${({ theme }) => theme.accentText};
   border: none;
   border-radius: 50%;

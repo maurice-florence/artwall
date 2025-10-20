@@ -9,7 +9,7 @@ const YearCardContainer = styled.div`
     justify-content: center;
     align-items: center;
     background: ${({ theme }) => theme.body};
-    color: ${({ theme }) => theme.accent};
+    color: ${({ theme }) => theme.primary};
     border-radius: 12px;
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
     font-size: 2.5rem;

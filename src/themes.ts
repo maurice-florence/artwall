@@ -28,6 +28,7 @@ export const atelierTheme = {
   gridGap: 24,
   border: '#d1d5db',
   textSecondary: '#6b7280',
+  secondary: '#6b7280',
 };
 
 export const blueprintTheme = {
@@ -60,6 +61,7 @@ export const blueprintTheme = {
   gridGap: 16,
   border: '#d1d5db',
   textSecondary: '#6b7280',
+  secondary: '#6b7280',
 };
 
 export const darkModeTheme = {
@@ -92,6 +94,7 @@ export const darkModeTheme = {
   gridGap: 16,
   border: '#d1d5db',
   textSecondary: '#6b7280',
+  secondary: '#6b7280',
 };
 
 export const natureTheme = {
@@ -125,6 +128,7 @@ export const natureTheme = {
   gridGap: 24,
   border: '#d1d5db',
   textSecondary: '#6b7280',
+  secondary: '#6b7280',
 };
 
 export const earthTheme = {
@@ -158,6 +162,7 @@ export const earthTheme = {
   gridGap: 24,
   border: '#d1d5db',
   textSecondary: '#6b7280',
+  secondary: '#6b7280',
 };
 
 export const tealTheme = {
@@ -190,6 +195,7 @@ export const tealTheme = {
   gridGap: 16,
   border: '#B2DFDB',
   textSecondary: '#00695C',
+  secondary: '#00695C',
 };
 
 export const themes = {

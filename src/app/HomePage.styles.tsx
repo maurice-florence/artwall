@@ -17,7 +17,7 @@ export const MainContent = styled.div`
 export const CollageContainer = styled.main`
   display: grid;
   padding: 1.5rem;
-  gap: ${({ theme }) => theme.gridGap ? `${theme.gridGap}px` : '24px'};
+  gap: ${({ theme }) => theme.gridGap ? `${theme.gridGap}px` : '4px'};
   
   /* De kern van de nieuwe layout */
     grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));

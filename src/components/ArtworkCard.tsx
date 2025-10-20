@@ -86,8 +86,7 @@ const CardFront = styled(CardFace)<{ $medium: ArtworkMedium; $imageUrl?: string;
 `;
 
 const CardBack = styled(CardFace)`
-  background: ${({ theme }) => theme.accent};
-  color: #FFFFFF;
+  background: ${({ theme }) => theme.primary};
   transform: rotateY(180deg);
   padding: 0.7rem;
   justify-content: center;
@@ -122,6 +121,14 @@ const CardFooter = styled.div`
   padding: 0.5rem;
   border-radius: 4px;
   color: ${({ theme }) => theme.cardText};
+`;
+
+const CardBackTitle = styled(CardTitle)`
+    color: ${({ theme }) => theme.body};
+`;
+
+const CardBackFooter = styled(CardFooter)`
+    color: ${({ theme }) => theme.body};
 `;
 
 const CardCategory = styled.div`
@@ -385,13 +392,13 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin }: ArtworkCardProps) => {
             )}
           </CardFront>
           <CardBack>
-            <CardTitle style={{ color: '#FFFFFF' }}>{artwork.title}</CardTitle>
-            <CardFooter style={{ color: '#FFFFFF', flexDirection: 'column' }}>
+            <CardBackTitle>{artwork.title}</CardBackTitle>
+            <CardBackFooter style={{flexDirection: 'column' }}>
               <span>{formattedDate}</span>
               <CardCategory>
                 {getArtworkIcon(artwork)}
               </CardCategory>
-            </CardFooter>
+            </CardBackFooter>
           </CardBack>
         </CardInner>
       </CardContainer>
