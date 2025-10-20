@@ -16,6 +16,7 @@ export interface Theme {
   gridGap: number;
   border: string;
   textSecondary: string;
+  secondary: string;
 }
 
 declare module 'styled-components' {
