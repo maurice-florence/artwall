@@ -12,7 +12,6 @@ import cardSizesJson from '@/constants/card-sizes.json';
 interface CardSizesType {
   default: { gridColumn: number; gridRow: number };
   novel: { gridColumn: number; gridRow: number };
-  song: { gridColumn: number; gridRow: number };
   // Add other keys as needed
 }
 const cardSizes: CardSizesType = cardSizesJson;
@@ -22,11 +21,6 @@ const cardSizes: CardSizesType = cardSizesJson;
 
 // Get grid span from cardSizes.json by subtype, fallback to default
 const getGridSpan = (subtype: string, medium?: ArtworkMedium) => {
-  if (medium === 'audio') {
-    // Always use 'song' size for all audio cards
-    const size = cardSizes['song'];
-    return `grid-column: span ${size.gridColumn}; grid-row: span ${size.gridRow};`;
-  }
   const size = (subtype in cardSizes ? (cardSizes as any)[subtype] : cardSizes['default']);
   return `grid-column: span ${size.gridColumn}; grid-row: span ${size.gridRow};`;
 };
@@ -79,8 +73,8 @@ const CardFace = styled.div`
 `;
 
 // Use a transient prop ($medium) to avoid passing it to the DOM
-const CardFront = styled(CardFace)<{ $medium: ArtworkMedium; $imageUrl?: string; $isWriting?: boolean }>`
-  background: ${({ theme, $imageUrl, $isWriting }) => $isWriting && !$imageUrl ? `url('/paper1.jpg')` : $imageUrl ? `url(${$imageUrl})` : theme.cardBg};
+const CardFront = styled(CardFace)<{ $medium: ArtworkMedium; $imageUrl?: string; $isWriting?: boolean; $isAudio?: boolean }>`
+  background: ${({ theme, $imageUrl, $isWriting, $isAudio }) => ($isWriting && !$imageUrl) ? `url('/paper1.jpg')` : ($isAudio && !$imageUrl) ? `url('/paper2.png')` : $imageUrl ? `url(${$imageUrl})` : theme.cardBg};
   background-size: cover;
   background-position: center;
   color: ${({ theme }) => theme.cardText};
@@ -202,6 +196,10 @@ const getArtworkIcon = (artwork: Artwork) => {
   return iconMap[artwork.medium] || iconMap['other'];
 };
 
+const isImageUrl = (url: string) => {
+  return /\.(jpeg|jpg|gif|png)$/.test(url);
+}
+
 const truncateText = (text: string, maxLength: number) => {
   if (!text) return '';
   return text.length > maxLength ? text.slice(0, maxLength - 3) + '...' : text;
@@ -244,6 +242,10 @@ const TextOverlay = styled.div`
   overflow: hidden;
   white-space: pre-wrap;
   word-break: break-word;
+`;
+
+const AudioTextOverlay = styled(TextOverlay)`
+  font-family: sans-serif;
 `;
 
 const ArtworkCard = ({ artwork, onSelect, isAdmin }: ArtworkCardProps) => {
@@ -301,16 +303,15 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin }: ArtworkCardProps) => {
     // Calculate max lines based on card size (default: 8, novel: 16, song: 10)
     let maxLines = 8;
     if (subtype === 'novel') maxLines = 16;
-    if (subtype === 'song') maxLines = 10;
 
     // Accept either a single string or an array of strings for images
     let images: string[] = [];
     if (Array.isArray(artwork.coverImageUrl)) {
-      images = artwork.coverImageUrl;
-    } else if (artwork.coverImageUrl) {
+      images = artwork.coverImageUrl.filter(isImageUrl);
+    } else if (artwork.coverImageUrl && isImageUrl(artwork.coverImageUrl)) {
       images = [artwork.coverImageUrl];
     } else if (Array.isArray(artwork.mediaUrls) && artwork.mediaUrls.length > 0) {
-      images = artwork.mediaUrls;
+      images = artwork.mediaUrls.filter(isImageUrl);
     }
 
     // For audio: get the first available mediaUrl (mediaUrl or mediaUrls)
@@ -318,7 +319,7 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin }: ArtworkCardProps) => {
     if (artwork.mediaUrl) {
       audioUrl = artwork.mediaUrl;
     } else if (Array.isArray(artwork.mediaUrls) && artwork.mediaUrls.length > 0) {
-      audioUrl = artwork.mediaUrls[0];
+      audioUrl = artwork.mediaUrls.find(url => !isImageUrl(url));
     }
 
 
@@ -332,16 +333,24 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin }: ArtworkCardProps) => {
     }
 
     const isWriting = artwork.medium === 'writing';
+    const isAudio = artwork.medium === 'audio';
     const hasImage = images.length > 0;
     const imageUrl = hasImage ? images[0] : undefined;
+
+    const start = Math.floor(cardText.length / 3);
+    const textPreview = cardText.slice(start);
 
     // Card front: only show title, image/waveform, language, and footer. No extra text under the title for any medium.
     return (
       <CardContainer $medium={artwork.medium} $subtype={subtype} onClick={onSelect} data-testid={`artwork-card-${artwork.id}`}>
         <CardInner>
-          <CardFront $medium={artwork.medium} $imageUrl={imageUrl} $isWriting={isWriting}>
-            {isWriting && !hasImage ? (
-              <TextOverlay>{truncateText(cardText, 200)}</TextOverlay>
+          <CardFront $medium={artwork.medium} $imageUrl={imageUrl} $isWriting={isWriting} $isAudio={isAudio}>
+            {(isWriting || isAudio) && !hasImage ? (
+              isWriting ? (
+                <TextOverlay>{textPreview}</TextOverlay>
+              ) : (
+                <AudioTextOverlay>{textPreview}</AudioTextOverlay>
+              )
             ) : !imageUrl && (
               <>
                 <div style={{ borderRadius: 4, marginBottom: '0.5rem', flexShrink: 0 }}>
@@ -349,11 +358,7 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin }: ArtworkCardProps) => {
                 </div>
                 {/* Image or waveform, always between title and footer */}
                 <div style={{ flex: 1, minHeight: 0, minWidth: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 4 }}>
-                  {artwork.medium === 'audio' ? (
-                    <div style={{ width: '100%', height: 60, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      {/* SVG removed */}
-                    </div>
-                  ) : images.length > 0 ? (
+                  {images.length > 0 ? (
                     <div style={{ width: '100%', height: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: 0, padding: 0 }}>
                       <FaImage size={26} color={theme.accent || '#1F618D'} />
                     </div>
