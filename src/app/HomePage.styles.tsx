@@ -20,11 +20,11 @@ export const CollageContainer = styled.main`
   gap: ${({ theme }) => theme.gridGap ? `${theme.gridGap}px` : '4px'};
   
   /* De kern van de nieuwe layout */
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  grid-auto-rows: ${({ theme }) => theme.cardHeight ? `${theme.cardHeight}px` : '360px'};
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  grid-auto-rows: 225px;
   
   /* Deze regel vertelt de grid om gaten op te vullen! */
-    grid-auto-flow: dense;
+  grid-auto-flow: dense;
 
   @media (min-width: 1920px) {
     grid-template-columns: repeat(5, 1fr);
@@ -40,7 +40,7 @@ const pulse = keyframes`
 `;
 
 export const SkeletonCard = styled.div`
-  height: ${({ theme }) => theme.cardHeight ? `${theme.cardHeight}px` : '360px'};
+  height: 225px;
   width: 100%;
   border-radius: 12px;
   animation: ${pulse} 1.5s ease-in-out infinite;

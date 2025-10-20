@@ -12,6 +12,7 @@ import cardSizesJson from '@/constants/card-sizes.json';
 interface CardSizesType {
   default: { gridColumn: number; gridRow: number };
   novel: { gridColumn: number; gridRow: number };
+  prose: { gridColumn: number; gridRow: number };
   // Add other keys as needed
 }
 const cardSizes: CardSizesType = cardSizesJson;
@@ -21,6 +22,9 @@ const cardSizes: CardSizesType = cardSizesJson;
 
 // Get grid span from cardSizes.json by subtype, fallback to default
 const getGridSpan = (subtype: string, medium?: ArtworkMedium) => {
+  if (subtype === 'prose') {
+    return `grid-column: span 4; grid-row: span 4;`;
+  }
   const size = (subtype in cardSizes ? (cardSizes as any)[subtype] : cardSizes['default']);
   return `grid-column: span ${size.gridColumn}; grid-row: span ${size.gridRow};`;
 };
@@ -30,7 +34,6 @@ const CardContainer = styled.div<{ $medium: ArtworkMedium; $subtype?: string; $b
   width: 100%;
   max-width: 480px;
   border-radius: 10px;
-  /* Remove explicit height, let grid control it */
   ${props => getGridSpan(props.$subtype || 'default', props.$medium)}
 
   font-size: 0.75rem;

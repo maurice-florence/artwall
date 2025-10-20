@@ -2,7 +2,7 @@
 
 import React from "react";
 import { useRouter, useParams, notFound } from "next/navigation";
-import { db } from "@/firebase";
+import { realtimeDb } from "@/firebase";
 import { ref, get } from "firebase/database";
 import { formatDate } from "@/utils";
 import { Artwork } from '@/types/index';
@@ -213,7 +213,7 @@ export default function ArtworkModalPage() {
     }
     const fetchArtwork = async () => {
       // Search all medium folders in 'artwall' for the artwork
-      const artwallRef = ref(db, 'artwall');
+      const artwallRef = ref(realtimeDb, 'artwall');
       const snapshot = await get(artwallRef);
       const data = snapshot.val();
       if (!data) {

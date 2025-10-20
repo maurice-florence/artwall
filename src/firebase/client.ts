@@ -21,4 +21,4 @@ const app = initializeApp(firebaseConfig);
 // Export the services you need
 export const db = getFirestore(app); // This is for Firestore
 export const storage = getStorage(app);
-export const realTimeDB = getDatabase(app); // 👈 Export the Realtime Database instance
+export const realtimeDb = getDatabase(app); // 👈 Export the Realtime Database instance

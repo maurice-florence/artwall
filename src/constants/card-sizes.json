@@ -1,4 +1,5 @@
 {
   "default": { "gridColumn": 1, "gridRow": 1 },
-  "novel": { "gridColumn": 2, "gridRow": 2 }
+  "novel": { "gridColumn": 2, "gridRow": 1 },
+  "prose": { "gridColumn": 4, "gridRow": 4 }
 }

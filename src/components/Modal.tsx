@@ -56,10 +56,15 @@ const ModalContent = styled.div`
   }
 `;
 
+const ModalHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 1rem;
+`;
+
 const CloseButton = styled.button`
-  position: absolute;
-  top: 1rem;
-  right: 1rem;
   background: none;
   border: none;
   font-size: 1.5rem;
@@ -159,7 +164,6 @@ const ShareButton = styled.button`
 const LanguageSwitcher = styled.div`
   display: flex;
   gap: 0.5rem;
-  margin-top: 0.5rem;
 `;
 
 const LanguageButton = styled.button<{ $active: boolean }>`
@@ -364,15 +368,9 @@ const Modal: React.FC<ModalProps> = ({
   return createPortal(
     <ModalBackdrop onClick={handleClose}>
       <ModalContent onClick={(e) => e.stopPropagation()} id="modal-root">
-        <CloseButton onClick={handleClose} aria-label="Sluit modal">
-          <FaTimes />
-        </CloseButton>
-        <div role="dialog" data-testid="modal">
-          <h2 data-testid="modal-title">{item.title}</h2>
-          <p data-testid="modal-date" style={{ marginTop: '0.25rem', opacity: 0.8 }}>({formattedDateStr})</p>
-
+        <ModalHeader>
           {/* Language Switcher */}
-          {availableLanguages.length > 1 && (
+          {availableLanguages.length > 1 ? (
             <LanguageSwitcher data-testid="modal-language-switcher">
               {availableLanguages.map((lang, idx) => (
                 <LanguageButton
@@ -385,10 +383,12 @@ const Modal: React.FC<ModalProps> = ({
                 </LanguageButton>
               ))}
             </LanguageSwitcher>
-          )}
-
-          <StyledHr />
-
+          ) : <div />}
+          <CloseButton onClick={handleClose} aria-label="Sluit modal">
+            <FaTimes />
+          </CloseButton>
+        </ModalHeader>
+        <div role="dialog" data-testid="modal">
           <MediaTextContainer>
             {/* Display content for all mediums */}
             {translation.content && (
