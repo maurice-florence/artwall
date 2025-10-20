@@ -22,9 +22,6 @@ const cardSizes: CardSizesType = cardSizesJson;
 
 // Get grid span from cardSizes.json by subtype, fallback to default
 const getGridSpan = (subtype: string, medium?: ArtworkMedium) => {
-  if (subtype === 'prose') {
-    return `grid-column: span 4; grid-row: span 4;`;
-  }
   const size = (subtype in cardSizes ? (cardSizes as any)[subtype] : cardSizes['default']);
   return `grid-column: span ${size.gridColumn}; grid-row: span ${size.gridRow};`;
 };

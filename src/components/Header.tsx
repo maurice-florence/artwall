@@ -62,14 +62,7 @@ const IconsWrapper = styled.div`
   gap: 0.5rem;
 `;
 
-const CenteredTitleWrapper = styled.div`
-  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-  display: flex;
-  align-items: center;
-  flex: 1;
-  justify-content: center;
-  position: relative;
-`;
+
 
 const MEDIUM_ICONS: Record<string, React.ReactNode> = {
   'audio': <FaMusic />,
@@ -120,13 +113,11 @@ const Header: React.FC<HeaderProps> = ({
   return (
     <HeaderWrapper data-testid="header">
       <TitleRow data-testid="header-title-row">
-        <CenteredTitleWrapper>
-          <Title data-testid="header-title">Kunstmuur</Title>
-        </CenteredTitleWrapper>
+        <Title data-testid="header-title">Kunstmuur</Title>
       </TitleRow>
       {/* Second row: filters, icons, search, theme */}
       <div style={{ width: '100%' }} data-testid="header-controls-row">
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', width: '100%' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }} data-testid="header-filters">
             <IconsWrapper data-testid="header-medium-icons">
               <MediumIconButton
@@ -153,7 +144,7 @@ const Header: React.FC<HeaderProps> = ({
               ))}
             </IconsWrapper>
           </div>
-          <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
+          <div>
             <input
               type="text"
               value={searchTerm}
