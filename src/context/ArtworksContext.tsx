@@ -3,7 +3,7 @@
 import React, { createContext, useState, useEffect, useContext, ReactNode } from 'react';
 // 👇 FIX 1: Make sure you import the Realtime Database instance, not Firestore.
 // I'm assuming your export is named 'realTimeDB' as we discussed.
-import { realTimeDB } from '../firebase'; 
+import { realtimeDb } from '../firebase'; 
 import { ref, onValue } from 'firebase/database';
 import { Artwork } from '@/types';
 
@@ -38,7 +38,7 @@ export const ArtworksProvider: React.FC<{ children: ReactNode }> = ({ children }
     setError(null);
 
     // 👇 FIX 2: Use the correct database instance
-    const artwallRef = ref(realTimeDB, 'artwall');
+    const artwallRef = ref(realtimeDb, 'artwall');
 
     const unsubscribe = onValue(
       artwallRef, 

@@ -4,7 +4,7 @@ import { getAuth, onAuthStateChanged, User } from 'firebase/auth';
 import { ref, onValue } from 'firebase/database';
 import { useArtworks } from '@/context/ArtworksContext';
 // 👇 FIX: Import your Realtime Database instance, not the Firestore one.
-import { realTimeDB } from '@/firebase/client';
+import { realtimeDb } from '@/firebase/client';
 
 // SECTION: Styled Components (no changes needed here)
 
@@ -79,7 +79,7 @@ const Footer: React.FC<FooterProps> = ({ onAddNewArtwork }) => {
   // ✅ IMPROVEMENT: Consolidate all side effects into a single useEffect hook.
   useEffect(() => {
     // 👇 FIX: Use the correct database instance and path.
-    const artwallRef = ref(realTimeDB, 'artwall');
+    const artwallRef = ref(realtimeDb, 'artwall');
 
     // 1. Set up the database listener
     const unsubscribeDb = onValue(artwallRef, (snapshot) => {

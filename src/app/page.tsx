@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo, useCallback, lazy, Suspense } from 'react';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
-import { db } from '@/firebase';
+import { db, realtimeDb } from '@/firebase';
 import { ref, onValue, remove, update, push } from 'firebase/database';
 import { getStorage, ref as storageRef, deleteObject } from "firebase/storage";
 import { 
@@ -110,7 +110,7 @@ export default function HomePage() {
 
     const handleSaveNewEntry = async (entry: any) => {
         if (entry && entry._delete && entry.id && entry.medium) {
-            await remove(ref(db, `artwall/${entry.medium}/${entry.id}`));
+            await remove(ref(realtimeDb, `artwall/${entry.medium}/${entry.id}`));
             setSelectedItem(null);
             return;
         }
@@ -124,10 +124,10 @@ export default function HomePage() {
             isHidden: false,
         };
         // Generate a new key for the artwork
-        const artwallRef = ref(db, `artwall/${medium}`);
+        const artwallRef = ref(realtimeDb, `artwall/${medium}`);
         const pushRef = push(artwallRef);
         const newId = pushRef.key;
-        await update(ref(db, `artwall/${medium}/${newId}`), { ...newEntry, id: newId });
+        await update(ref(realtimeDb, `artwall/${medium}/${newId}`), { ...newEntry, id: newId });
     };
 
     const handleEdit = useCallback((artwork: Artwork) => {
