@@ -46,4 +46,9 @@ export const SUBTYPE_LABELS: Record<string, string> = {
   other: 'Overig'
 };
 
-// Only keep the new JSON-driven implementation
+// Helper functions for type-safe medium checks
+export const isWritingMedium = (medium: ArtworkMedium): boolean => medium === 'writing';
+export const isAudioMedium = (medium: ArtworkMedium): boolean => medium === 'audio';
+export const isDrawingMedium = (medium: ArtworkMedium): boolean => medium === 'drawing';
+export const isSculptureMedium = (medium: ArtworkMedium): boolean => medium === 'sculpture';
+export const isOtherMedium = (medium: ArtworkMedium): boolean => medium === 'other';

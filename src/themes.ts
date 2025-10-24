@@ -1,7 +1,7 @@
 export const atelierTheme = {
-  body: '#F8F7F2',
+  body: '#ffffff',
   text: '#3D405B',
-  headerBg: '#3D405B',
+  headerBg: '#0b8783',
   headerText: '#F8F7F2',
   accent: '#E07A5F',
   accentText: '#FFFFFF',
@@ -23,7 +23,8 @@ export const atelierTheme = {
     sculpture: 'radial-gradient(circle at 30% 30%, #e8e8e8 60%, #f5f5f5 100%)',
     drawing: 'repeating-linear-gradient(120deg, #e8e8e8 0px, #e8e8e8 10px, #f5f5f5 10px, #f5f5f5 20px)',
   },
-  primary: '#3D405B',
+  primary: '#0b8783',
+  complementary: '#f4787c',
   cardHeight: 360,
   gridGap: 24,
   border: '#d1d5db',
@@ -32,14 +33,15 @@ export const atelierTheme = {
 };
 
 export const blueprintTheme = {
-  body: '#EAF2F8',
+  body: '#ffffff',
   text: '#17202A',
-  headerBg: '#2E86C1',
+  headerBg: '#0b8783',
   headerText: '#FFFFFF',
   accent: '#1F618D',
   accentText: '#FFFFFF',
   cardBg: '#FFFFFF',
   cardText: '#17202A',
+  complementary: '#f4787c',
   categories: {
     music: '#C0392B',
     poem: '#2980B9',
@@ -56,7 +58,7 @@ export const blueprintTheme = {
     sculpture: 'radial-gradient(circle at 70% 70%, #fbeee6 60%, #eaf2f8 100%)',
     drawing: 'repeating-linear-gradient(120deg, #eaf2f8 0px, #eaf2f8 10px, #f8f9f9 10px, #f8f9f9 20px)',
   },
-  primary: '#2E86C1',
+  primary: '#0b8783',
   cardHeight: 360,
   gridGap: 16,
   border: '#d1d5db',
@@ -89,7 +91,8 @@ export const darkModeTheme = {
     sculpture: 'radial-gradient(circle at 30% 30%, #232b36 60%, #1e2732 100%)',
     drawing: 'repeating-linear-gradient(120deg, #232b36 0px, #232b36 10px, #1e2732 10px, #1e2732 20px)',
   },
-  primary: '#BB86FC',
+  primary: '#0b8783',
+  complementary: '#f4787c',
   cardHeight: 360,
   gridGap: 16,
   border: '#d1d5db',
@@ -98,7 +101,7 @@ export const darkModeTheme = {
 };
 
 export const natureTheme = {
-  body: '#E6F4EA', // light leaf green
+  body: '#ffffff', // standard background
   text: '#2C3E50',
   headerBg: '#7FB77E', // leaf green
   headerText: '#F8F7F2',
@@ -123,7 +126,8 @@ export const natureTheme = {
     sculpture: 'linear-gradient(135deg, #D7CCC8 0%, #A1887F 100%)',
     drawing: 'linear-gradient(135deg, #CFD8DC 0%, #90A4AE 100%)',
   },
-  primary: '#7FB77E',
+  primary: '#0b8783',
+  complementary: '#f4787c',
   cardHeight: 360,
   gridGap: 24,
   border: '#d1d5db',
@@ -132,7 +136,7 @@ export const natureTheme = {
 };
 
 export const earthTheme = {
-  body: '#F5F5F5',
+  body: '#ffffff',
   text: '#3E2723',
   headerBg: '#795548', // brown
   headerText: '#FFFFFF',
@@ -157,7 +161,8 @@ export const earthTheme = {
     sculpture: 'linear-gradient(135deg, #D7CCC8 0%, #A1887F 100%)',
     drawing: 'linear-gradient(135deg, #BDBDBD 0%, #757575 100%)',
   },
-  primary: '#795548',
+  primary: '#0b8783',
+  complementary: '#f4787c',
   cardHeight: 360,
   gridGap: 24,
   border: '#d1d5db',
@@ -166,7 +171,7 @@ export const earthTheme = {
 };
 
 export const tealTheme = {
-  body: '#E0F2F1',
+  body: '#ffffff',
   text: '#004D40',
   headerBg: '#00796B',
   headerText: '#FFFFFF',
@@ -190,7 +195,8 @@ export const tealTheme = {
     sculpture: 'radial-gradient(circle at 70% 70%, #b2dfdb 60%, #e0f2f1 100%)',
     drawing: 'repeating-linear-gradient(120deg, #e0f2f1 0px, #e0f2f1 10px, #f8f9f9 10px, #f8f9f9 20px)',
   },
-  primary: '#00796B',
+  primary: '#0b8783',
+  complementary: '#f4787c',
   cardHeight: 360,
   gridGap: 16,
   border: '#B2DFDB',
@@ -204,5 +210,38 @@ export const themes = {
   teal: tealTheme,
 };
 
-export type Theme = typeof atelierTheme;
+export interface Theme {
+  body: string;
+  text: string;
+  headerBg: string;
+  headerText: string;
+  accent: string;
+  accentText: string;
+  cardBg: string;
+  cardText: string;
+  categories: {
+    music: string;
+    poem: string;
+    prosepoem: string;
+    prose: string;
+    sculpture: string;
+    drawing: string;
+  };
+  cardBackgrounds: {
+    default: string;
+    music: string;
+    poem: string;
+    prose: string;
+    sculpture: string;
+    drawing: string;
+  };
+  primary: string;
+  complementary: string;
+  cardHeight: number;
+  gridGap: number;
+  border: string;
+  textSecondary: string;
+  secondary: string;
+}
+
 export type ThemeName = 'blueprint' | 'dark' | 'teal';

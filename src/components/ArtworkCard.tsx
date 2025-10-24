@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { FaBookOpen, FaPaintBrush, FaMusic, FaAlignLeft, FaEllipsisH, FaImage, FaPenNib, FaCube } from 'react-icons/fa';
 import styled, { useTheme } from 'styled-components';
 import { Artwork, ArtworkMedium } from '@/types';
 import cardSizesJson from '@/constants/card-sizes.json';
 import GeneratedImage from './GeneratedImage';
+import { isWritingMedium, isAudioMedium } from '../constants/medium';
+import { generateUniqueGradient, shouldUseDarkText } from '@/utils/gradient-generator';
 
 // Removed WritingCardSVG import
 
@@ -74,11 +76,28 @@ const CardFace = styled.div`
 `;
 
 // Use a transient prop ($medium) to avoid passing it to the DOM
-const CardFront = styled(CardFace)<{ $medium: ArtworkMedium; $imageUrl?: string; $isWriting?: boolean; $isAudio?: boolean }>`
-  background: ${({ theme, $imageUrl, $isWriting, $isAudio }) => ($isWriting && !$imageUrl) ? `url('/paper1.jpg')` : ($isAudio && !$imageUrl) ? `url('/paper2.png')` : $imageUrl ? `url(${$imageUrl})` : theme.cardBg};
+const CardFront = styled(CardFace)<{ 
+  $medium: ArtworkMedium; 
+  $imageUrl?: string; 
+  $isWriting?: boolean; 
+  $isAudio?: boolean;
+  $gradient?: string;
+  $useDarkText?: boolean;
+}>`
+  background: ${({ theme, $imageUrl, $isWriting, $isAudio, $gradient, $medium }) => 
+    $gradient ? $gradient :
+    ($isWriting && !$imageUrl) ? `url('/paper1.jpg')` : 
+    ($isAudio && !$imageUrl) ? `url('/paper2.png')` : 
+    $imageUrl ? `url(${$imageUrl})` : 
+  // If no image/gradient, use primary for writing, complementary for audio, otherwise card background
+  ($medium === 'writing') ? theme.primary :
+  ($medium === 'audio') ? (theme as any).complementary || theme.cardBg :
+    theme.cardBg
+  };
   background-size: cover;
   background-position: center;
-  color: ${({ theme }) => theme.cardText};
+  color: ${({ theme, $useDarkText }) => $useDarkText ? theme.text : theme.cardText};
+  transition: background 220ms ease, color 160ms ease;
   padding: 0.7rem;
   font-size: 0.75rem;
   justify-content: space-between;
@@ -239,7 +258,7 @@ const LanguageTag = styled.span`
   font-weight: 500;
 `;
 
-const TextOverlay = styled.div`
+const TextOverlay = styled.div<{ $subtle?: boolean }>`
   position: absolute;
   top: 0;
   left: 0;
@@ -247,12 +266,13 @@ const TextOverlay = styled.div`
   height: 100%;
   padding: 1rem;
   font-family: 'Courier New', Courier, monospace;
-  font-size: 14px;
+  font-size: ${props => props.$subtle ? '10px' : '14px'};
   line-height: 1.5;
-  color: #333;
+  color: ${props => props.$subtle ? 'rgba(0, 0, 0, 0.15)' : '#333'};
   overflow: hidden;
   white-space: pre-wrap;
   word-break: break-word;
+  pointer-events: none;
 `;
 
 const AudioTextOverlay = styled(TextOverlay)`
@@ -343,31 +363,65 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin }: ArtworkCardProps) => {
       return null;
     }
 
-    const isWriting = artwork.medium === 'writing';
-    const isAudio = artwork.medium === 'audio';
+    const isWriting = isWritingMedium(artwork.medium);
+    const isAudio = isAudioMedium(artwork.medium);
     const hasImage = images.length > 0;
     const imageUrl = hasImage ? getImageUrl(images[0], 'card') : undefined;
 
     const start = Math.floor(cardText.length / 3);
     const textPreview = cardText.slice(start);
 
+    // Generate gradient for cards without images — memoized and keyed by
+    // artwork identity + relevant theme fields to avoid recalculation when
+    // unrelated theme properties change.
+    const themeFingerprint = `${(theme as any).primary || ''}|${(theme as any).complementary || ''}|${(theme as any).body || ''}`;
+
+    const uniqueGradient = useMemo(() => {
+      if ((isWriting || isAudio) && !hasImage) {
+        return generateUniqueGradient(artwork.id || artwork.title, theme, artwork.medium);
+      }
+      return undefined;
+    }, [artwork.id, artwork.title, artwork.medium, isWriting, isAudio, hasImage, themeFingerprint]);
+
+    const useDarkText = useMemo(() => {
+      return uniqueGradient ? shouldUseDarkText(uniqueGradient) : false;
+    }, [uniqueGradient, themeFingerprint]);
+
+    // Allow toggling between gradient and text preview for writing pieces
+    const [showPreview, setShowPreview] = useState(false);
+    const togglePreview = useCallback((e: React.MouseEvent) => {
+      if (isWriting && !hasImage) {
+        e.stopPropagation();
+        setShowPreview(prev => !prev);
+      }
+    }, [isWriting, hasImage]);
+
     // Card front: only show title, image/waveform, language, and footer. No extra text under the title for any medium.
     return (
       <CardContainer $medium={artwork.medium} $subtype={subtype} onClick={onSelect} data-testid={`artwork-card-${artwork.id}`}>
         <CardInner>
-          <CardFront $medium={artwork.medium} $imageUrl={imageUrl} $isWriting={isWriting} $isAudio={isAudio}>
+          <CardFront 
+            $medium={artwork.medium} 
+            $imageUrl={imageUrl} 
+            $isWriting={isWriting} 
+            $isAudio={isAudio}
+            $gradient={uniqueGradient}
+            $useDarkText={useDarkText}
+            onClick={togglePreview}
+          >
             {(isWriting || isAudio) && !hasImage ? (
               isWriting ? (
-                <TextOverlay>{textPreview}</TextOverlay>
+                showPreview ? (
+                  <TextOverlay style={{ color: useDarkText ? theme.text : theme.cardText }}>{textPreview}</TextOverlay>
+                ) : (
+                  <TextOverlay $subtle>{textPreview}</TextOverlay>
+                )
               ) : (
-                <AudioTextOverlay>{textPreview}</AudioTextOverlay>
+                <TextOverlay $subtle>{textPreview}</TextOverlay>
               )
             ) : !imageUrl && (
               <>
-                <div style={{ borderRadius: 4, marginBottom: '0.5rem', flexShrink: 0 }}>
-                  <CardTitle data-testid={`artwork-title-${artwork.id}`}>{artwork.title}</CardTitle>
-                </div>
-                {/* Image or waveform, always between title and footer */}
+                {/* Only show generated image, no title */}
                 <div style={{ flex: 1, minHeight: 0, minWidth: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 4 }}>
                   <GeneratedImage title={artwork.title || ''} medium={artwork.medium} />
                 </div>

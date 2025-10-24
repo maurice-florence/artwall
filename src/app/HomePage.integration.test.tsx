@@ -37,7 +37,8 @@ const mockArtworks = [
 
 describe('Artwall App Integration', () => {
   beforeEach(() => {
-    (useArtworks as vi.Mock).mockReturnValue({ artworks: mockArtworks, isLoading: false });
+    const mock = useArtworks as jest.Mock;
+    mock.mockReturnValue({ artworks: mockArtworks, isLoading: false });
   });
 
   it('renders HomePage and shows visible artworks', () => {
