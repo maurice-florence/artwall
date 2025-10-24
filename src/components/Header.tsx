@@ -82,6 +82,11 @@ const MediumIconButton = styled.button<{ $selected?: boolean }>`
   cursor: pointer;
   opacity: ${({ $selected }) => $selected ? 1 : 0.7};
   transition: color 0.2s, opacity 0.2s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem;
+  height: calc(1rem + 0.8rem);
   &:hover {
     color: ${({ theme }) => theme.primary};
     opacity: 1;
@@ -113,7 +118,7 @@ const Header: React.FC<HeaderProps> = ({
   return (
     <HeaderWrapper data-testid="header">
       <TitleRow data-testid="header-title-row">
-        <Title data-testid="header-title">Kunstmuur</Title>
+        <Title data-testid="header-title">Artwall</Title>
       </TitleRow>
       {/* Second row: filters, icons, search, theme */}
       <div style={{ width: '100%' }} data-testid="header-controls-row">

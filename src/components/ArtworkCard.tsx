@@ -105,8 +105,8 @@ const CardFront = styled(CardFace)<{
   flex-direction: column;
 `;
 
-const CardBack = styled(CardFace)`
-  background: ${({ theme }) => theme.primary};
+const CardBack = styled(CardFace)<{ $medium: ArtworkMedium }>`
+  background: ${({ theme, $medium }) => $medium === "audio" ? theme.complementary : theme.primary};
   transform: rotateY(180deg);
   padding: 0.7rem;
   justify-content: center;
@@ -441,15 +441,15 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin }: ArtworkCardProps) => {
               </>
             )}
           </CardFront>
-          <CardBack>
-            <CardBackTitle>{artwork.title}</CardBackTitle>
-            <CardBackFooter style={{flexDirection: 'column' }}>
-              <span>{formattedDate}</span>
-              <CardCategory>
-                {getArtworkIcon(artwork)}
-              </CardCategory>
-            </CardBackFooter>
-          </CardBack>
+            <CardBack $medium={artwork.medium}>
+              <CardBackTitle>{artwork.title}</CardBackTitle>
+              <CardBackFooter style={{flexDirection: 'column' }}>
+                <span>{formattedDate}</span>
+                <CardCategory>
+                  {getArtworkIcon(artwork)}
+                </CardCategory>
+              </CardBackFooter>
+            </CardBack>
         </CardInner>
       </CardContainer>
     );
@@ -476,3 +476,4 @@ const DeleteButton = styled.button`
 
 export { CardContainer };
 export default ArtworkCard;
+

@@ -48,7 +48,7 @@ function getThemeCompatibleColor(
       // Use primary color with enhanced saturation for poetry/writing
       baseColorHsl = {
         h: primaryHsl.h,
-        s: Math.min(100, primaryHsl.s * 1.5), // 50% more saturated
+        s: Math.min(100, primaryHsl.s * 1.1), // 10% more saturated
         l: Math.min(65, primaryHsl.l * 1.1) // Slightly lighter
       };
       break;
@@ -77,7 +77,7 @@ function getThemeCompatibleColor(
     hue = (baseColorHsl.h + (baseHue % 25)) % 360;
   } else if (medium === 'poetry' || medium === 'writing') {
     // For poetry/writing cards, stay very close to primary color
-    hue = (baseColorHsl.h + (baseHue % 10)) % 360;
+    hue = (baseColorHsl.h + (baseHue % 20)) % 360;
   } else {
     // For other cards, allow more variation while staying within a category-appropriate range
     const variationRange = baseHue % 30; // Reduced from 45 for more consistency
@@ -101,7 +101,7 @@ function getThemeCompatibleColor(
   } else {
     adjustedBaseColor = {
       h: hue,
-      s: Math.min(100, baseColorHsl.s * 1.2), // Standard saturation increase
+      s: Math.min(100, baseColorHsl.s * 0.2), // Standard saturation increase
       l: Math.min(95, baseColorHsl.l + 10) // Lighter for other types
     };
   }
@@ -124,6 +124,13 @@ function getThemeCompatibleColor(
       saturation = Math.min(55, baseColorHsl.s + 5); // Maintain some color at the end
       lightness = Math.max(85, baseColorHsl.l + 15); // Lightest end
       break;
+  }
+  // Darken writing medium gradients a bit to give more readable contrast
+  if (medium === 'writing' || medium === 'poetry') {
+    // reduce lightness across variants, clamp reasonably
+    lightness = Math.max(30, Math.min(85, lightness - 12));
+    // keep saturation a bit higher for color richness
+    saturation = Math.min(100, saturation + 6);
   }
 
   return `hsl(${hue}, ${saturation}%, ${lightness}%)`;

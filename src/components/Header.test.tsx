@@ -25,7 +25,7 @@ describe('Header', () => {
   it('renders without crashing and shows title', () => {
     render(<Header {...mockProps} />);
     expect(screen.getByTestId('header')).toBeInTheDocument();
-    expect(screen.getByTestId('header-title')).toHaveTextContent('Kunstmuur');
+    expect(screen.getByTestId('header-title')).toHaveTextContent('Artwall');
     expect(screen.getByTestId('header-title-row')).toBeInTheDocument();
     expect(screen.getByTestId('header-controls-row')).toBeInTheDocument();
     expect(screen.getByTestId('header-filters')).toBeInTheDocument();
