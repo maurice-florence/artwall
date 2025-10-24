@@ -381,8 +381,13 @@ def sync_to_firebase(force_update: bool = False):
     for medium in VALID_MEDIUMS:
         medium_ref = artwall_ref.child(medium)
         medium_items = medium_ref.get() or {}
-        for k in medium_items.keys():
-            existing_artworks[f"{medium}/{k}"] = medium_items[k]
+        # Handle both dict and tuple return types from Firebase
+        if isinstance(medium_items, dict):
+            items = medium_items.items()
+        else:
+            items = medium_items if medium_items else []
+        for k, v in items:
+            existing_artworks[f"{medium}/{k}"] = v
             existing_keys.add(f"{medium}/{k}")
     print(f"ℹ️  {len(existing_keys)} bestaande items gevonden")
 
@@ -534,15 +539,22 @@ def sync_to_firebase(force_update: bool = False):
         for file_path in grouped_item['files']:
             if file_path.suffix == '.html':
                 continue
+
+            # Use medium for storage path (moved outside try block)
+            medium_folder = medium if medium in VALID_MEDIUMS else 'other'
+            
             try:
-                # Use medium for storage path
-                medium_folder = medium if medium in VALID_MEDIUMS else 'other'
+                # Check if it's an image that should be resized
+                is_image = file_path.suffix.lower() in ['.jpg', '.jpeg', '.png', '.webp', '.gif']
+                
+                # Upload original file
                 blob = bucket.blob(f"{medium_folder}/{file_path.name}")
                 blob.upload_from_filename(str(file_path))
                 blob.make_public()
                 media_urls.append(blob.public_url)
                 print(f"  ☁️ {medium_folder}/{file_path.name}")
                 storage_operations['uploaded'].append(f"{medium_folder}/{file_path.name}")
+                
             except Exception as e:
                 print(f"  ❌ {medium_folder}/{file_path.name} - {e}")
                 storage_operations['failed'].append(f"{medium_folder}/{file_path.name}: {e}")

@@ -9,6 +9,7 @@ import { formatDate } from '@/utils';
 import { Artwork } from '@/types';
 import { useRouter } from 'next/navigation';
 import { createPortal } from 'react-dom';
+import { getResizedImageUrl } from '@/utils/image-urls';
 
 const ModalBackdrop = styled.div.attrs({
   role: 'dialog',
@@ -284,7 +285,7 @@ const Modal: React.FC<ModalProps> = ({
   };
 
   // Media type detection utility
-  function getMediaType(url: string): 'image' | 'video' | 'audio' | 'pdf' | 'unknown' {
+function getMediaType(url: string): 'image' | 'video' | 'audio' | 'pdf' | 'unknown' {
     if (!url) return 'unknown';
     const ext = url.split('.').pop()?.toLowerCase().split('?')[0];
     if (!ext) return 'unknown';
@@ -423,7 +424,18 @@ const Modal: React.FC<ModalProps> = ({
                     {(() => {
                         const currentUrl = allMedia[currentMediaIndex];
                         const type = getMediaType(currentUrl);
-                        if (type === 'image') return <ResponsiveImage src={currentUrl} alt={`Media ${currentMediaIndex + 1}`} data-testid={`modal-media-image-${currentMediaIndex}`} onClick={() => window.open(currentUrl, '_blank')} />;
+                        if (type === 'image') {
+                          // Use full size for modal, open original in new tab
+                          const fullSizeUrl = getResizedImageUrl(currentUrl, 'full');
+                          return (
+                            <ResponsiveImage 
+                              src={fullSizeUrl} 
+                              alt={`Media ${currentMediaIndex + 1}`} 
+                              data-testid={`modal-media-image-${currentMediaIndex}`} 
+                              onClick={() => window.open(currentUrl, '_blank')} 
+                            />
+                          );
+                        }
                         if (type === 'video') return <video src={currentUrl} controls style={{ width: '100%', maxHeight: '70vh', borderRadius: 4, background: '#222' }} data-testid={`modal-media-video-${currentMediaIndex}`} />;
                         if (type === 'audio') return <audio src={currentUrl} controls style={{ width: '100%', borderRadius: 4, background: '#222' }} data-testid={`modal-media-audio-${currentMediaIndex}`} />;
                         if (type === 'pdf') return <iframe src={currentUrl} style={{ width: '100%', height: '70vh', border: '1px solid #ddd', borderRadius: 4 }} title={`PDF ${currentMediaIndex + 1}`} data-testid={`modal-media-pdf-${currentMediaIndex}`} />;

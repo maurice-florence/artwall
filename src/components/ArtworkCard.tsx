@@ -213,24 +213,8 @@ const truncateText = (text: string, maxLength: number) => {
   return text.length > maxLength ? text.slice(0, maxLength - 3) + '...' : text;
 };
 
-const getResizedImageUrl = (url: string, width: number, height: number) => {
-  if (!url) return '';
-  const extensionIndex = url.lastIndexOf('.');
-  if (extensionIndex === -1) return url; // No extension found
-
-  const filename = url.slice(0, extensionIndex);
-  const extension = url.slice(extensionIndex);
-  
-  // Check if there are query parameters
-  const queryIndex = extension.indexOf('?');
-  if (queryIndex !== -1) {
-    const ext = extension.slice(0, queryIndex);
-    const query = extension.slice(queryIndex);
-    return `${filename}_${width}x${height}${ext}${query}`;
-  }
-
-  return `${filename}_${width}x${height}${extension}`;
-};
+// Import the image URL utility
+import { getResizedImageUrl as getImageUrl } from '@/utils/image-urls';
 
 interface ArtworkCardProps {
     artwork: Artwork;
@@ -362,7 +346,7 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin }: ArtworkCardProps) => {
     const isWriting = artwork.medium === 'writing';
     const isAudio = artwork.medium === 'audio';
     const hasImage = images.length > 0;
-    const imageUrl = hasImage ? getResizedImageUrl(images[0], 480, 480) : undefined;
+    const imageUrl = hasImage ? getImageUrl(images[0], 'card') : undefined;
 
     const start = Math.floor(cardText.length / 3);
     const textPreview = cardText.slice(start);

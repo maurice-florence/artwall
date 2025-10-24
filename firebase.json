@@ -29,5 +29,31 @@
         "write": "request.auth != null"
       }
     }
+  },
+  "extensions": {
+    "storage-resize-images": {
+      "sizes": [
+        {
+          "name": "thumbnail",
+          "width": 200,
+          "height": 200,
+          "quality": 90
+        },
+        {
+          "name": "card",
+          "width": 400,
+          "height": 400,
+          "quality": 90
+        },
+        {
+          "name": "full",
+          "width": 1200,
+          "height": 1200,
+          "quality": 90
+        }
+      ],
+      "deleteOriginalFile": false,
+      "imageFormats": ["JPEG", "PNG", "WEBP"]
+    }
   }
 }
