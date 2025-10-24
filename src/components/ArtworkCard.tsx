@@ -3,6 +3,7 @@ import { FaBookOpen, FaPaintBrush, FaMusic, FaAlignLeft, FaEllipsisH, FaImage, F
 import styled, { useTheme } from 'styled-components';
 import { Artwork, ArtworkMedium } from '@/types';
 import cardSizesJson from '@/constants/card-sizes.json';
+import GeneratedImage from './GeneratedImage';
 
 // Removed WritingCardSVG import
 
@@ -212,6 +213,25 @@ const truncateText = (text: string, maxLength: number) => {
   return text.length > maxLength ? text.slice(0, maxLength - 3) + '...' : text;
 };
 
+const getResizedImageUrl = (url: string, width: number, height: number) => {
+  if (!url) return '';
+  const extensionIndex = url.lastIndexOf('.');
+  if (extensionIndex === -1) return url; // No extension found
+
+  const filename = url.slice(0, extensionIndex);
+  const extension = url.slice(extensionIndex);
+  
+  // Check if there are query parameters
+  const queryIndex = extension.indexOf('?');
+  if (queryIndex !== -1) {
+    const ext = extension.slice(0, queryIndex);
+    const query = extension.slice(queryIndex);
+    return `${filename}_${width}x${height}${ext}${query}`;
+  }
+
+  return `${filename}_${width}x${height}${extension}`;
+};
+
 interface ArtworkCardProps {
     artwork: Artwork;
     onSelect: () => void;
@@ -342,7 +362,7 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin }: ArtworkCardProps) => {
     const isWriting = artwork.medium === 'writing';
     const isAudio = artwork.medium === 'audio';
     const hasImage = images.length > 0;
-    const imageUrl = hasImage ? images[0] : undefined;
+    const imageUrl = hasImage ? getResizedImageUrl(images[0], 480, 480) : undefined;
 
     const start = Math.floor(cardText.length / 3);
     const textPreview = cardText.slice(start);
@@ -365,15 +385,7 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin }: ArtworkCardProps) => {
                 </div>
                 {/* Image or waveform, always between title and footer */}
                 <div style={{ flex: 1, minHeight: 0, minWidth: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 4 }}>
-                  {images.length > 0 ? (
-                    <div style={{ width: '100%', height: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: 0, padding: 0 }}>
-                      <FaImage size={26} color={theme.accent || '#1F618D'} />
-                    </div>
-                  ) : (
-                    <div style={{ width: '100%', height: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: 0, padding: 0 }}>
-                      <FaImage size={26} color={theme.accent || '#1F618D'} />
-                    </div>
-                  )}
+                  <GeneratedImage title={artwork.title || ''} medium={artwork.medium} />
                 </div>
                 {availableLanguages.length > 1 && (
                   <LanguageIndicator data-testid={`artwork-languages-${artwork.id}`}> 
