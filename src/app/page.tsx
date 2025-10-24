@@ -46,6 +46,7 @@ export default function HomePage() {
     const [showNewEntryModal, setShowNewEntryModal] = useState(false);
     const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
     const [artworkToEdit, setArtworkToEdit] = useState<Artwork | null>(null);
+    const [visibleCount, setVisibleCount] = useState(100);
 
     // Local state for medium and year filtering
     const [selectedMedium, setSelectedMedium] = useState<string>('all');
@@ -58,6 +59,17 @@ export default function HomePage() {
         animations: true,
         theme: 'default',
     });
+
+    useEffect(() => {
+        const handleScroll = () => {
+            if (window.innerHeight + document.documentElement.scrollTop >= document.documentElement.offsetHeight - 500) {
+                setVisibleCount(prevCount => prevCount + 100);
+            }
+        };
+    
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, []);
 
     const availableMediums = useMemo(() => {
         const meds = new Set(allArtworks.map((a: Artwork) => a.medium));
@@ -168,7 +180,7 @@ export default function HomePage() {
               setSearchTerm={setSearchTerm}
             />
                 <CollageContainer>
-                    {timelineItems.map((item: TimelineItem) => {
+                    {timelineItems.slice(0, visibleCount).map((item: TimelineItem) => {
                         if ('type' in item && item.type === 'year-marker') {
                             return <YearMarkerCard key={item.id} year={item.year} />;
                         }
@@ -220,6 +232,3 @@ export default function HomePage() {
         </PageLayout>
     );
 }
-
-
-
