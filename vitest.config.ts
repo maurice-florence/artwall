@@ -27,6 +27,7 @@ export default defineConfig({
       '@/app': path.resolve(__dirname, './src/app'),
       '@/lib': path.resolve(__dirname, './src/lib'),
       '@/utils': path.resolve(__dirname, './src/utils'),
+      '@/hooks': path.resolve(__dirname, './src/hooks'),
     },
   },
 });

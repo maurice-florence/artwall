@@ -1,9 +1,11 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { useArtworks } from '@/context/ArtworksContext';
 import styled from 'styled-components';
-import { FaArrowLeft, FaArrowRight, FaPenNib, FaBookOpen, FaPaintBrush, FaMusic, FaAlignLeft, FaImage, FaVideo, FaEllipsisH, FaCube, FaGlobe, FaCertificate, FaStar } from 'react-icons/fa';
-import ThemeEditor from './ThemeEditor'; // Importeren
+import { FaPenNib, FaPaintBrush, FaMusic, FaEllipsisH, FaCube, FaGlobe, FaCertificate, FaStar, FaSearch } from 'react-icons/fa';
+import ThemeEditor from './ThemeEditor';
 import { MEDIUMS, MEDIUM_LABELS, SUBTYPE_LABELS } from '@/constants/medium';
+import { useDropdown } from '@/hooks/useDropdown';
+import { BaseIconButton, Dropdown } from './common';
 
 const HeaderWrapper = styled.header`
   background: ${({ theme }) => theme.body};
@@ -15,6 +17,14 @@ const HeaderWrapper = styled.header`
   position: sticky;
   top: 0;
   z-index: 100;
+`;
+
+const ControlsRow = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  width: 100%;
 `;
 
 const TitleRow = styled.div`
@@ -31,29 +41,39 @@ const Title = styled.h1`
   margin: 0;
 `;
 
-const ToggleButton = styled.button`
-  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-  background: none;
-  border: none;
-  color: ${({ theme }) => theme.accent};
-  font-size: 1.5rem;
-  margin-right: 1.2rem;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  opacity: 0.95;
-  transition: color 0.2s, opacity 0.2s;
-  &:hover {
-    color: ${({ theme }) => theme.headerText};
-    opacity: 1;
-  }
-`;
-
 const RightSection = styled.div`
   font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
   display: flex;
   align-items: center;
   gap: 0.5rem; /* match IconsWrapper gap for consistent spacing */
+`;
+
+const SearchWrapper = styled.div`
+  position: relative;
+  display: flex;
+  align-items: center;
+`;
+
+const SearchIcon = styled(FaSearch)`
+  position: absolute;
+  left: 1rem;
+  color: ${({ theme }) => theme.secondary};
+  pointer-events: none;
+`;
+
+const SearchInput = styled.input`
+  padding: 0.5rem 1rem 0.5rem 2.5rem; /* Left padding for icon */
+  border-radius: 20px;
+  border: 1px solid ${({ theme }) => theme.border};
+  font-size: 1rem;
+  background-color: ${({ theme }) => theme.body};
+  color: ${({ theme }) => theme.text};
+  transition: border-color 0.2s, box-shadow 0.2s;
+  &:focus {
+    outline: none;
+    border-color: ${({ theme }) => theme.primary};
+    box-shadow: 0 0 0 2px ${({ theme }) => theme.primary}30;
+  }
 `;
 
 const IconsWrapper = styled.div`
@@ -63,8 +83,6 @@ const IconsWrapper = styled.div`
   gap: 0.5rem;
 `;
 
-
-
 const MEDIUM_ICONS: Record<string, React.ReactNode> = {
   'audio': <FaMusic />,
   'writing': <FaPenNib />,
@@ -73,60 +91,16 @@ const MEDIUM_ICONS: Record<string, React.ReactNode> = {
   'other': <FaEllipsisH />,
 };
 
-const MediumIconButton = styled.button<{ $selected?: boolean }>`
-  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-  background: none;
-  border: none;
-  color: ${({ theme, $selected }) => $selected ? theme.primary : theme.secondary};
-  font-size: 1.15rem;
-  margin: 0 0.1rem;
-  cursor: pointer;
-  opacity: ${({ $selected }) => $selected ? 1 : 0.7};
-  transition: color 0.2s, opacity 0.2s;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.25rem;
-  height: calc(1rem + 0.8rem);
-  &:hover {
-    color: ${({ theme }) => theme.primary};
-    opacity: 1;
-  }
-`;
+const MediumIconButton = styled(BaseIconButton)``;
 
 const DropdownWrapper = styled.div`
   position: relative;
 `;
 
-const Dropdown = styled.div<{ $closing?: boolean }>`
-  position: absolute;
-  top: calc(100% - 2px); /* Account for the padding-bottom */
-  right: 0;
-  background: ${({ theme }) => theme.body};
-  border: 1px solid rgba(0,0,0,0.08);
-  padding: 0.4rem;
-  border-radius: 6px;
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  z-index: 200;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
-  opacity: 0;
-  transform: translateY(-6px) scale(0.99);
-  animation: ${({ $closing }) => $closing ? 'fadeOutDown 140ms ease forwards' : 'fadeInUp 160ms ease forwards'};
-
-  @keyframes fadeInUp {
-    to { opacity: 1; transform: translateY(0) scale(1); }
-  }
-  @keyframes fadeOutDown {
-    to { opacity: 0; transform: translateY(-6px) scale(0.99); }
-  }
-`;
-
-const DropdownButton = styled.button<{ $selected?: boolean }>`
+const DropdownButton = styled.button<{ $active?: boolean }>`
   background: none;
   border: none;
-  color: ${({ theme, $selected }) => $selected ? theme.primary : theme.secondary};
+  color: ${({ theme, $active }) => $active ? theme.primary : theme.secondary};
   padding: 0.35rem 0.5rem;
   display: inline-flex;
   gap: 0.25rem;
@@ -135,10 +109,12 @@ const DropdownButton = styled.button<{ $selected?: boolean }>`
   cursor: pointer;
   border-radius: 4px;
   font-size: 0.95rem;
+  transition: color 0.2s, background 0.2s;
   &:hover {
     color: ${({ theme }) => theme.primary};
     background: rgba(0,0,0,0.02);
   }
+  ${({ $active }) => $active ? `opacity: 1;` : `opacity: 0.85;`}
 `;
 
 interface HeaderProps {
@@ -173,83 +149,12 @@ const Header: React.FC<HeaderProps> = ({
   setSelectedRating,
 }) => {
   // evaluation dropdown state
-  const evalRef = useRef<HTMLDivElement | null>(null);
-  const [evalMounted, setEvalMounted] = useState(false);
-  const [evalClosing, setEvalClosing] = useState(false);
+  const evalRef = useRef<HTMLDivElement>(null);
+  const { isMounted: evalMounted, isClosing: evalClosing, toggle: toggleEvalDropdown, close: closeEvalDropdown } = useDropdown(evalRef);
 
   // rating dropdown state
-  const ratingRef = useRef<HTMLDivElement | null>(null);
-  const [ratingMounted, setRatingMounted] = useState(false);
-  const [ratingClosing, setRatingClosing] = useState(false);
-
-  const closeEvalDropdown = useCallback(() => {
-    if (!evalMounted) return;
-    setEvalClosing(true);
-    window.setTimeout(() => {
-      setEvalMounted(false);
-      setEvalClosing(false);
-    }, 180);
-  }, [evalMounted]);
-
-  const toggleEvalDropdown = useCallback(() => {
-    if (!evalMounted) {
-      setEvalMounted(true);
-      setEvalClosing(false);
-    } else {
-      closeEvalDropdown();
-    }
-  }, [evalMounted, closeEvalDropdown]);
-
-  const closeRatingDropdown = useCallback(() => {
-    if (!ratingMounted) return;
-    setRatingClosing(true);
-    window.setTimeout(() => {
-      setRatingMounted(false);
-      setRatingClosing(false);
-    }, 180);
-  }, [ratingMounted]);
-
-  const toggleRatingDropdown = useCallback(() => {
-    if (!ratingMounted) {
-      setRatingMounted(true);
-      setRatingClosing(false);
-    } else {
-      closeRatingDropdown();
-    }
-  }, [ratingMounted, closeRatingDropdown]);
-
-  const handleDocumentClick = useCallback((e: MouseEvent) => {
-    const target = e.target as Node;
-    
-    // Check if a click is outside a specific dropdown
-    const isOutside = (ref: React.RefObject<HTMLDivElement | null>) => {
-      return !ref.current || !ref.current.contains(target);
-    };
-
-    // Close dropdowns based on click location
-    if (evalMounted && isOutside(evalRef)) {
-      closeEvalDropdown();
-    }
-    if (ratingMounted && isOutside(ratingRef)) {
-      closeRatingDropdown();
-    }
-  }, [evalMounted, ratingMounted, closeEvalDropdown, closeRatingDropdown]);
-
-  const handleKeydown = useCallback((e: KeyboardEvent) => {
-    if (e.key === 'Escape') {
-      closeEvalDropdown();
-      closeRatingDropdown();
-    }
-  }, [closeEvalDropdown, closeRatingDropdown]);
-
-  useEffect(() => {
-    document.addEventListener('mousedown', handleDocumentClick);
-    document.addEventListener('keydown', handleKeydown);
-    return () => {
-      document.removeEventListener('mousedown', handleDocumentClick);
-      document.removeEventListener('keydown', handleKeydown);
-    };
-  }, [handleDocumentClick, handleKeydown]);
+  const ratingRef = useRef<HTMLDivElement>(null);
+  const { isMounted: ratingMounted, isClosing: ratingClosing, toggle: toggleRatingDropdown, close: closeRatingDropdown } = useDropdown(ratingRef);
 
   // Dev-only counts badge
   const devEvalCount = (window as any).__dev_eval_count__ ?? null;
@@ -295,13 +200,12 @@ const Header: React.FC<HeaderProps> = ({
         <Title data-testid="header-title">Artwall</Title>
       </TitleRow>
       {/* Second row: filters, icons, search, theme */}
-      <div style={{ width: '100%' }} data-testid="header-controls-row">
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', width: '100%' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }} data-testid="header-filters">
-            <IconsWrapper data-testid="header-medium-icons">
+      <ControlsRow data-testid="header-controls-row">
+          <IconsWrapper data-testid="header-medium-icons">
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }} data-testid="header-filters">
               <MediumIconButton
-                key="all"
-                $selected={selectedMedium === 'all'}
+                key="all-mediums"
+                $active={selectedMedium === 'all'}
                 title="All mediums"
                 aria-label="All mediums"
                 onClick={() => setSelectedMedium('all')}
@@ -312,7 +216,7 @@ const Header: React.FC<HeaderProps> = ({
               {([...(availableMediums.length > 0 ? availableMediums : MEDIUMS).filter(m => m !== 'other'), 'other']).map((med) => (
                 <MediumIconButton
                   key={med}
-                  $selected={selectedMedium === med}
+                  $active={selectedMedium === med}
                   title={MEDIUM_LABELS[med as keyof typeof MEDIUM_LABELS]}
                   aria-label={MEDIUM_LABELS[med as keyof typeof MEDIUM_LABELS]}
                   onClick={() => setSelectedMedium(selectedMedium === med ? 'all' : med)}
@@ -321,27 +225,26 @@ const Header: React.FC<HeaderProps> = ({
                   {MEDIUM_ICONS[med as keyof typeof MEDIUM_ICONS]}
                 </MediumIconButton>
               ))}
-            </IconsWrapper>
-          </div>
-          <div>
-            <input
+            </div>
+          </IconsWrapper>
+          <SearchWrapper>
+            <SearchIcon />
+            <SearchInput
               type="text"
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
-              placeholder="Zoeken..."
-              style={{ padding: '0.4rem 0.8rem', borderRadius: 20, border: '1px solid #ccc', fontSize: '1rem' }}
+              placeholder="Search..."
               data-testid="header-search"
               aria-label="Zoek in kunstwerken"
-              role="searchbox"
             />
-          </div>
+          </SearchWrapper>
           <RightSection data-testid="header-theme-switcher">
             {/* evaluation filter (personal seals) */}
             <DropdownWrapper ref={evalRef}>
               <MediumIconButton
                 title={'Filter op evaluatie'}
                 aria-label="Filter op evaluatie"
-                $selected={selectedEvaluation !== 'all'}
+                $active={selectedEvaluation !== 'all'}
                 onClick={() => toggleEvalDropdown()}
                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleEvalDropdown(); } }}
                 data-testid="header-filter-evaluation"
@@ -351,7 +254,7 @@ const Header: React.FC<HeaderProps> = ({
               {evalMounted && (
                 <Dropdown $closing={evalClosing}>
                   {[5,4,3,2,1].map(n => (
-                    <DropdownButton key={`eval-${n}`} onClick={() => { setSelectedEvaluation(selectedEvaluation === n ? 'all' : n); closeEvalDropdown(); }} $selected={selectedEvaluation !== 'all' && selectedEvaluation === n} title={`${n} seals of meer`} aria-label={`${n} seals of meer`}>
+                    <DropdownButton key={`eval-${n}`} onClick={() => { setSelectedEvaluation(selectedEvaluation === n ? 'all' : n); closeEvalDropdown(); }} $active={selectedEvaluation !== 'all' && selectedEvaluation === n} title={`${n} seals of meer`} aria-label={`${n} seals of meer`}>
                       <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, justifyContent: 'space-between', width: '100%', minWidth: '120px' }}>
                         <span style={{ display: 'inline-flex', gap: 4 }} aria-hidden>
                           {Array.from({length: n}).map((_,i) => <FaCertificate key={i} />)}
@@ -360,7 +263,7 @@ const Header: React.FC<HeaderProps> = ({
                       </div>
                     </DropdownButton>
                   ))}
-                  <DropdownButton onClick={() => { setSelectedEvaluation('all'); closeEvalDropdown(); }} $selected={selectedEvaluation === 'all'} title="All evaluations" aria-label="All evaluations">All</DropdownButton>
+                  <DropdownButton onClick={() => { setSelectedEvaluation('all'); closeEvalDropdown(); }} $active={selectedEvaluation === 'all'} title="All evaluations" aria-label="All evaluations">All</DropdownButton>
                 </Dropdown>
               )}
             </DropdownWrapper>
@@ -370,7 +273,7 @@ const Header: React.FC<HeaderProps> = ({
               <MediumIconButton
                 title={'Filter op beoordeling'}
                 aria-label="Filter op beoordeling"
-                $selected={selectedRating !== 'all'}
+                $active={selectedRating !== 'all'}
                 onClick={() => toggleRatingDropdown()}
                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleRatingDropdown(); } }}
                 data-testid="header-filter-rating"
@@ -380,7 +283,7 @@ const Header: React.FC<HeaderProps> = ({
               {ratingMounted && (
                 <Dropdown $closing={ratingClosing}>
                   {[5,4,3,2,1].map(n => (
-                    <DropdownButton key={`rating-${n}`} onClick={() => { setSelectedRating(selectedRating === n ? 'all' : n); closeRatingDropdown(); }} $selected={selectedRating !== 'all' && selectedRating === n} title={`${n} sterren of meer`} aria-label={`${n} sterren of meer`}>
+                    <DropdownButton key={`rating-${n}`} onClick={() => { setSelectedRating(selectedRating === n ? 'all' : n); closeRatingDropdown(); }} $active={selectedRating !== 'all' && selectedRating === n} title={`${n} sterren of meer`} aria-label={`${n} sterren of meer`}>
                       <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, justifyContent: 'space-between', width: '100%', minWidth: '120px' }}>
                         <span style={{ display: 'inline-flex', gap: 4 }} aria-hidden>
                           {Array.from({length: n}).map((_,i) => <FaStar key={i} />)}
@@ -389,7 +292,7 @@ const Header: React.FC<HeaderProps> = ({
                       </div>
                     </DropdownButton>
                   ))}
-                  <DropdownButton onClick={() => { setSelectedRating('all'); closeRatingDropdown(); }} $selected={selectedRating === 'all'} title="All ratings" aria-label="All ratings">All</DropdownButton>
+                  <DropdownButton onClick={() => { setSelectedRating('all'); closeRatingDropdown(); }} $active={selectedRating === 'all'} title="All ratings" aria-label="All ratings">All</DropdownButton>
                 </Dropdown>
               )}
             </DropdownWrapper>
@@ -397,8 +300,7 @@ const Header: React.FC<HeaderProps> = ({
             {/* Note: eval/rating counts are intentionally not shown on the main header; options show numbers inside the dropdown */}
             <ThemeEditor />
           </RightSection>
-        </div>
-      </div> {/* <-- Close the column flex div for title and toolbar */}
+      </ControlsRow>
     </HeaderWrapper>
   );
 };
