@@ -42,9 +42,12 @@ interface BaseArtwork {
   url3?: string;
   content?: string; // Primary language content
   
-  // NEW: Evaluation and rating fields
+  // NEW: evaluation and rating fields
   evaluation?: string; // Personal assessment (1-5)
   rating?: string; // Audience or public rating
+  // Normalized numeric forms produced when loading from the database
+  evaluationNum?: number | null;
+  ratingNum?: number | null;
   
   // Category-specific media fields
   coverImageUrl?: string;
@@ -122,9 +125,11 @@ export interface ArtworkFormData {
   url2?: string;
   url3?: string;
   
-  // NEW: Evaluation and rating fields
+  // NEW: evaluation and rating fields
   evaluation?: string; // Personal assessment (1-5)
   rating?: string; // Audience or public rating
+  evaluationNum?: number | null;
+  ratingNum?: number | null;
   
   // Music specific
   lyrics?: string;

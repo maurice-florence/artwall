@@ -52,6 +52,8 @@ export default function HomePage() {
     const [selectedMedium, setSelectedMedium] = useState<string>('all');
     const [selectedYear, setSelectedYear] = useState<string>('all');
     const [searchTerm, setSearchTerm] = useState<string>('');
+    const [selectedEvaluation, setSelectedEvaluation] = useState<number | 'all'>('all');
+    const [selectedRating, setSelectedRating] = useState<number | 'all'>('all');
     const [viewOptions, setViewOptions] = useState<ViewOptions>({
         spacing: 'comfortabel',
         layout: 'alternerend',
@@ -91,10 +93,22 @@ export default function HomePage() {
         if (!isAdmin && artwork.isHidden) return false;
         const mediumMatch = selectedMedium === 'all' || artwork.medium === selectedMedium;
         const yearMatch = selectedYear === 'all' || artwork.year.toString() === selectedYear;
-        const searchMatch = searchTerm.trim() === '' ? true : 
-            artwork.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            artwork.description.toLowerCase().includes(searchTerm.toLowerCase());
-        return mediumMatch && yearMatch && searchMatch;
+        const q = searchTerm.trim().toLowerCase();
+        const titleText = (artwork.title || '').toString().toLowerCase();
+        const descText = (artwork.description || '').toString().toLowerCase();
+        const searchMatch = q === '' ? true : titleText.includes(q) || descText.includes(q);
+    // Prefer normalized numeric fields produced by ArtworksContext (evaluationNum / ratingNum),
+    // fall back to raw fields if normalized versions are absent.
+    const normalizedEval = (artwork as any).evaluationNum;
+    const rawEval = (artwork as any).evaluation;
+    const evalVal = typeof normalizedEval === 'number' ? normalizedEval : (typeof rawEval === 'number' ? rawEval : (rawEval && rawEval !== '' ? Number(rawEval) : NaN));
+    const evaluationMatch = selectedEvaluation === 'all' ? true : (!isNaN(evalVal) && evalVal >= (selectedEvaluation as number));
+
+    const normalizedRating = (artwork as any).ratingNum;
+    const rawRating = (artwork as any).rating;
+    const ratingVal = typeof normalizedRating === 'number' ? normalizedRating : (typeof rawRating === 'number' ? rawRating : (rawRating && rawRating !== '' ? Number(rawRating) : NaN));
+    const ratingMatch = selectedRating === 'all' ? true : (!isNaN(ratingVal) && ratingVal >= (selectedRating as number));
+        return mediumMatch && yearMatch && searchMatch && evaluationMatch && ratingMatch;
     });
 
     const sorted = filtered.sort((a: Artwork, b: Artwork) => {
@@ -155,6 +169,33 @@ export default function HomePage() {
         setIsAdminModalOpen(true);
     };
 
+    // Dev-only debug: log how many artworks match the selected evaluation/rating when filters change
+    useEffect(() => {
+        if (process.env.NODE_ENV === 'production') return;
+        const evalCount = allArtworks.reduce((acc, a) => {
+            const val = (a as any).evaluationNum ?? ((a as any).evaluation);
+            const n = typeof val === 'number' ? val : (val && val !== '' ? Number(val) : NaN);
+            if (!isNaN(n) && selectedEvaluation !== 'all' && n >= (selectedEvaluation as number)) return acc + 1;
+            return acc;
+        }, 0);
+        const ratingCount = allArtworks.reduce((acc, a) => {
+            const val = (a as any).ratingNum ?? ((a as any).rating);
+            const n = typeof val === 'number' ? val : (val && val !== '' ? Number(val) : NaN);
+            if (!isNaN(n) && selectedRating !== 'all' && n >= (selectedRating as number)) return acc + 1;
+            return acc;
+        }, 0);
+        console.debug(`[debug] evaluation filter=${selectedEvaluation} -> ${evalCount} matching artworks (total ${allArtworks.length})`);
+        console.debug(`[debug] rating filter=${selectedRating} -> ${ratingCount} matching artworks (total ${allArtworks.length})`);
+        // Also expose on window for header badge in dev
+        try {
+            (window as any).__dev_eval_count__ = evalCount;
+            (window as any).__dev_rating_count__ = ratingCount;
+            (window as any).__dev_total__ = allArtworks.length;
+        } catch (e) {
+            // ignore (SSR, etc.)
+        }
+    }, [selectedEvaluation, selectedRating, allArtworks]);
+
     function isArtwork(item: TimelineItem): item is Artwork {
         return (item as Artwork).medium !== undefined;
     }
@@ -176,8 +217,12 @@ export default function HomePage() {
               setSelectedYear={setSelectedYear}
               availableMediums={availableMediums}
               availableYears={availableYears}
-              searchTerm={searchTerm}
-              setSearchTerm={setSearchTerm}
+                            searchTerm={searchTerm}
+                            setSearchTerm={setSearchTerm}
+                            selectedEvaluation={selectedEvaluation}
+                            setSelectedEvaluation={setSelectedEvaluation}
+                            selectedRating={selectedRating}
+                            setSelectedRating={setSelectedRating}
             />
                 <CollageContainer>
                     {timelineItems.slice(0, visibleCount).map((item: TimelineItem) => {

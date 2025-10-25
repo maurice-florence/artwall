@@ -69,12 +69,42 @@ export const ArtworksProvider: React.FC<{ children: ReactNode }> = ({ children }
                       lyrics: item.lyrics || ''
                     };
                   }
+                  // Normalize evaluation/rating into numeric fields for easier filtering elsewhere.
+                  const rawEval = (item as any).evaluation;
+                  let evaluationNum: number | null = null;
+                  if (typeof rawEval === 'number') {
+                    evaluationNum = rawEval;
+                  } else if (rawEval !== undefined && rawEval !== null && rawEval !== '') {
+                    const p = Number(rawEval);
+                    evaluationNum = Number.isFinite(p) ? p : null;
+                  }
+                  (item as any).evaluationNum = evaluationNum;
+
+                  const rawRating = (item as any).rating;
+                  let ratingNum: number | null = null;
+                  if (typeof rawRating === 'number') {
+                    ratingNum = rawRating;
+                  } else if (rawRating !== undefined && rawRating !== null && rawRating !== '') {
+                    const p = Number(rawRating);
+                    ratingNum = Number.isFinite(p) ? p : null;
+                  }
+                  (item as any).ratingNum = ratingNum;
+
                   loadedArtworks.push(item as Artwork);
                 });
               }
             });
           }
           setArtworks(loadedArtworks);
+          if (process.env.NODE_ENV !== 'production' && loadedArtworks.length > 0) {
+            try {
+              // Developer diagnostic: show the first normalized artwork so we can confirm fields
+              // eslint-disable-next-line no-console
+              console.debug('ArtworksContext: first normalized artwork:', loadedArtworks[0]);
+            } catch (e) {
+              // ignore
+            }
+          }
         } catch (processingError) {
           console.error("Error processing Firebase data:", processingError);
           setError("Failed to process artworks data.");

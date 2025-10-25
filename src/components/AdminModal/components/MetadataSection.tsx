@@ -242,7 +242,7 @@ export const MetadataSection: React.FC<FormComponentProps> = ({
 
       {shouldShowField?.('rating') && (
         <SmartFormField
-          label="Publieke Rating"
+          label="Publieke rating"
           field="rating"
           value={formData.rating || ''}
           formData={formData}

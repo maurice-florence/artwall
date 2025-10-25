@@ -869,9 +869,9 @@ def validate_note_metadata(meta: Dict[str, Any], category: str, has_translations
         try:
             rating = int(meta['rating'])
             if rating < 1 or rating > 5:
-                errors.append(f"Rating '{rating}' moet tussen 1 en 5 liggen")
+                errors.append(f"rating '{rating}' moet tussen 1 en 5 liggen")
         except (ValueError, TypeError):
-            errors.append(f"Rating '{meta.get('rating')}' is geen geldig getal")
+            errors.append(f"rating '{meta.get('rating')}' is geen geldig getal")
     
     # Medium-specific validation (replace legacy category logic)
     if meta.get('medium') in ['writing', 'audio']:

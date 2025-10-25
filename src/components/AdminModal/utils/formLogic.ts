@@ -119,7 +119,7 @@ export const CONDITIONAL_RULES: ConditionalRule[] = [
     action: 'show'
   },
   
-  // Evaluation and rating fields
+  // evaluation and rating fields
   {
     field: 'evaluation',
     condition: (data) => true, // Always show
@@ -371,9 +371,9 @@ export const validateWithSmartLogic = (formData: ArtworkFormData): { errors: str
     warnings.push('Future date detected - is this correct?');
   }
   
-  // Evaluation validation
+  // evaluation validation
   if (formData.evaluation && !['1', '2', '3', '4', '5'].includes(formData.evaluation)) {
-    errors.push('Evaluation must be between 1 and 5');
+    errors.push('evaluation must be between 1 and 5');
   }
   
   return { errors, warnings };

@@ -85,8 +85,8 @@ def analyze_metadata_structure(artworks):
     print(f"\n📊 Field Coverage:")
     print(f"  Medium field      : {has_medium_field:3}/{len(artworks)} artworks ({has_medium_field/len(artworks)*100:.1f}%)")
     print(f"  Subtype field     : {has_subtype_field:3}/{len(artworks)} artworks ({has_subtype_field/len(artworks)*100:.1f}%)")
-    print(f"  Evaluation field  : {has_evaluation_field:3}/{len(artworks)} artworks ({has_evaluation_field/len(artworks)*100:.1f}%)")
-    print(f"  Rating field      : {has_rating_field:3}/{len(artworks)} artworks ({has_rating_field/len(artworks)*100:.1f}%)")
+    print(f"  evaluation field  : {has_evaluation_field:3}/{len(artworks)} artworks ({has_evaluation_field/len(artworks)*100:.1f}%)")
+    print(f"  rating field      : {has_rating_field:3}/{len(artworks)} artworks ({has_rating_field/len(artworks)*100:.1f}%)")
     print(f"  Translations      : {has_translations:3}/{len(artworks)} artworks ({has_translations/len(artworks)*100:.1f}%)")
 
 # --- CHECK STORAGE STATUS ---

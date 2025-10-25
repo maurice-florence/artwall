@@ -2,12 +2,25 @@ import React, { useContext, useState, useRef, useEffect, useCallback } from 'rea
 import styled from 'styled-components';
 import { ThemeContext } from '@/context/ThemeContext';
 import type { Theme } from '@/styled';
-import { FaSave, FaUndo, FaCog } from 'react-icons/fa';
+import { FaSave, FaUndo, FaCog, FaPalette } from 'react-icons/fa';
 
 const EditorContainer = styled.div`
   display: flex;
   gap: 0.5rem;
   align-items: center;
+  position: relative; /* for dropdowns */
+`;
+
+const ColorEditContainer = styled.div`
+  background: ${({ theme }) => theme.body};
+  border: 1px solid rgba(0,0,0,0.08);
+  padding: 0.4rem;
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  z-index: 200;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
 `;
 
 const ColorCircleLabel = styled.label`
@@ -29,42 +42,31 @@ const HiddenColorInput = styled.input.attrs({ type: 'color' })`
   display: none;
 `;
 
-const AdvancedToggle = styled.button<{ $active?: boolean }>`
-  /* match SaveIconButton style for consistency with other icon buttons */
+const BaseIconButton = styled.button<{ $active?: boolean }>`
   background: none;
   border: none;
-  color: ${({ theme }) => theme.primary};
+  color: ${({ theme, $active }) => $active ? theme.primary : theme.secondary};
   font-size: 1.2rem;
   cursor: pointer;
   display: flex;
   align-items: center;
   padding: 0.25rem;
   height: calc(1rem + 0.8rem);
-  margin-left: 0.25rem;
-  ${({ $active, theme }) => $active ? `filter: drop-shadow(0 4px 8px rgba(0,0,0,0.06));` : ''}
+  transition: color 0.2s;
+  &:hover {
+    color: ${({ theme }) => theme.primary};
+  }
+  ${({ $active }) => $active ? `filter: drop-shadow(0 4px 8px rgba(0,0,0,0.06));` : ''}
 `;
 
-const SaveIconButton = styled.button`
-  background: none;
-  border: none;
-  color: ${({ theme }) => theme.primary};
-  font-size: 1.2rem;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  padding: 0.25rem;
-  height: calc(1rem + 0.8rem);
+const AdvancedToggle = styled(BaseIconButton)`
+  margin-left: 0.25rem;
 `;
-const ResetButton = styled.button`
-  background: none;
-  border: none;
-  color: ${({ theme }) => theme.textSecondary};
+
+const SaveIconButton = styled(BaseIconButton)``;
+
+const ResetButton = styled(BaseIconButton)`
   font-size: 1.1rem;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  padding: 0.25rem;
-  height: calc(1rem + 0.8rem);
 `;
 
 const PalettesContainer = styled.div`
@@ -91,16 +93,42 @@ const PaletteSwatch = styled.button<{ $active?: boolean }>`
   }
 `;
 
-const GradientButton = styled.button`
-  /* Match search input height: search uses font-size 1rem with 0.4rem vertical padding (0.8rem total)
-     so height = 1rem + 0.8rem = 1.8rem. Use same for width to keep a circle. */
+const ColorDropdown = styled.div<{ $closing?: boolean }>`
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  background: ${({ theme }) => theme.body};
+  border: 1px solid rgba(0,0,0,0.08);
+  padding: 0.4rem;
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  min-width: 200px;
+  z-index: 200;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+  opacity: 0;
+  transform: translateY(-6px) scale(0.99);
+  animation: ${({ $closing }) => $closing ? 'fadeOutDown 140ms ease forwards' : 'fadeInUp 160ms ease forwards'};
+
+  @keyframes fadeInUp {
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  @keyframes fadeOutDown {
+    to { opacity: 0; transform: translateY(-6px) scale(0.99); }
+  }
+`;
+
+const GradientButton = styled(BaseIconButton)`
+  /* Match other header icon buttons: use the same height/padding and make it circular */
+  border-radius: 50%;
+  padding: 0.25rem;
   width: calc(1rem + 0.8rem);
   height: calc(1rem + 0.8rem);
-  border-radius: 50%;
-  border: 1px solid ${({ theme }) => theme.border};
-  padding: 0;
-  cursor: pointer;
-  display: inline-block;
+  min-width: calc(1rem + 0.8rem);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   background-size: cover;
   transition: transform 140ms ease, box-shadow 140ms ease;
   &:hover { transform: scale(1.04); box-shadow: 0 6px 12px rgba(0,0,0,0.06); }
@@ -218,30 +246,13 @@ const ThemeEditor: React.FC = () => {
   };
 
   return (
-    <EditorContainer>
-      <PalettesContainer ref={palettesRef}>
-        <GradientButton
-          aria-label="Choose palette"
-          title="Choose palette"
-          onClick={toggleDropdown}
-          style={{ background: `linear-gradient(135deg, ${themeObject.primary || '#0b8783'} 0%, ${(themeObject as any).complementary || '#f4787c'} 100%)` }}
-        />
-
-        {dropdownMounted && (
-          <DropdownContainer $closing={dropdownClosing}>
-            {PALETTES.map(p => (
-              <PaletteSwatch
-                key={p.name}
-                title={p.name}
-                $active={themeObject.primary === p.primary}
-                onClick={() => { applyPalette(p); closeDropdown(); }}
-                style={{ background: `linear-gradient(135deg, ${p.primary} 0%, ${p.complementary} 100%)` }}
-              />
-            ))}
-          </DropdownContainer>
-        )}
-      </PalettesContainer>
-
+    <EditorContainer ref={palettesRef}>
+      <SaveIconButton onClick={saveThemeAsDefault} title="Save as default">
+        <FaSave />
+      </SaveIconButton>
+      <ResetButton onClick={resetTheme} title="Reset to default">
+        <FaUndo />
+      </ResetButton>
       <AdvancedToggle
         $active={advanced}
         onClick={() => setAdvanced(a => !a)}
@@ -252,53 +263,85 @@ const ThemeEditor: React.FC = () => {
         <FaCog />
       </AdvancedToggle>
 
-      {/* Individual color pickers are hidden by default. They appear only when Advanced (gear) is active. */}
-      {advanced && (
-        <>
-          <ColorCircleLabel style={{ backgroundColor: themeObject.primary }} htmlFor="primary-color">
-            <HiddenColorInput
-              id="primary-color"
-              ref={primaryInputRef}
-              value={themeObject.primary || '#000000'}
-              onChange={(e) => updateThemeColor('primary', e.target.value)}
-            />
-          </ColorCircleLabel>
+      {dropdownMounted && (
+        <ColorDropdown $closing={dropdownClosing}>
+          {/* Presets at top */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, 34px)', gap: '0.35rem' }}>
+            {PALETTES.map(p => (
+              <PaletteSwatch
+                key={p.name}
+                title={p.name}
+                $active={themeObject.primary === p.primary}
+                onClick={() => { applyPalette(p); }}
+                style={{ background: `linear-gradient(135deg, ${p.primary} 0%, ${p.complementary} 100%)` }}
+              />
+            ))}
+          </div>
 
-          <ColorCircleLabel style={{ backgroundColor: themeObject.complementary }} htmlFor="complementary-color">
-            <HiddenColorInput
-              id="complementary-color"
-              ref={complementaryInputRef}
-              value={themeObject.complementary || '#f4787c'}
-              onChange={(e) => updateThemeColor('complementary', e.target.value)}
-            />
-          </ColorCircleLabel>
+          {/* Advanced color pickers below presets */}
+          {advanced && (
+            <ColorEditContainer>
+              <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
+                <ColorCircleLabel style={{ backgroundColor: themeObject.primary }} htmlFor="primary-color">
+                  <HiddenColorInput
+                    id="primary-color"
+                    ref={primaryInputRef}
+                    value={themeObject.primary || '#000000'}
+                    onChange={(e) => updateThemeColor('primary', e.target.value)}
+                  />
+                </ColorCircleLabel>
+                <span style={{ fontSize: '0.9rem', color: 'rgba(0,0,0,0.7)' }}>Primary</span>
+              </div>
 
-          <ColorCircleLabel style={{ backgroundColor: themeObject.secondary }} htmlFor="secondary-color">
-            <HiddenColorInput
-              id="secondary-color"
-              ref={secondaryInputRef}
-              value={themeObject.secondary || '#ffffff'}
-              onChange={(e) => updateThemeColor('secondary', e.target.value)}
-            />
-          </ColorCircleLabel>
+              <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
+                <ColorCircleLabel style={{ backgroundColor: themeObject.complementary }} htmlFor="complementary-color">
+                  <HiddenColorInput
+                    id="complementary-color"
+                    ref={complementaryInputRef}
+                    value={themeObject.complementary || '#f4787c'}
+                    onChange={(e) => updateThemeColor('complementary', e.target.value)}
+                  />
+                </ColorCircleLabel>
+                <span style={{ fontSize: '0.9rem', color: 'rgba(0,0,0,0.7)' }}>Complementary</span>
+              </div>
 
-          <ColorCircleLabel style={{ backgroundColor: themeObject.body }} htmlFor="background-color">
-            <HiddenColorInput
-              id="background-color"
-              ref={backgroundInputRef}
-              value={themeObject.body || '#ffffff'}
-              onChange={(e) => updateThemeColor('body', e.target.value)}
-            />
-          </ColorCircleLabel>
-        </>
+              <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
+                <ColorCircleLabel style={{ backgroundColor: themeObject.secondary }} htmlFor="secondary-color">
+                  <HiddenColorInput
+                    id="secondary-color"
+                    ref={secondaryInputRef}
+                    value={themeObject.secondary || '#ffffff'}
+                    onChange={(e) => updateThemeColor('secondary', e.target.value)}
+                  />
+                </ColorCircleLabel>
+                <span style={{ fontSize: '0.9rem', color: 'rgba(0,0,0,0.7)' }}>Secondary</span>
+              </div>
+
+              <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
+                <ColorCircleLabel style={{ backgroundColor: themeObject.body }} htmlFor="background-color">
+                  <HiddenColorInput
+                    id="background-color"
+                    ref={backgroundInputRef}
+                    value={themeObject.body || '#ffffff'}
+                    onChange={(e) => updateThemeColor('body', e.target.value)}
+                  />
+                </ColorCircleLabel>
+                <span style={{ fontSize: '0.9rem', color: 'rgba(0,0,0,0.7)' }}>Background</span>
+              </div>
+            </ColorEditContainer>
+          )}
+        </ColorDropdown>
       )}
 
-      <SaveIconButton onClick={saveThemeAsDefault} title="Save as default">
-        <FaSave />
-      </SaveIconButton>
-      <ResetButton onClick={resetTheme} title="Reset to default">
-        <FaUndo />
-      </ResetButton>
+      {/* This is now the last item */}
+      <PalettesContainer>
+        <GradientButton
+          aria-label="Choose palette"
+          title="Choose theme colors"
+          onClick={toggleDropdown}
+          style={{ background: `linear-gradient(135deg, ${themeObject.primary || '#0b8783'} 0%, ${(themeObject as any).complementary || '#f4787c'} 100%)` }}
+        />
+      </PalettesContainer>
     </EditorContainer>
   );
 };
