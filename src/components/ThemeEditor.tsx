@@ -65,21 +65,27 @@ const ThemeEditor: React.FC = () => {
   const editorRef = useRef<HTMLDivElement | null>(null);
   const { isMounted: dropdownMounted, isClosing: dropdownClosing, toggle: toggleDropdown, close: closeDropdown } = useDropdown(editorRef);
 
-  // Preset palettes with matching complementary colors to avoid free-form pickers
-  const PALETTES: Array<{ name: string; primary: string; complementary: string; secondary?: string; body?: string }> = [
-    { name: 'Teal', primary: '#0b8783', complementary: '#f4787c', secondary: '#6b7280', body: '#ffffff' },
-    { name: 'Coral', primary: '#E07A5F', complementary: '#5FCFE0', secondary: '#A74B3C', body: '#ffffff' },
-    { name: 'Indigo', primary: '#4B2E83', complementary: '#F2A3B1', secondary: '#6b7280', body: '#ffffff' },
-    { name: 'Olive', primary: '#607A3B', complementary: '#E8A3B9', secondary: '#8A9775', body: '#ffffff' },
-    { name: 'Rose', primary: '#C94C6A', complementary: '#4CD1B6', secondary: '#A64B5A', body: '#ffffff' },
-    { name: 'Amber', primary: '#D97706', complementary: '#06C0D9', secondary: '#B26A05', body: '#ffffff' },
-    { name: 'Slate', primary: '#374151', complementary: '#F7A8A8', secondary: '#6b7280', body: '#ffffff' },
-    { name: 'Purple', primary: '#6B21A8', complementary: '#F0B3E0', secondary: '#6b7280', body: '#ffffff' },
+  // Preset palettes using triadic color schemes (120° apart) and analogous variations
+  const PALETTES: Array<{ name: string; primary: string; secondary: string; tertiary: string; inactive: string; body?: string }> = [
+    { name: 'Teal', primary: '#0b8783', secondary: '#E85D4F', tertiary: '#F4A742', inactive: '#94A3A8', body: '#ffffff' },
+    { name: 'Blue', primary: '#2563EB', secondary: '#DC2626', tertiary: '#F59E0B', inactive: '#9CA3AF', body: '#ffffff' },
+    { name: 'Purple', primary: '#7C3AED', secondary: '#059669', tertiary: '#EA580C', inactive: '#A78BFA', body: '#ffffff' },
+    { name: 'Indigo', primary: '#4F46E5', secondary: '#EAB308', tertiary: '#EC4899', inactive: '#818CF8', body: '#ffffff' },
+    { name: 'Green', primary: '#059669', secondary: '#7C3AED', tertiary: '#DC2626', inactive: '#6EE7B7', body: '#ffffff' },
+    { name: 'Rose', primary: '#E11D48', secondary: '#3B82F6', tertiary: '#10B981', inactive: '#FDA4AF', body: '#ffffff' },
+    { name: 'Amber', primary: '#D97706', secondary: '#8B5CF6', tertiary: '#06B6D4', inactive: '#FCD34D', body: '#ffffff' },
+    { name: 'Cyan', primary: '#0891B2', secondary: '#F97316', tertiary: '#A855F7', inactive: '#67E8F9', body: '#ffffff' },
   ];
 
-  const applyPalette = (p: { primary: string; complementary: string; secondary?: string; body?: string }) => {
+  const applyPalette = (p: { primary: string; secondary: string; tertiary: string; inactive: string; body?: string }) => {
     // Batch update to avoid multiple intermediate renders
-    updateThemeColors({ primary: p.primary, complementary: p.complementary, secondary: p.secondary || themeObject.secondary, body: p.body || themeObject.body });
+    updateThemeColors({ 
+      primary: p.primary, 
+      secondary: p.secondary,
+      tertiary: p.tertiary,
+      inactive: p.inactive,
+      body: p.body || themeObject.body 
+    });
     closeDropdown();
   };
 
@@ -111,7 +117,7 @@ const ThemeEditor: React.FC = () => {
                 title={p.name}
                 $active={themeObject.primary.toLowerCase() === p.primary.toLowerCase()}
                 onClick={() => { applyPalette(p); }}
-                style={{ background: `linear-gradient(135deg, ${p.primary} 0%, ${p.complementary} 100%)` }}
+                style={{ background: `linear-gradient(135deg, ${p.primary} 0%, ${p.secondary} 50%, ${p.tertiary} 100%)` }}
               />
             ))}
           </div>
@@ -131,25 +137,36 @@ const ThemeEditor: React.FC = () => {
               </div>
 
               <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
-                <ColorCircleLabel style={{ backgroundColor: themeObject.complementary }} htmlFor="complementary-color">
-                  <HiddenColorInput
-                    id="complementary-color"
-                    value={themeObject.complementary || '#f4787c'}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateThemeColor('complementary', e.target.value)}
-                  />
-                </ColorCircleLabel>
-                <span style={{ fontSize: '0.9rem', color: 'rgba(0,0,0,0.7)' }}>Complementary</span>
-              </div>
-
-              <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
                 <ColorCircleLabel style={{ backgroundColor: themeObject.secondary }} htmlFor="secondary-color">
                   <HiddenColorInput
                     id="secondary-color"
-                    value={themeObject.secondary || '#ffffff'}
+                    value={themeObject.secondary || '#E85D4F'}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateThemeColor('secondary', e.target.value)}
                   />
                 </ColorCircleLabel>
                 <span style={{ fontSize: '0.9rem', color: 'rgba(0,0,0,0.7)' }}>Secondary</span>
+              </div>
+
+              <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
+                <ColorCircleLabel style={{ backgroundColor: themeObject.tertiary }} htmlFor="tertiary-color">
+                  <HiddenColorInput
+                    id="tertiary-color"
+                    value={themeObject.tertiary || '#F4A742'}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateThemeColor('tertiary', e.target.value)}
+                  />
+                </ColorCircleLabel>
+                <span style={{ fontSize: '0.9rem', color: 'rgba(0,0,0,0.7)' }}>Tertiary</span>
+              </div>
+
+              <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
+                <ColorCircleLabel style={{ backgroundColor: themeObject.inactive }} htmlFor="inactive-color">
+                  <HiddenColorInput
+                    id="inactive-color"
+                    value={themeObject.inactive || '#94A3A8'}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateThemeColor('inactive', e.target.value)}
+                  />
+                </ColorCircleLabel>
+                <span style={{ fontSize: '0.9rem', color: 'rgba(0,0,0,0.7)' }}>Inactive</span>
               </div>
 
               <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>

@@ -3,11 +3,21 @@
  * 
  * Centralized configuration for all gradient generation settings.
  * Adjust these values to control the appearance of card gradients.
+ * 
+ * COLOR SYSTEM:
+ * The app uses a triadic color scheme with 3 primary colors:
+ * - PRIMARY: Used for poetry/writing cards (default: teal #0b8783)
+ * - SECONDARY: Used for audio/music cards (default: coral-red #E85D4F) 
+ * - TERTIARY: Used for visual arts - drawing/sculpture (default: amber #F4A742)
+ * - INACTIVE: Desaturated primary for disabled buttons/UI (default: gray-teal #94A3A8)
+ * 
+ * This creates visual distinction between content types while maintaining
+ * a cohesive, aesthetically pleasing palette based on color theory.
  */
 
 export const GRADIENT_SATURATION = {
   /** Poetry and Writing cards saturation boost (Default: 40, Range: 0-100) */
-  poetry: 50,
+  poetry: 30,
   /** Audio and Music cards saturation boost (Default: 30, Range: 0-100) */
   audio: 30,
   /** Other media types saturation boost (Default: 20, Range: 0-100) */
@@ -27,11 +37,11 @@ export const HUE_VARIATION = {
 
 export const BASE_SATURATION_MULTIPLIER = {
   /** Poetry/Writing base saturation multiplier (Default: 1.1, Range: 0.5-2.0) */
-  poetry: 0.1,
+  poetry: 1,
   /** Audio/Music base saturation multiplier (Default: 1.4, Range: 0.5-2.0) */
-  audio: 1.4,
+  audio: 1,
   /** Other media base saturation multiplier (Default: 1.2, Range: 0.5-2.0) */
-  other: 1.2,
+  other: 1,
 };
 
 export const BASE_LIGHTNESS = {
@@ -54,7 +64,7 @@ export const GRADIENT_VARIANTS = {
     /** Max saturation cap (Default: 85, Range: 50-100) */
     saturationCap: 15,
     /** Lightness addition (Default: 5, Range: 0-20) */
-    lightnessAdd: 5,
+    lightnessAdd: 25,
     /** Min lightness floor (Default: 75, Range: 50-90) */
     lightnessMin: 75,
   },
@@ -70,7 +80,7 @@ export const GRADIENT_VARIANTS = {
   },
   end: {
     /** Saturation addition (Default: 5, Range: 0-20) */
-    saturationAdd: 5,
+    saturationAdd: 25,
     /** Max saturation cap (Default: 55, Range: 30-100) */
     saturationCap: 55,
     /** Lightness addition (Default: 15, Range: 0-40) */
@@ -100,7 +110,20 @@ export const GRADIENT_ANGLE = {
 
 export const COLOR_STOP_HUE_SPACING = {
   /** Hue difference between start and middle (Default: 25, Range: 0-60) */
-  startToMiddle: 55,
+  startToMiddle: 75,
   /** Hue difference between middle and end (Default: 25, Range: 0-60) */
   middleToEnd: 25,
+};
+
+export const IMAGE_OVERLAY = {
+  /** Enable/disable overlay for drawing cards (Default: true) */
+  enabled: true,
+  /** Gradient angle for overlay (Default: 135, Range: 0-360) */
+  angle: 135,
+  /** Start opacity in percentage (Default: 25, Range: 0-100) */
+  startOpacity: 65,
+  /** End opacity in percentage (Default: 12.5, Range: 0-100) */
+  endOpacity: 12.5,
+  /** Color to use for overlay - 'tertiary', 'secondary', or 'primary' (Default: 'tertiary') */
+  colorSource: 'tertiary' as 'tertiary' | 'secondary' | 'primary',
 };

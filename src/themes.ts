@@ -23,13 +23,14 @@ export const atelierTheme = {
     sculpture: 'radial-gradient(circle at 30% 30%, #e8e8e8 60%, #f5f5f5 100%)',
     drawing: 'repeating-linear-gradient(120deg, #e8e8e8 0px, #e8e8e8 10px, #f5f5f5 10px, #f5f5f5 20px)',
   },
-  primary: '#0b8783',
-  complementary: '#f4787c',
+  primary: '#0b8783',      // Teal (180°) - Poetry/Writing
+  secondary: '#E85D4F',    // Coral-Red (10°) - Audio/Music
+  tertiary: '#F4A742',     // Amber (40°) - Visual Arts
+  inactive: '#94A3A8',     // Desaturated teal - Inactive elements
   cardHeight: 360,
   gridGap: 24,
   border: '#d1d5db',
   textSecondary: '#6b7280',
-  secondary: '#6b7280',
 };
 
 export const blueprintTheme = {
@@ -41,7 +42,6 @@ export const blueprintTheme = {
   accentText: '#FFFFFF',
   cardBg: '#FFFFFF',
   cardText: '#17202A',
-  complementary: '#f4787c',
   categories: {
     music: '#C0392B',
     poem: '#2980B9',
@@ -58,12 +58,14 @@ export const blueprintTheme = {
     sculpture: 'radial-gradient(circle at 70% 70%, #fbeee6 60%, #eaf2f8 100%)',
     drawing: 'repeating-linear-gradient(120deg, #eaf2f8 0px, #eaf2f8 10px, #f8f9f9 10px, #f8f9f9 20px)',
   },
-  primary: '#0b8783',
+  primary: '#0b8783',      // Teal (180°) - Poetry/Writing
+  secondary: '#E85D4F',    // Coral-Red (10°) - Audio/Music
+  tertiary: '#F4A742',     // Amber (40°) - Visual Arts
+  inactive: '#94A3A8',     // Desaturated teal - Inactive elements
   cardHeight: 360,
   gridGap: 16,
   border: '#d1d5db',
   textSecondary: '#6b7280',
-  secondary: '#6b7280',
 };
 
 export const darkModeTheme = {
@@ -91,13 +93,14 @@ export const darkModeTheme = {
     sculpture: 'radial-gradient(circle at 30% 30%, #232b36 60%, #1e2732 100%)',
     drawing: 'repeating-linear-gradient(120deg, #232b36 0px, #232b36 10px, #1e2732 10px, #1e2732 20px)',
   },
-  primary: '#0b8783',
-  complementary: '#f4787c',
+  primary: '#0b8783',      // Teal (180°) - Poetry/Writing
+  secondary: '#E85D4F',    // Coral-Red (10°) - Audio/Music
+  tertiary: '#F4A742',     // Amber (40°) - Visual Arts
+  inactive: '#94A3A8',     // Desaturated teal - Inactive elements
   cardHeight: 360,
   gridGap: 16,
   border: '#d1d5db',
   textSecondary: '#6b7280',
-  secondary: '#6b7280',
 };
 
 export const natureTheme = {
@@ -126,13 +129,14 @@ export const natureTheme = {
     sculpture: 'linear-gradient(135deg, #D7CCC8 0%, #A1887F 100%)',
     drawing: 'linear-gradient(135deg, #CFD8DC 0%, #90A4AE 100%)',
   },
-  primary: '#0b8783',
-  complementary: '#f4787c',
+  primary: '#0b8783',      // Teal (180°) - Poetry/Writing
+  secondary: '#E85D4F',    // Coral-Red (10°) - Audio/Music
+  tertiary: '#F4A742',     // Amber (40°) - Visual Arts
+  inactive: '#94A3A8',     // Desaturated teal - Inactive elements
   cardHeight: 360,
   gridGap: 24,
   border: '#d1d5db',
   textSecondary: '#6b7280',
-  secondary: '#6b7280',
 };
 
 export const earthTheme = {
@@ -161,13 +165,14 @@ export const earthTheme = {
     sculpture: 'linear-gradient(135deg, #D7CCC8 0%, #A1887F 100%)',
     drawing: 'linear-gradient(135deg, #BDBDBD 0%, #757575 100%)',
   },
-  primary: '#0b8783',
-  complementary: '#f4787c',
+  primary: '#0b8783',      // Teal (180°) - Poetry/Writing
+  secondary: '#E85D4F',    // Coral-Red (10°) - Audio/Music
+  tertiary: '#F4A742',     // Amber (40°) - Visual Arts
+  inactive: '#94A3A8',     // Desaturated teal - Inactive elements
   cardHeight: 360,
   gridGap: 24,
   border: '#d1d5db',
   textSecondary: '#6b7280',
-  secondary: '#6b7280',
 };
 
 export const tealTheme = {
@@ -195,13 +200,14 @@ export const tealTheme = {
     sculpture: 'radial-gradient(circle at 70% 70%, #b2dfdb 60%, #e0f2f1 100%)',
     drawing: 'repeating-linear-gradient(120deg, #e0f2f1 0px, #e0f2f1 10px, #f8f9f9 10px, #f8f9f9 20px)',
   },
-  primary: '#0b8783',
-  complementary: '#f4787c',
+  primary: '#0b8783',      // Teal (180°) - Poetry/Writing
+  secondary: '#E85D4F',    // Coral-Red (10°) - Audio/Music
+  tertiary: '#F4A742',     // Amber (40°) - Visual Arts
+  inactive: '#94A3A8',     // Desaturated teal - Inactive elements
   cardHeight: 360,
   gridGap: 16,
   border: '#B2DFDB',
   textSecondary: '#00695C',
-  secondary: '#00695C',
 };
 
 export const themes = {
@@ -236,12 +242,13 @@ export interface Theme {
     drawing: string;
   };
   primary: string;
-  complementary: string;
+  secondary: string;
+  tertiary: string;
+  inactive: string;
   cardHeight: number;
   gridGap: number;
   border: string;
   textSecondary: string;
-  secondary: string;
 }
 
 export type ThemeName = 'blueprint' | 'dark' | 'teal';

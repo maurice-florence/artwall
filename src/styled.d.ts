@@ -12,12 +12,13 @@ export interface Theme {
   categories: Record<string, string>;
   cardBackgrounds: Record<string, string>;
   primary: string;
-  complementary: string;
+  secondary: string;
+  tertiary: string;
+  inactive: string;
   cardHeight: number;
   gridGap: number;
   border: string;
   textSecondary: string;
-  secondary: string;
 }
 
 declare module 'styled-components' {

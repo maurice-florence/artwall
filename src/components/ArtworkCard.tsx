@@ -6,6 +6,7 @@ import cardSizesJson from '@/constants/card-sizes.json';
 import GeneratedImage from './GeneratedImage';
 import { isWritingMedium, isAudioMedium } from '../constants/medium';
 import { generateUniqueGradient, shouldUseDarkText } from '@/utils/gradient-generator';
+import { IMAGE_OVERLAY } from '@/config/gradient-settings';
 
 // Removed WritingCardSVG import
 
@@ -91,7 +92,7 @@ const CardFront = styled(CardFace)<{
     ($isAudio && !$imageUrl) ? `url('/paper2.png')` : 
   // If no image/gradient, use solid colors
   ($medium === 'writing') ? theme.primary :
-  ($medium === 'audio') ? (theme as any).complementary || theme.cardBg :
+  ($medium === 'audio') ? (theme as any).secondary || theme.cardBg :
     theme.cardBg
   };
   background-size: cover;
@@ -106,7 +107,10 @@ const CardFront = styled(CardFace)<{
 `;
 
 const CardBack = styled(CardFace)<{ $medium: ArtworkMedium }>`
-  background: ${({ theme, $medium }) => $medium === "audio" ? theme.complementary : theme.primary};
+  background: ${({ theme, $medium }) => 
+    $medium === "audio" ? theme.secondary : 
+    $medium === "drawing" ? theme.tertiary : 
+    theme.primary};
   transform: rotateY(180deg);
   padding: 0.7rem;
   justify-content: center;
@@ -182,6 +186,22 @@ const CardImage = styled.img<{ $fillAvailable?: boolean }>`
   position: absolute;
   top: 0;
   left: 0;
+`;
+
+const ImageOverlay = styled.div<{ $color: string }>`
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 12px;
+  background: linear-gradient(
+    ${IMAGE_OVERLAY.angle}deg, 
+    ${props => props.$color}${Math.round(IMAGE_OVERLAY.startOpacity * 2.55).toString(16).padStart(2, '0')} 0%, 
+    ${props => props.$color}${Math.round(IMAGE_OVERLAY.endOpacity * 2.55).toString(16).padStart(2, '0')} 100%
+  );
+  pointer-events: none;
+  z-index: 1;
 `;
 
 const ProzaImage = styled.img`
@@ -368,7 +388,7 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin }: ArtworkCardProps) => {
     // Generate gradient for cards without images — memoized and keyed by
     // artwork identity + relevant theme fields to avoid recalculation when
     // unrelated theme properties change.
-    const themeFingerprint = `${(theme as any).primary || ''}|${(theme as any).complementary || ''}|${(theme as any).body || ''}`;
+    const themeFingerprint = `${(theme as any).primary || ''}|${(theme as any).secondary || ''}|${(theme as any).tertiary || ''}|${(theme as any).body || ''}`;
 
     const uniqueGradient = useMemo(() => {
       if ((isWriting || isAudio) && !hasImage) {
@@ -405,12 +425,18 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin }: ArtworkCardProps) => {
           >
             {/* Show image as proper img element if available */}
             {imageUrl ? (
-              <CardImage 
-                src={imageUrl} 
-                alt={artwork.title || 'Artwork'} 
-                loading="lazy"
-                decoding="async"
-              />
+              <>
+                <CardImage 
+                  src={imageUrl} 
+                  alt={artwork.title || 'Artwork'} 
+                  loading="lazy"
+                  decoding="async"
+                />
+                {/* Add gradient overlay for drawing cards */}
+                {IMAGE_OVERLAY.enabled && artwork.medium === 'drawing' && (
+                  <ImageOverlay $color={theme[IMAGE_OVERLAY.colorSource]} />
+                )}
+              </>
             ) : (isWriting || isAudio) && !hasImage ? (
               isWriting ? (
                 showPreview ? (

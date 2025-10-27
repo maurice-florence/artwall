@@ -13,7 +13,7 @@ import {
 
 // Simple in-memory cache to avoid recalculating gradients for the same
 // input + theme pair during a render cycle. Keyed by a fingerprint of
-// relevant theme fields (primary/complementary/body) to ensure cache
+// relevant theme fields (primary/secondary/tertiary/body) to ensure cache
 // invalidation when theme changes.
 const gradientCache: Map<string, Map<string, string>> = new Map();
 let gradientGenCount = 0;
@@ -46,11 +46,13 @@ function getThemeCompatibleColor(
 ): string {
   // Extract the theme's colors
   const primaryColor = theme.primary || '#0b8783'; // Use default if not set
-  const complementaryColor = theme.complementary || '#f4787c'; // Use default if not set
+  const secondaryColor = theme.secondary || '#E85D4F'; // Use default if not set
+  const tertiaryColor = theme.tertiary || '#F4A742'; // Use default if not set
   const categoryColor = theme.categories[medium as keyof typeof theme.categories];
 
   const primaryHsl = rgbToHsl(hexToRgb(primaryColor));
-  const complementaryHsl = rgbToHsl(hexToRgb(complementaryColor));
+  const secondaryHsl = rgbToHsl(hexToRgb(secondaryColor));
+  const tertiaryHsl = rgbToHsl(hexToRgb(tertiaryColor));
   const categoryHsl = categoryColor ? rgbToHsl(hexToRgb(categoryColor)) : primaryHsl;
 
   // Select base color based on medium
@@ -67,11 +69,20 @@ function getThemeCompatibleColor(
       break;
     case 'audio':
     case 'music':
-      // Use complementary color with enhanced saturation for audio/music
+      // Use secondary color with enhanced saturation for audio/music
       baseColorHsl = {
-        h: complementaryHsl.h,
-        s: Math.min(100, complementaryHsl.s * BASE_SATURATION_MULTIPLIER.audio),
-        l: Math.max(BASE_LIGHTNESS.audioMin, complementaryHsl.l * BASE_LIGHTNESS.audioMultiplier)
+        h: secondaryHsl.h,
+        s: Math.min(100, secondaryHsl.s * BASE_SATURATION_MULTIPLIER.audio),
+        l: Math.max(BASE_LIGHTNESS.audioMin, secondaryHsl.l * BASE_LIGHTNESS.audioMultiplier)
+      };
+      break;
+    case 'drawing':
+    case 'sculpture':
+      // Use tertiary color for visual arts
+      baseColorHsl = {
+        h: tertiaryHsl.h,
+        s: Math.min(90, tertiaryHsl.s * BASE_SATURATION_MULTIPLIER.other),
+        l: tertiaryHsl.l
       };
       break;
     default:
@@ -86,7 +97,7 @@ function getThemeCompatibleColor(
   // Calculate final hue based on medium type
   let hue;
   if (medium === 'audio' || medium === 'music') {
-    // For audio/music cards, use complementary color's hue with moderate variation
+    // For audio/music cards, use secondary color's hue with moderate variation
     hue = (baseColorHsl.h + (baseHue % HUE_VARIATION.audio)) % 360;
   } else if (medium === 'poetry' || medium === 'writing') {
     // For poetry/writing cards, stay very close to primary color
@@ -226,7 +237,7 @@ export function generateUniqueGradient(inputString: string, theme: DefaultTheme,
     console.log('🎨 Gradient cache cleared - new saturation settings:', GRADIENT_SATURATION);
   }
   
-  const themeKey = `${(theme as any).primary || ''}|${(theme as any).complementary || ''}|${(theme as any).body || ''}|${satFingerprint}`;
+  const themeKey = `${(theme as any).primary || ''}|${(theme as any).secondary || ''}|${(theme as any).tertiary || ''}|${(theme as any).body || ''}|${satFingerprint}`;
   const cacheKey = `${inputString}::${medium}`;
 
   let inner = gradientCache.get(themeKey);
