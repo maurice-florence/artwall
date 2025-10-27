@@ -86,10 +86,10 @@ const CardFront = styled(CardFace)<{
 }>`
   background: ${({ theme, $imageUrl, $isWriting, $isAudio, $gradient, $medium }) => 
     $gradient ? $gradient :
+    // Only use background images for paper textures, not actual images
     ($isWriting && !$imageUrl) ? `url('/paper1.jpg')` : 
     ($isAudio && !$imageUrl) ? `url('/paper2.png')` : 
-    $imageUrl ? `url(${$imageUrl})` : 
-  // If no image/gradient, use primary for writing, complementary for audio, otherwise card background
+  // If no image/gradient, use solid colors
   ($medium === 'writing') ? theme.primary :
   ($medium === 'audio') ? (theme as any).complementary || theme.cardBg :
     theme.cardBg
@@ -173,21 +173,15 @@ const AudioIconOverlay = styled.div`
 
 const CardImage = styled.img<{ $fillAvailable?: boolean }>`
   width: 100%;
-  border-radius: 8px;
-  margin-bottom: 0.5rem;
-  ${props => props.$fillAvailable ? `
-    flex: 1 1 auto;
-    height: auto;
-    min-height: 0;
-    min-width: 0;
-    object-fit: contain;
-    max-height: 180px;
-    align-self: stretch;
-  ` : `
-    height: 180px;
-    object-fit: contain;
-    max-height: 180px;
-  `}
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  border-radius: 12px;
+  margin: 0;
+  padding: 0;
+  position: absolute;
+  top: 0;
+  left: 0;
 `;
 
 const ProzaImage = styled.img`
@@ -409,7 +403,15 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin }: ArtworkCardProps) => {
             $useDarkText={useDarkText}
             onClick={togglePreview}
           >
-            {(isWriting || isAudio) && !hasImage ? (
+            {/* Show image as proper img element if available */}
+            {imageUrl ? (
+              <CardImage 
+                src={imageUrl} 
+                alt={artwork.title || 'Artwork'} 
+                loading="lazy"
+                decoding="async"
+              />
+            ) : (isWriting || isAudio) && !hasImage ? (
               isWriting ? (
                 showPreview ? (
                   <TextOverlay style={{ color: useDarkText ? theme.text : theme.cardText }}>{textPreview}</TextOverlay>
@@ -419,7 +421,7 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin }: ArtworkCardProps) => {
               ) : (
                 <TextOverlay $subtle>{textPreview}</TextOverlay>
               )
-            ) : !imageUrl && (
+            ) : (
               <>
                 {/* Only show generated image, no title */}
                 <div style={{ flex: 1, minHeight: 0, minWidth: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 4 }}>
