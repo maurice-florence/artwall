@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { getResizedImageUrl, getResizedImageUrlWithFallback } from '@/utils/image-urls';
 
 interface OptimizedImageProps {
@@ -43,6 +43,24 @@ export const OptimizedImage: React.FC<OptimizedImageProps> = ({
   });
   const [hasError, setHasError] = useState(false);
   const attemptsRef = useRef(0);
+
+  // Update currentSrc when src or preferredSize props change
+  useEffect(() => {
+    // Reset state for new src
+    setHasError(false);
+    attemptsRef.current = 0;
+
+    if (preferredSize === 'original') {
+      setCurrentSrc(src);
+    } else {
+      try {
+        const optimizedUrl = getResizedImageUrlWithFallback(src, preferredSize);
+        setCurrentSrc(typeof optimizedUrl === 'string' ? optimizedUrl : src);
+      } catch {
+        setCurrentSrc(src);
+      }
+    }
+  }, [src, preferredSize]);
 
   const handleImageError = () => {
     attemptsRef.current += 1;

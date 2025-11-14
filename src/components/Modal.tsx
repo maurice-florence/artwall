@@ -252,11 +252,11 @@ const CarouselButton = styled.button`
   }
   
   &.prev {
-    left: 16px;
+    left: 4px;
   }
   
   &.next {
-    right: 16px;
+    right: 4px;
   }
 `;
 
@@ -326,8 +326,8 @@ const ThumbnailButton = styled.button<{ $active: boolean }>`
 
 const ExpandButton = styled.button`
   position: absolute;
-  top: 16px;
-  right: 60px;
+  top: 8px;
+  right: 8px;
   background: rgba(0, 0, 0, 0.7);
   color: white;
   border: none;
@@ -468,7 +468,7 @@ function getMediaType(url: string): 'image' | 'video' | 'audio' | 'pdf' | 'unkno
   }, [item.coverImageUrl, item.mediaUrl, item.mediaUrls, item.pdfUrl, item.audioUrl]);
 
   // Debug logging
-  console.log('Modal render - currentMediaIndex:', currentMediaIndex, 'allMedia.length:', allMedia.length);
+  // console.log('Modal render - currentMediaIndex:', currentMediaIndex, 'allMedia.length:', allMedia.length);
 
   useEffect(() => {
     if (isOpen) {
@@ -556,6 +556,7 @@ function getMediaType(url: string): 'image' | 'video' | 'audio' | 'pdf' | 'unkno
                       if (type === 'image') {
                         return (
                           <OptimizedImage 
+                            key={`image-${currentMediaIndex}-${currentUrl}`}
                             src={currentUrl}
                             alt={`Media ${currentMediaIndex + 1}`}
                             preferredSize="full"
@@ -575,6 +576,7 @@ function getMediaType(url: string): 'image' | 'video' | 'audio' | 'pdf' | 'unkno
                       if (type === 'video') {
                         return (
                           <video 
+                            key={`video-${currentMediaIndex}-${currentUrl}`}
                             src={currentUrl} 
                             controls 
                             style={{ 
@@ -591,6 +593,7 @@ function getMediaType(url: string): 'image' | 'video' | 'audio' | 'pdf' | 'unkno
                       if (type === 'audio') {
                         return (
                           <audio 
+                            key={`audio-${currentMediaIndex}-${currentUrl}`}
                             src={currentUrl} 
                             controls 
                             style={{ 
@@ -606,6 +609,7 @@ function getMediaType(url: string): 'image' | 'video' | 'audio' | 'pdf' | 'unkno
                       if (type === 'pdf') {
                         return (
                           <iframe 
+                            key={`pdf-${currentMediaIndex}-${currentUrl}`}
                             src={currentUrl} 
                             style={{ 
                               width: '100%', 
@@ -642,9 +646,7 @@ function getMediaType(url: string): 'image' | 'video' | 'audio' | 'pdf' | 'unkno
                           onClick={(ev) => {
                             ev.stopPropagation();
                             ev.preventDefault();
-                            console.log('Previous clicked, current index:', currentMediaIndex);
                             const newIndex = (currentMediaIndex - 1 + allMedia.length) % allMedia.length;
-                            console.log('New index:', newIndex);
                             setCurrentMediaIndex(newIndex);
                           }}
                           aria-label="Previous media"
@@ -657,9 +659,7 @@ function getMediaType(url: string): 'image' | 'video' | 'audio' | 'pdf' | 'unkno
                           onClick={(ev) => {
                             ev.stopPropagation();
                             ev.preventDefault();
-                            console.log('Next clicked, current index:', currentMediaIndex);
                             const newIndex = (currentMediaIndex + 1) % allMedia.length;
-                            console.log('New index:', newIndex);
                             setCurrentMediaIndex(newIndex);
                           }}
                           aria-label="Next media"
@@ -697,7 +697,6 @@ function getMediaType(url: string): 'image' | 'video' | 'audio' | 'pdf' | 'unkno
                               $active={index === currentMediaIndex}
                               onClick={(ev) => {
                                 ev.stopPropagation();
-                                console.log('Thumbnail clicked, setting index to:', index);
                                 setCurrentMediaIndex(index);
                               }}
                               aria-label={`View media ${index + 1}`}
