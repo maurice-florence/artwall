@@ -9,6 +9,7 @@ import { Artwork } from '@/types/index';
 import styled from "styled-components";
 import { FaTimes, FaSoundcloud, FaShareAlt } from "react-icons/fa";
 import ReactMarkdown from "react-markdown";
+import { OptimizedImage } from "@/components/OptimizedImage";
 
 // ... Modal styles (copied from previous Modal.tsx) ...
 const ModalBackdrop = styled.div.attrs({
@@ -273,10 +274,11 @@ export default function ArtworkModalPage() {
           {artwork.medium === 'writing' && (
             <>
               {hasCoverImageUrl(artwork) && artwork.coverImageUrl && (
-                <ModalImage
+                <OptimizedImage
                   src={artwork.coverImageUrl}
                   alt={`Cover voor ${artwork.title}`}
-                  style={{ marginBottom: '1rem' }}
+                  preferredSize="full"
+                  style={{ marginBottom: '1rem', width: '100%', height: 'auto', maxHeight: 'calc(85vh - 200px)', objectFit: 'contain', borderRadius: 4 }}
                 />
               )}
               {hasMediaUrl(artwork) && artwork.mediaUrl && (
@@ -286,7 +288,14 @@ export default function ArtworkModalPage() {
           )}
           {/* Visual arts: image */}
           {getMediaType(artwork) === 'image' && hasMediaUrl(artwork) && (
-            <ModalImage src={artwork.mediaUrl || '/logo192.png'} alt={artwork.title} loading="lazy" />
+            <OptimizedImage 
+              src={artwork.mediaUrl || '/logo192.png'} 
+              alt={artwork.title} 
+              preferredSize="full"
+              fallbackSrc="/logo192.png"
+              style={{ width: '100%', height: 'auto', maxHeight: 'calc(85vh - 200px)', objectFit: 'contain', borderRadius: 4 }}
+              loading="lazy" 
+            />
           )}
           {/* Audio/music: SoundCloud or audio */}
           {getMediaType(artwork) === 'audio' && (

@@ -10,6 +10,7 @@ import { Artwork } from '@/types';
 import { useRouter } from 'next/navigation';
 import { createPortal } from 'react-dom';
 import { getResizedImageUrl } from '@/utils/image-urls';
+import { OptimizedImage } from './OptimizedImage';
 
 const ModalBackdrop = styled.div.attrs({
   role: 'dialog',
@@ -406,11 +407,28 @@ function getMediaType(url: string): 'image' | 'video' | 'audio' | 'pdf' | 'unkno
                 {isStacked ? (
                     allMedia.map((url, index) => {
                         const type = getMediaType(url);
-                        if (type === 'image') return <ResponsiveImage key={index} src={url} alt={`Media ${index + 1}`} onClick={() => window.open(url, '_blank')} />;
-                        if (type === 'video') return <video key={index} src={url} controls style={{ width: '100%', borderRadius: 4, background: '#222' }} />;
-                        if (type === 'audio') return <audio key={index} src={url} controls style={{ width: '100%', borderRadius: 4, background: '#222' }} />;
+                        if (type === 'image') {
+                          return (
+                            <OptimizedImage
+                              key={index}
+                              src={url}
+                              alt={`Media ${index + 1}`}
+                              preferredSize="full"
+                              style={{ 
+                                width: '100%', 
+                                height: 'auto', 
+                                borderRadius: 4, 
+                                cursor: 'pointer',
+                                marginBottom: '1rem'
+                              }}
+                              onClick={() => window.open(url, '_blank')}
+                            />
+                          );
+                        }
+                        if (type === 'video') return <video key={index} src={url} controls style={{ width: '100%', borderRadius: 4, background: '#222', marginBottom: '1rem' }} />;
+                        if (type === 'audio') return <audio key={index} src={url} controls style={{ width: '100%', borderRadius: 4, background: '#222', marginBottom: '1rem' }} />;
                         if (type === 'pdf') return <PdfViewer key={index} src={url} title={`PDF ${index + 1}`} />;
-                        return <div key={index}>Onbekend mediabestand</div>;
+                        return <div key={index} style={{ marginBottom: '1rem' }}>Onbekend mediabestand</div>;
                     })
                 ) : (
                   <>
@@ -425,12 +443,20 @@ function getMediaType(url: string): 'image' | 'video' | 'audio' | 'pdf' | 'unkno
                         const currentUrl = allMedia[currentMediaIndex];
                         const type = getMediaType(currentUrl);
                         if (type === 'image') {
-                          // Use full size for modal, open original in new tab
-                          const fullSizeUrl = getResizedImageUrl(currentUrl, 'full');
+                          // Use OptimizedImage with 'full' preference and fallback to original
                           return (
-                            <ResponsiveImage 
-                              src={fullSizeUrl} 
-                              alt={`Media ${currentMediaIndex + 1}`} 
+                            <OptimizedImage 
+                              src={currentUrl}
+                              alt={`Media ${currentMediaIndex + 1}`}
+                              preferredSize="full"
+                              style={{ 
+                                width: '100%', 
+                                height: 'auto', 
+                                maxHeight: '70vh', 
+                                objectFit: 'contain', 
+                                borderRadius: 4, 
+                                cursor: 'pointer' 
+                              }}
                               data-testid={`modal-media-image-${currentMediaIndex}`} 
                               onClick={() => window.open(currentUrl, '_blank')} 
                             />
