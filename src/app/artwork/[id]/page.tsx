@@ -9,7 +9,7 @@ import { Artwork } from '@/types/index';
 import styled from "styled-components";
 import { FaTimes, FaSoundcloud, FaShareAlt } from "react-icons/fa";
 import ReactMarkdown from "react-markdown";
-import { OptimizedImage } from "@/components/OptimizedImage";
+import { SmartImage } from "@/components/SmartImage";
 
 // ... Modal styles (copied from previous Modal.tsx) ...
 const ModalBackdrop = styled.div.attrs({
@@ -274,7 +274,7 @@ export default function ArtworkModalPage() {
           {artwork.medium === 'writing' && (
             <>
               {hasCoverImageUrl(artwork) && artwork.coverImageUrl && (
-                <OptimizedImage
+             <SmartImage
                   src={artwork.coverImageUrl}
                   alt={`Cover voor ${artwork.title}`}
                   preferredSize="full"
@@ -288,7 +288,7 @@ export default function ArtworkModalPage() {
           )}
           {/* Visual arts: image */}
           {getMediaType(artwork) === 'image' && hasMediaUrl(artwork) && (
-            <OptimizedImage 
+          <SmartImage 
               src={artwork.mediaUrl || '/logo192.png'} 
               alt={artwork.title} 
               preferredSize="full"

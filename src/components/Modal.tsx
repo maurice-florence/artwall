@@ -1,4 +1,4 @@
-// Removed alignment check line
+// Removed alignment check l$env:NEXT_PUBLIC_ENABLE_SANDBOX = "true"; npm run devine
 // ...existing code...
 // ...existing code...
 import React, { useEffect, useState, useRef, useMemo } from 'react';
@@ -10,7 +10,7 @@ import { Artwork } from '@/types';
 import { useRouter } from 'next/navigation';
 import { createPortal } from 'react-dom';
 import { getResizedImageUrl } from '@/utils/image-urls';
-import { OptimizedImage } from './OptimizedImage';
+import { SmartImage } from './SmartImage';
 
 const ModalBackdrop = styled.div.attrs({
   role: 'dialog',
@@ -555,7 +555,7 @@ function getMediaType(url: string): 'image' | 'video' | 'audio' | 'pdf' | 'unkno
                       
                       if (type === 'image') {
                         return (
-                          <OptimizedImage 
+                          <SmartImage 
                             key={`image-${currentMediaIndex}-${currentUrl}`}
                             src={currentUrl}
                             alt={`Media ${currentMediaIndex + 1}`}
@@ -703,7 +703,7 @@ function getMediaType(url: string): 'image' | 'video' | 'audio' | 'pdf' | 'unkno
                               title={`${type} ${index + 1}`}
                             >
                               {type === 'image' ? (
-                                <OptimizedImage
+                                <SmartImage
                                   src={url}
                                   alt={`Thumbnail ${index + 1}`}
                                   preferredSize="thumbnail"

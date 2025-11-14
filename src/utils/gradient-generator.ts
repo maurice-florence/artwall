@@ -1,5 +1,6 @@
 import type { DefaultTheme } from 'styled-components';
 import type { Theme } from '@/styled';
+import { logger } from '@/utils/logger';
 import { 
   GRADIENT_SATURATION, 
   HUE_VARIATION, 
@@ -129,9 +130,7 @@ function getThemeCompatibleColor(
       l: baseColorHsl.l // Keep original lightness for poetry
     };
     // Debug logging for poetry/writing
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`📝 Poetry gradient: base=${baseColorHsl.s}%, boost=${poetrySat}%, final=${adjustedBaseColor.s}%`);
-    }
+    logger.debug(`📝 Poetry gradient: base=${baseColorHsl.s}%, boost=${poetrySat}%, final=${adjustedBaseColor.s}%`);
   } else {
     adjustedBaseColor = {
       h: hue,
@@ -234,7 +233,7 @@ export function generateUniqueGradient(inputString: string, theme: DefaultTheme,
   if (process.env.NODE_ENV === 'development' && satFingerprint !== lastSatFingerprint) {
     gradientCache.clear();
     lastSatFingerprint = satFingerprint;
-    console.log('🎨 Gradient cache cleared - new saturation settings:', GRADIENT_SATURATION);
+  logger.info('🎨 Gradient cache cleared - new saturation settings:', GRADIENT_SATURATION);
   }
   
   const themeKey = `${(theme as any).primary || ''}|${(theme as any).secondary || ''}|${(theme as any).tertiary || ''}|${(theme as any).body || ''}|${satFingerprint}`;
