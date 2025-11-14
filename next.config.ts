@@ -4,6 +4,15 @@ import type { NextConfig } from 'next';
 /** @type {import('next').NextConfig} */
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  eslint: {
+    // Only fail build on actual ESLint errors, not warnings
+    ignoreDuringBuilds: false,
+    dirs: ['src']
+  },
+  typescript: {
+    // Only fail on serious TypeScript errors during production builds
+    ignoreBuildErrors: false
+  },
   images: {
     remotePatterns: [
       {
