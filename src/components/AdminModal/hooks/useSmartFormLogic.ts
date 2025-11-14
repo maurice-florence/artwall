@@ -37,6 +37,12 @@ export const useSmartFormLogic = (formData: ArtworkFormData) => {
 
   const [lastAppliedDefaults, setLastAppliedDefaults] = useState<Set<keyof ArtworkFormData>>(new Set());
 
+  const checkIfDependency = useCallback((field: keyof ArtworkFormData, formData: ArtworkFormData): boolean => {
+    // Check if this field depends on others
+    const dependencyFields = ['language2', 'language3', 'url2', 'url3', 'location2'];
+    return dependencyFields.includes(field);
+  }, []);
+
   // Update smart state when form data changes
   useEffect(() => {
     const visibleFields = getVisibleFields(formData);
@@ -74,13 +80,7 @@ export const useSmartFormLogic = (formData: ArtworkFormData) => {
       fieldStates,
       smartValidation: validation
     });
-  }, [formData]);
-
-  const checkIfDependency = useCallback((field: keyof ArtworkFormData, formData: ArtworkFormData): boolean => {
-    // Check if this field depends on others
-    const dependencyFields = ['language2', 'language3', 'url2', 'url3', 'location2'];
-    return dependencyFields.includes(field);
-  }, []);
+  }, [formData, checkIfDependency]);
 
   // Apply smart defaults when category changes
   const applySmartDefaultsForCategory = useCallback((formData: ArtworkFormData): Partial<ArtworkFormData> => {
@@ -126,7 +126,7 @@ export const useSmartFormLogic = (formData: ArtworkFormData) => {
     };
     
     return helpTexts[field] || '';
-   }, [formData.medium]);
+   }, []);
 
   // Get smart suggestions for field values
    const getSmartSuggestions = useCallback((field: keyof ArtworkFormData): string[] => {

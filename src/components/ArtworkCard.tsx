@@ -296,6 +296,51 @@ const AudioTextOverlay = styled(TextOverlay)`
 const ArtworkCard = ({ artwork, onSelect, isAdmin }: ArtworkCardProps) => {
     const theme = useTheme();
 
+    // All hooks must be called at the top level, before any conditional logic
+    // Slider state for all cards with images, only on card back
+    const [currentImage, setCurrentImage] = useState(0);
+    
+    // Basic calculations for memoization
+    const isWriting = isWritingMedium(artwork.medium);
+    const isAudio = isAudioMedium(artwork.medium);
+    
+    // Accept either a single string or an array of strings for images
+    let images: string[] = [];
+    if (Array.isArray(artwork.coverImageUrl)) {
+      images = artwork.coverImageUrl.filter(isImageUrl);
+    } else if (artwork.coverImageUrl && isImageUrl(artwork.coverImageUrl)) {
+      images = [artwork.coverImageUrl];
+    } else if (Array.isArray(artwork.mediaUrls) && artwork.mediaUrls.length > 0) {
+      images = artwork.mediaUrls.filter(isImageUrl);
+    }
+    
+    const hasImage = images.length > 0;
+    
+    // Generate gradient for cards without images — memoized and keyed by
+    // artwork identity + relevant theme fields to avoid recalculation when
+    // unrelated theme properties change.
+    const themeFingerprint = `${(theme as any).primary || ''}|${(theme as any).secondary || ''}|${(theme as any).tertiary || ''}|${(theme as any).body || ''}`;
+
+    const uniqueGradient = useMemo(() => {
+      if ((isWriting || isAudio) && !hasImage) {
+        return generateUniqueGradient(artwork.id || artwork.title, theme, artwork.medium);
+      }
+      return undefined;
+    }, [artwork.id, artwork.title, artwork.medium, isWriting, isAudio, hasImage, theme]);
+
+    const useDarkText = useMemo(() => {
+      return uniqueGradient ? shouldUseDarkText(uniqueGradient) : false;
+    }, [uniqueGradient]);
+
+    // Allow toggling between gradient and text preview for writing pieces
+    const [showPreview, setShowPreview] = useState(false);
+    const togglePreview = useCallback((e: React.MouseEvent) => {
+      if (isWriting && !hasImage) {
+        e.stopPropagation();
+        setShowPreview(prev => !prev);
+      }
+    }, [isWriting, hasImage]);
+
     // Card sizing logic: only 'novels' and 'songs' get special sizing, all others use standard size
     const formattedDate = new Date(artwork.year, (artwork.month || 1) - 1, artwork.day || 1)
       .toLocaleDateString('nl-NL', { month: 'short', year: 'numeric' });
@@ -349,16 +394,6 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin }: ArtworkCardProps) => {
     let maxLines = 8;
     if (subtype === 'novel') maxLines = 16;
 
-    // Accept either a single string or an array of strings for images
-    let images: string[] = [];
-    if (Array.isArray(artwork.coverImageUrl)) {
-      images = artwork.coverImageUrl.filter(isImageUrl);
-    } else if (artwork.coverImageUrl && isImageUrl(artwork.coverImageUrl)) {
-      images = [artwork.coverImageUrl];
-    } else if (Array.isArray(artwork.mediaUrls) && artwork.mediaUrls.length > 0) {
-      images = artwork.mediaUrls.filter(isImageUrl);
-    }
-
     // For audio: get the first available mediaUrl (mediaUrl or mediaUrls)
     let audioUrl: string | undefined = undefined;
     if (artwork.mediaUrl) {
@@ -367,48 +402,16 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin }: ArtworkCardProps) => {
       audioUrl = artwork.mediaUrls.find(url => !isImageUrl(url));
     }
 
-
-    // Slider state for all cards with images, only on card back
-    const [currentImage, setCurrentImage] = useState(0);
-
     // Blank card rendering
     const blank = !artwork.title && !artwork.description && !artwork.coverImageUrl;
     if (blank) {
       return null;
     }
 
-    const isWriting = isWritingMedium(artwork.medium);
-    const isAudio = isAudioMedium(artwork.medium);
-    const hasImage = images.length > 0;
     const imageUrl = hasImage ? getImageUrl(images[0], 'card') : undefined;
 
     const start = Math.floor(cardText.length / 3);
     const textPreview = cardText.slice(start);
-
-    // Generate gradient for cards without images — memoized and keyed by
-    // artwork identity + relevant theme fields to avoid recalculation when
-    // unrelated theme properties change.
-    const themeFingerprint = `${(theme as any).primary || ''}|${(theme as any).secondary || ''}|${(theme as any).tertiary || ''}|${(theme as any).body || ''}`;
-
-    const uniqueGradient = useMemo(() => {
-      if ((isWriting || isAudio) && !hasImage) {
-        return generateUniqueGradient(artwork.id || artwork.title, theme, artwork.medium);
-      }
-      return undefined;
-    }, [artwork.id, artwork.title, artwork.medium, isWriting, isAudio, hasImage, themeFingerprint]);
-
-    const useDarkText = useMemo(() => {
-      return uniqueGradient ? shouldUseDarkText(uniqueGradient) : false;
-    }, [uniqueGradient, themeFingerprint]);
-
-    // Allow toggling between gradient and text preview for writing pieces
-    const [showPreview, setShowPreview] = useState(false);
-    const togglePreview = useCallback((e: React.MouseEvent) => {
-      if (isWriting && !hasImage) {
-        e.stopPropagation();
-        setShowPreview(prev => !prev);
-      }
-    }, [isWriting, hasImage]);
 
     // Card front: only show title, image/waveform, language, and footer. No extra text under the title for any medium.
     return (

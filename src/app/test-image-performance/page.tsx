@@ -89,7 +89,7 @@ const ImagePerformanceTestPage: React.FC = () => {
     <TestContainer>
       <h1>Image Performance Test</h1>
       <p>This page tests whether the Firebase Storage image resizing extension is working properly.</p>
-      <p>If resized images exist, they should load faster than the original. If they don't exist, you'll see 404 errors.</p>
+      <p>If resized images exist, they should load faster than the original. If they don&apos;t exist, you&apos;ll see 404 errors.</p>
       
       <ImageGrid>
         {testImages.map((test, index) => {
@@ -114,7 +114,7 @@ const ImagePerformanceTestPage: React.FC = () => {
               )}
               
               {test.error && (
-                <LoadTime>❌ Failed to load - Image variant doesn't exist</LoadTime>
+                <LoadTime>❌ Failed to load - Image variant doesn&apos;t exist</LoadTime>
               )}
             </ImageTestCard>
           );
