@@ -38,12 +38,11 @@ const ModalContent = styled.div`
   border-radius: 8px;
   width: 90%;
   max-width: 900px;
-  max-height: 90vh;
-  overflow-y: auto;
-  position: relative;
+  max-height: 95vh;
   display: flex;
   flex-direction: column;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  position: relative;
 
   h2 {
     color: ${({ theme }) => theme.text};
@@ -218,25 +217,30 @@ const CarouselViewport = styled.div`
   border-radius: 8px;
   overflow: hidden;
   background: rgba(0, 0, 0, 0.05);
+  max-height: 60vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 `;
 
 const CarouselButton = styled.button`
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(0, 0, 0, 0.8);
   color: white;
   border: none;
   border-radius: 50%;
   width: 50px;
   height: 50px;
   cursor: pointer;
-  z-index: 10;
+  z-index: 100;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 18px;
   transition: all 0.2s ease;
+  pointer-events: auto;
   
   &:hover {
     background: rgba(0, 0, 0, 0.9);
@@ -369,6 +373,11 @@ const Modal: React.FC<ModalProps> = ({
   const textContainerRef = useRef<HTMLDivElement>(null);
   const imageContainerRef = useRef<HTMLDivElement>(null);
 
+  // Reset carousel index when item changes
+  useEffect(() => {
+    setCurrentMediaIndex(0);
+  }, [item.id]);
+
   // Get available languages
   const availableLanguages = [];
   if (item.language1) availableLanguages.push(item.language1);
@@ -401,6 +410,7 @@ const Modal: React.FC<ModalProps> = ({
 
   const handleClose = () => {
     setCurrentLanguage(item.language1 || 'en');
+    setCurrentMediaIndex(0); // Reset carousel position when closing
     onClose();
   };
 
@@ -456,6 +466,9 @@ function getMediaType(url: string): 'image' | 'video' | 'audio' | 'pdf' | 'unkno
     if (item.audioUrl && !media.includes(item.audioUrl)) media.push(item.audioUrl);
     return media.filter(Boolean);
   }, [item.coverImageUrl, item.mediaUrl, item.mediaUrls, item.pdfUrl, item.audioUrl]);
+
+  // Debug logging
+  console.log('Modal render - currentMediaIndex:', currentMediaIndex, 'allMedia.length:', allMedia.length);
 
   useEffect(() => {
     if (isOpen) {
@@ -549,7 +562,7 @@ function getMediaType(url: string): 'image' | 'video' | 'audio' | 'pdf' | 'unkno
                             style={{ 
                               width: '100%', 
                               height: 'auto', 
-                              maxHeight: '70vh', 
+                              maxHeight: '55vh', 
                               objectFit: 'contain', 
                               borderRadius: 4,
                               display: 'block'
@@ -566,7 +579,7 @@ function getMediaType(url: string): 'image' | 'video' | 'audio' | 'pdf' | 'unkno
                             controls 
                             style={{ 
                               width: '100%', 
-                              maxHeight: '70vh', 
+                              maxHeight: '55vh', 
                               borderRadius: 4, 
                               background: '#222' 
                             }} 
@@ -596,7 +609,7 @@ function getMediaType(url: string): 'image' | 'video' | 'audio' | 'pdf' | 'unkno
                             src={currentUrl} 
                             style={{ 
                               width: '100%', 
-                              height: '70vh', 
+                              height: '55vh', 
                               border: '1px solid #ddd', 
                               borderRadius: 4 
                             }} 
@@ -628,7 +641,11 @@ function getMediaType(url: string): 'image' | 'video' | 'audio' | 'pdf' | 'unkno
                           className="prev"
                           onClick={(ev) => {
                             ev.stopPropagation();
-                            setCurrentMediaIndex((currentMediaIndex - 1 + allMedia.length) % allMedia.length);
+                            ev.preventDefault();
+                            console.log('Previous clicked, current index:', currentMediaIndex);
+                            const newIndex = (currentMediaIndex - 1 + allMedia.length) % allMedia.length;
+                            console.log('New index:', newIndex);
+                            setCurrentMediaIndex(newIndex);
                           }}
                           aria-label="Previous media"
                         >
@@ -639,7 +656,11 @@ function getMediaType(url: string): 'image' | 'video' | 'audio' | 'pdf' | 'unkno
                           className="next"
                           onClick={(ev) => {
                             ev.stopPropagation();
-                            setCurrentMediaIndex((currentMediaIndex + 1) % allMedia.length);
+                            ev.preventDefault();
+                            console.log('Next clicked, current index:', currentMediaIndex);
+                            const newIndex = (currentMediaIndex + 1) % allMedia.length;
+                            console.log('New index:', newIndex);
+                            setCurrentMediaIndex(newIndex);
                           }}
                           aria-label="Next media"
                         >
@@ -674,7 +695,11 @@ function getMediaType(url: string): 'image' | 'video' | 'audio' | 'pdf' | 'unkno
                             <ThumbnailButton
                               key={index}
                               $active={index === currentMediaIndex}
-                              onClick={() => setCurrentMediaIndex(index)}
+                              onClick={(ev) => {
+                                ev.stopPropagation();
+                                console.log('Thumbnail clicked, setting index to:', index);
+                                setCurrentMediaIndex(index);
+                              }}
                               aria-label={`View media ${index + 1}`}
                               title={`${type} ${index + 1}`}
                             >
@@ -726,6 +751,9 @@ const MediaTextContainer = styled.div`
   gap: 1.5rem;
   align-items: flex-start;
   width: 100%;
+  flex: 1;
+  overflow: hidden;
+  min-height: 0;
 `;
 
 const TextContainer = styled.div`
@@ -734,6 +762,8 @@ const TextContainer = styled.div`
   border-radius: 8px;
   padding: 1rem;
   margin-top: 0 !important;
+  overflow-y: auto;
+  max-height: 70vh;
 `;
 
 const ImageContainer = styled.div`
