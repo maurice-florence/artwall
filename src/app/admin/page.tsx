@@ -3,6 +3,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import { logger } from '@/utils/logger';
 import { getAuth, onAuthStateChanged, User } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import styled from 'styled-components';
@@ -142,7 +143,7 @@ const AdminPage: React.FC = () => {
   const handleDelete = async (artwork: Artwork) => {
     if (confirm(`Weet je zeker dat je "${artwork.title}" wilt verwijderen?`)) {
       // TODO: Implement delete functionality
-      console.log('Delete artwork:', artwork.id);
+  logger.warn('Delete artwork requested (not implemented):', artwork.id);
     }
   };
 

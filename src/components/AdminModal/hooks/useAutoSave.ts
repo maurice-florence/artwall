@@ -1,6 +1,7 @@
 // src/components/AdminModal/hooks/useAutoSave.ts
 // filepath: c:\Users\friem\OneDrive\Documenten\GitHub\artwall\src\components\AdminModal\hooks\useAutoSave.ts
 import { useEffect, useRef, useCallback } from 'react';
+import { logger } from '@/utils/logger';
 import { ArtworkFormData } from '@/types';
 
 interface AutoSaveOptions {
@@ -31,9 +32,9 @@ export const useAutoSave = (
     try {
       localStorage.setItem(key, dataString);
       lastSavedRef.current = dataString;
-      console.log('Draft saved:', new Date().toLocaleTimeString());
+  logger.info('Draft saved:', new Date().toLocaleTimeString());
     } catch (error) {
-      console.warn('Failed to save draft:', error);
+  logger.warn('Failed to save draft:', error);
     }
   }, [formData, key, enabled]);
 
@@ -44,11 +45,11 @@ export const useAutoSave = (
       const saved = localStorage.getItem(key);
       if (saved) {
         const parsedData = JSON.parse(saved);
-        console.log('Draft loaded:', new Date().toLocaleTimeString());
+  logger.info('Draft loaded:', new Date().toLocaleTimeString());
         return parsedData;
       }
     } catch (error) {
-      console.warn('Failed to load draft:', error);
+  logger.warn('Failed to load draft:', error);
     }
     return null;
   }, [key, enabled]);
@@ -59,9 +60,9 @@ export const useAutoSave = (
     try {
       localStorage.removeItem(key);
       lastSavedRef.current = '';
-      console.log('Draft cleared');
+  logger.info('Draft cleared');
     } catch (error) {
-      console.warn('Failed to clear draft:', error);
+  logger.warn('Failed to clear draft:', error);
     }
   }, [key, enabled]);
 

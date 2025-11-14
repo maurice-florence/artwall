@@ -1,10 +1,12 @@
 // src/utils/performance.ts
 // filepath: c:\Users\friem\OneDrive\Documenten\GitHub\artwall\src\utils\performance.ts
+import { logger } from '@/utils/logger';
+
 export const measurePerformance = (name: string, fn: () => void) => {
   const start = performance.now();
   fn();
   const end = performance.now();
-  console.log(`${name} took ${end - start} milliseconds`);
+  logger.debug(`${name} took ${(end - start).toFixed(2)} ms`);
 };
 
 export const debounce = <T extends (...args: any[]) => void>(
