@@ -1,9 +1,9 @@
 // Removed alignment check line
 // ...existing code...
 // ...existing code...
-import React, { useEffect, useState, useRef, useLayoutEffect, useMemo } from 'react';
+import React, { useEffect, useState, useRef, useMemo } from 'react';
 import styled from 'styled-components';
-import { FaTimes, FaSoundcloud, FaShareAlt, FaTrash } from 'react-icons/fa';
+import { FaTimes, FaSoundcloud, FaShareAlt, FaTrash, FaChevronLeft, FaChevronRight, FaExpandArrowsAlt } from 'react-icons/fa';
 import ReactMarkdown from 'react-markdown';
 import { formatDate } from '@/utils';
 import { Artwork } from '@/types';
@@ -203,6 +203,147 @@ function hasMediaType(artwork: Artwork): boolean {
   return 'mediaType' in artwork && typeof (artwork as any).mediaType === 'string';
 }
 
+// Carousel styled components
+const CarouselContainer = styled.div`
+  position: relative;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+`;
+
+const CarouselViewport = styled.div`
+  position: relative;
+  width: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.05);
+`;
+
+const CarouselButton = styled.button`
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  cursor: pointer;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background: rgba(0, 0, 0, 0.9);
+    transform: translateY(-50%) scale(1.1);
+  }
+  
+  &:active {
+    transform: translateY(-50%) scale(0.95);
+  }
+  
+  &.prev {
+    left: 16px;
+  }
+  
+  &.next {
+    right: 16px;
+  }
+`;
+
+const CarouselIndicators = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 0;
+`;
+
+const CarouselCounter = styled.div`
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 500;
+`;
+
+const ThumbnailContainer = styled.div`
+  display: flex;
+  gap: 0.5rem;
+  max-width: 100%;
+  overflow-x: auto;
+  padding: 0.5rem 0;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.3) transparent;
+  
+  &::-webkit-scrollbar {
+    height: 6px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 3px;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 3px;
+  }
+`;
+
+const ThumbnailButton = styled.button<{ $active: boolean }>`
+  flex-shrink: 0;
+  width: 60px;
+  height: 60px;
+  border: 2px solid ${({ $active, theme }) => $active ? theme.accent : 'transparent'};
+  border-radius: 6px;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    border-color: ${({ theme }) => theme.accent};
+    transform: scale(1.05);
+  }
+  
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+`;
+
+const ExpandButton = styled.button`
+  position: absolute;
+  top: 16px;
+  right: 60px;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  width: 40px;
+  height: 40px;
+  cursor: pointer;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background: rgba(0, 0, 0, 0.9);
+    transform: scale(1.1);
+  }
+`;
+
 type ModalProps = {
   item: Artwork;
   onClose: () => void;
@@ -225,7 +366,6 @@ const Modal: React.FC<ModalProps> = ({
   const [currentLanguage, setCurrentLanguage] = useState(item.language1 || 'en');
   // Add state for slider inside Modal component
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
-  const [isStacked, setIsStacked] = useState(false);
   const textContainerRef = useRef<HTMLDivElement>(null);
   const imageContainerRef = useRef<HTMLDivElement>(null);
 
@@ -317,20 +457,6 @@ function getMediaType(url: string): 'image' | 'video' | 'audio' | 'pdf' | 'unkno
     return media.filter(Boolean);
   }, [item.coverImageUrl, item.mediaUrl, item.mediaUrls, item.pdfUrl, item.audioUrl]);
 
-  useLayoutEffect(() => {
-    if (textContainerRef.current && imageContainerRef.current && allMedia.length > 1) {
-      const textHeight = textContainerRef.current.scrollHeight;
-      const mediaHeight = imageContainerRef.current.scrollHeight;
-      const shouldStack = textHeight > mediaHeight;
-      
-      // Only update state if it actually needs to change
-      setIsStacked(current => current !== shouldStack ? shouldStack : current);
-    } else {
-      // Only update state if it's not already false
-      setIsStacked(current => current ? false : current);
-    }
-  }, [allMedia.length, cleanContent]); // Use allMedia.length instead of allMedia reference
-
   useEffect(() => {
     if (isOpen) {
       // Trap focus within modal
@@ -404,86 +530,188 @@ function getMediaType(url: string): 'image' | 'video' | 'audio' | 'pdf' | 'unkno
                 dangerouslySetInnerHTML={{ __html: parseContent(cleanContent) }}
               />
             )}
-            {/* Display all media (coverImageUrl, mediaUrl, mediaUrls) in the slider */}
-            {allMedia.length > 0 &&
-              <ImageContainer ref={imageContainerRef} style={{ position: 'relative', alignItems: 'center', justifyContent: 'center' }}>
-                {isStacked ? (
-                    allMedia.map((url, index) => {
-                        const type = getMediaType(url);
-                        if (type === 'image') {
-                          return (
-                            <OptimizedImage
-                              key={index}
-                              src={url}
-                              alt={`Media ${index + 1}`}
-                              preferredSize="full"
-                              style={{ 
-                                width: '100%', 
-                                height: 'auto', 
-                                borderRadius: 4, 
-                                cursor: 'pointer',
-                                marginBottom: '1rem'
-                              }}
-                              onClick={() => window.open(url, '_blank')}
-                            />
-                          );
-                        }
-                        if (type === 'video') return <video key={index} src={url} controls style={{ width: '100%', borderRadius: 4, background: '#222', marginBottom: '1rem' }} />;
-                        if (type === 'audio') return <audio key={index} src={url} controls style={{ width: '100%', borderRadius: 4, background: '#222', marginBottom: '1rem' }} />;
-                        if (type === 'pdf') return <PdfViewer key={index} src={url} title={`PDF ${index + 1}`} />;
-                        return <div key={index} style={{ marginBottom: '1rem' }}>Onbekend mediabestand</div>;
-                    })
-                ) : (
-                  <>
-                    {allMedia.length > 1 && (
-                      <button
-                        style={{ position: 'absolute', left: 0, top: '50%', transform: 'translateY(-50%)', background: 'rgba(0,0,0,0.3)', color: '#fff', border: 'none', borderRadius: '50%', width: 32, height: 32, cursor: 'pointer', zIndex: 2 }}
-                        onClick={ev => { ev.stopPropagation(); setCurrentMediaIndex((currentMediaIndex - 1 + allMedia.length) % allMedia.length); }}
-                        aria-label="Previous media"
-                      >&lt;</button>
-                    )}
+            {/* Enhanced Image Carousel */}
+            {allMedia.length > 0 && (
+              <ImageContainer ref={imageContainerRef}>
+                <CarouselContainer>
+                  <CarouselViewport>
+                    {/* Current Media Display */}
                     {(() => {
-                        const currentUrl = allMedia[currentMediaIndex];
-                        const type = getMediaType(currentUrl);
-                        if (type === 'image') {
-                          // Use OptimizedImage with 'full' preference and fallback to original
-                          return (
-                            <OptimizedImage 
-                              src={currentUrl}
-                              alt={`Media ${currentMediaIndex + 1}`}
-                              preferredSize="full"
-                              style={{ 
-                                width: '100%', 
-                                height: 'auto', 
-                                maxHeight: '70vh', 
-                                objectFit: 'contain', 
-                                borderRadius: 4, 
-                                cursor: 'pointer' 
-                              }}
-                              data-testid={`modal-media-image-${currentMediaIndex}`} 
-                              onClick={() => window.open(currentUrl, '_blank')} 
-                            />
-                          );
-                        }
-                        if (type === 'video') return <video src={currentUrl} controls style={{ width: '100%', maxHeight: '70vh', borderRadius: 4, background: '#222' }} data-testid={`modal-media-video-${currentMediaIndex}`} />;
-                        if (type === 'audio') return <audio src={currentUrl} controls style={{ width: '100%', borderRadius: 4, background: '#222' }} data-testid={`modal-media-audio-${currentMediaIndex}`} />;
-                        if (type === 'pdf') return <iframe src={currentUrl} style={{ width: '100%', height: '70vh', border: '1px solid #ddd', borderRadius: 4 }} title={`PDF ${currentMediaIndex + 1}`} data-testid={`modal-media-pdf-${currentMediaIndex}`} />;
-                        return <div style={{ width: '100%', minHeight: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#888', fontSize: 16 }}><span>Onbekend mediabestand</span></div>;
+                      const currentUrl = allMedia[currentMediaIndex];
+                      const type = getMediaType(currentUrl);
+                      
+                      if (type === 'image') {
+                        return (
+                          <OptimizedImage 
+                            src={currentUrl}
+                            alt={`Media ${currentMediaIndex + 1}`}
+                            preferredSize="full"
+                            style={{ 
+                              width: '100%', 
+                              height: 'auto', 
+                              maxHeight: '70vh', 
+                              objectFit: 'contain', 
+                              borderRadius: 4,
+                              display: 'block'
+                            }}
+                            data-testid={`modal-media-image-${currentMediaIndex}`}
+                          />
+                        );
+                      }
+                      
+                      if (type === 'video') {
+                        return (
+                          <video 
+                            src={currentUrl} 
+                            controls 
+                            style={{ 
+                              width: '100%', 
+                              maxHeight: '70vh', 
+                              borderRadius: 4, 
+                              background: '#222' 
+                            }} 
+                            data-testid={`modal-media-video-${currentMediaIndex}`} 
+                          />
+                        );
+                      }
+                      
+                      if (type === 'audio') {
+                        return (
+                          <audio 
+                            src={currentUrl} 
+                            controls 
+                            style={{ 
+                              width: '100%', 
+                              borderRadius: 4, 
+                              background: '#222' 
+                            }} 
+                            data-testid={`modal-media-audio-${currentMediaIndex}`} 
+                          />
+                        );
+                      }
+                      
+                      if (type === 'pdf') {
+                        return (
+                          <iframe 
+                            src={currentUrl} 
+                            style={{ 
+                              width: '100%', 
+                              height: '70vh', 
+                              border: '1px solid #ddd', 
+                              borderRadius: 4 
+                            }} 
+                            title={`PDF ${currentMediaIndex + 1}`} 
+                            data-testid={`modal-media-pdf-${currentMediaIndex}`} 
+                          />
+                        );
+                      }
+                      
+                      return (
+                        <div style={{ 
+                          width: '100%', 
+                          minHeight: 200, 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          justifyContent: 'center', 
+                          color: '#888', 
+                          fontSize: 16 
+                        }}>
+                          <span>Onbekend mediabestand</span>
+                        </div>
+                      );
                     })()}
+                    
+                    {/* Navigation Buttons - Only show if multiple media */}
                     {allMedia.length > 1 && (
-                      <button
-                        style={{ position: 'absolute', right: 0, top: '50%', transform: 'translateY(-50%)', background: 'rgba(0,0,0,0.3)', color: '#fff', border: 'none', borderRadius: '50%', width: 32, height: 32, cursor: 'pointer', zIndex: 2 }}
-                        onClick={ev => { ev.stopPropagation(); setCurrentMediaIndex((currentMediaIndex + 1) % allMedia.length); }}
-                        aria-label="Next media"
-                      >&gt;</button>
+                      <>
+                        <CarouselButton
+                          className="prev"
+                          onClick={(ev) => {
+                            ev.stopPropagation();
+                            setCurrentMediaIndex((currentMediaIndex - 1 + allMedia.length) % allMedia.length);
+                          }}
+                          aria-label="Previous media"
+                        >
+                          <FaChevronLeft />
+                        </CarouselButton>
+                        
+                        <CarouselButton
+                          className="next"
+                          onClick={(ev) => {
+                            ev.stopPropagation();
+                            setCurrentMediaIndex((currentMediaIndex + 1) % allMedia.length);
+                          }}
+                          aria-label="Next media"
+                        >
+                          <FaChevronRight />
+                        </CarouselButton>
+                      </>
                     )}
-                    {allMedia.length > 1 && (
-                      <span style={{ position: 'absolute', bottom: 8, right: 16, fontSize: 14, color: '#fff', background: 'rgba(0,0,0,0.3)', borderRadius: 8, padding: '0 8px' }}>{currentMediaIndex + 1}/{allMedia.length}</span>
+                    
+                    {/* Expand to Full Size Button - Only for images */}
+                    {getMediaType(allMedia[currentMediaIndex]) === 'image' && (
+                      <ExpandButton
+                        onClick={() => window.open(allMedia[currentMediaIndex], '_blank')}
+                        aria-label="Open full size"
+                        title="Open full size in new tab"
+                      >
+                        <FaExpandArrowsAlt />
+                      </ExpandButton>
                     )}
-                  </>
-                )}
+                  </CarouselViewport>
+                  
+                  {/* Carousel Indicators and Thumbnails - Only show if multiple media */}
+                  {allMedia.length > 1 && (
+                    <CarouselIndicators>
+                      <CarouselCounter>
+                        {currentMediaIndex + 1} / {allMedia.length}
+                      </CarouselCounter>
+                      
+                      <ThumbnailContainer>
+                        {allMedia.map((url, index) => {
+                          const type = getMediaType(url);
+                          return (
+                            <ThumbnailButton
+                              key={index}
+                              $active={index === currentMediaIndex}
+                              onClick={() => setCurrentMediaIndex(index)}
+                              aria-label={`View media ${index + 1}`}
+                              title={`${type} ${index + 1}`}
+                            >
+                              {type === 'image' ? (
+                                <OptimizedImage
+                                  src={url}
+                                  alt={`Thumbnail ${index + 1}`}
+                                  preferredSize="thumbnail"
+                                  style={{ 
+                                    width: '100%', 
+                                    height: '100%', 
+                                    objectFit: 'cover' 
+                                  }}
+                                />
+                              ) : (
+                                <div style={{ 
+                                  width: '100%', 
+                                  height: '100%', 
+                                  display: 'flex', 
+                                  alignItems: 'center', 
+                                  justifyContent: 'center',
+                                  fontSize: '12px',
+                                  color: '#666',
+                                  textTransform: 'uppercase'
+                                }}>
+                                  {type}
+                                </div>
+                              )}
+                            </ThumbnailButton>
+                          );
+                        })}
+                      </ThumbnailContainer>
+                    </CarouselIndicators>
+                  )}
+                </CarouselContainer>
               </ImageContainer>
-            }
+            )}
           </MediaTextContainer>
         </div>
       </ModalContent>
