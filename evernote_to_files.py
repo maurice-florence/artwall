@@ -46,7 +46,7 @@ import sys
 import yaml  # Vereist: pip install pyyaml
 import base64
 import time
-from typing import Dict, Any, List, Tuple
+from typing import Dict, Any, List, Tuple, Optional
 
 # --- CONFIGURATIE ---
 SOURCE_ENEX_FOLDER = pathlib.Path('G:/Mijn Drive/Creatief/Artwall')
@@ -112,7 +112,7 @@ def normalize_subtype(medium: str, subtype: str) -> str:
     else:
         return 'other'
 
-def auto_detect_medium_subtype_from_content(content: str, resources: list = None) -> tuple:
+def auto_detect_medium_subtype_from_content(content: str, resources: Optional[list] = None) -> tuple:
     """
     Automatically detect medium and subtype based on content analysis.
     This is a fallback for when medium/subtype are not explicitly provided.
@@ -364,7 +364,7 @@ def generate_html_file(meta: Dict[str, Any], content_html: str, file_path: pathl
 </html>"""
     file_path.write_text(html_content, encoding='utf-8')
 
-def generate_filename(meta: Dict[str, Any], lang: str = None, version: Any = None) -> str:
+def generate_filename(meta: Dict[str, Any], lang: Optional[str] = None, version: Any = None) -> str:
     date = f"{meta.get('year', '0000')}{str(meta.get('month', '00')).zfill(2)}{str(meta.get('day', '00')).zfill(2)}"
     medium = meta.get('medium', 'unknown')
     subtype = meta.get('subtype', 'unknown')
@@ -395,7 +395,7 @@ def generate_filename(meta: Dict[str, Any], lang: str = None, version: Any = Non
 
     return filename
 
-def extract_auto_description(content_html: str, max_length: int = 100, category: str = None) -> str:
+def extract_auto_description(content_html: str, max_length: int = 100, category: Optional[str] = None) -> str:
     """
     Extracts the first sentence or row of content to use as description.
     Excludes the title (first row) and looks for the next meaningful text.

@@ -14,10 +14,6 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  // Disable tracing to avoid permission issues
-  tracing: false,
-  // Disable telemetry
-  telemetry: false,
 };
 
 export default nextConfig;
