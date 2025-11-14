@@ -1,4 +1,4 @@
-// Removed alignment check line
+// Removed alignment check l$env:NEXT_PUBLIC_ENABLE_SANDBOX = "true"; npm run devine
 // ...existing code...
 // ...existing code...
 import React, { useEffect, useState, useRef, useMemo } from 'react';
@@ -10,7 +10,6 @@ import { Artwork } from '@/types';
 import { useRouter } from 'next/navigation';
 import { createPortal } from 'react-dom';
 import { getResizedImageUrl } from '@/utils/image-urls';
-import { OptimizedImage } from './OptimizedImage';
 import { SmartImage } from './SmartImage';
 
 const ModalBackdrop = styled.div.attrs({

@@ -9,7 +9,6 @@ import { Artwork } from '@/types/index';
 import styled from "styled-components";
 import { FaTimes, FaSoundcloud, FaShareAlt } from "react-icons/fa";
 import ReactMarkdown from "react-markdown";
-import { OptimizedImage } from "@/components/OptimizedImage";
 import { SmartImage } from "@/components/SmartImage";
 
 // ... Modal styles (copied from previous Modal.tsx) ...
