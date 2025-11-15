@@ -53,3 +53,6 @@ serviceAccountKey_artwall.json
 .__pycache__
 __pycache__/
 vercel-logs/
+ 
+# local reports
+git-cleanup-report.txt
