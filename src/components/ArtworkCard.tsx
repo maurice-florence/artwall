@@ -109,7 +109,8 @@ const CardFront = styled(CardFace)<{
 const CardBack = styled(CardFace)<{ $medium: ArtworkMedium }>`
   background: ${({ theme, $medium }) => 
     $medium === "audio" ? theme.secondary : 
-    $medium === "drawing" ? theme.tertiary : 
+    ($medium === "drawing" || $medium === "sculpture") ? theme.tertiary : 
+    $medium === "other" ? (theme as any).accent || theme.primary :
     theme.primary};
   transform: rotateY(180deg);
   padding: 0.7rem;
@@ -410,6 +411,21 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin }: ArtworkCardProps) => {
 
     const imageUrl = hasImage ? getImageUrl(images[0], 'card') : undefined;
 
+    // Determine overlay tint per medium
+    const overlayColor = useMemo(() => {
+      switch (artwork.medium) {
+        case 'writing':
+          return (theme as any).primary;
+        case 'audio':
+          return (theme as any).secondary;
+        case 'drawing':
+        case 'sculpture':
+          return (theme as any).tertiary;
+        default:
+          return (theme as any).accent || (theme as any).primary;
+      }
+    }, [artwork.medium, theme]);
+
     const start = Math.floor(cardText.length / 3);
     const textPreview = cardText.slice(start);
 
@@ -435,9 +451,9 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin }: ArtworkCardProps) => {
                   loading="lazy"
                   decoding="async"
                 />
-                {/* Add gradient overlay for drawing cards */}
-                {IMAGE_OVERLAY.enabled && artwork.medium === 'drawing' && (
-                  <ImageOverlay $color={theme[IMAGE_OVERLAY.colorSource]} />
+                {/* Add gradient overlay for all image cards with per-medium tint */}
+                {IMAGE_OVERLAY.enabled && (
+                  <ImageOverlay $color={overlayColor} />
                 )}
               </>
             ) : (isWriting || isAudio) && !hasImage ? (

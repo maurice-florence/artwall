@@ -14,6 +14,9 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: false
   },
   images: {
+    // Allow Firebase Storage in both URL styles:
+    // - firebasestorage.googleapis.com/v0/b/<bucket>/o/... (API style)
+    // - storage.googleapis.com/<bucket>/... (GS style)
     remotePatterns: [
       {
         protocol: 'https',
@@ -21,7 +24,20 @@ const nextConfig: NextConfig = {
         port: '',
         pathname: '/v0/b/artwall-by-jr.appspot.com/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'storage.googleapis.com',
+        port: '',
+        pathname: '/artwall-by-jr.appspot.com/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'storage.googleapis.com',
+        port: '',
+        pathname: '/artwall-by-jr.firebasestorage.app/**',
+      },
     ],
+    domains: ['firebasestorage.googleapis.com', 'storage.googleapis.com'],
   },
 };
 
