@@ -17,6 +17,36 @@
 			"command": "npm run vercel:collect",
 			"problemMatcher": [],
 			"group": "test"
+		},
+		{
+			"label": "Git: Clean merged branches",
+			"type": "shell",
+			"command": "powershell",
+			"args": [
+				"-NoProfile",
+				"-ExecutionPolicy",
+				"Bypass",
+				"-File",
+				"c:/Users/friem/OneDrive/Documenten/GitHub/artwall/scripts/git-clean-merged.ps1"
+			],
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "Git: Clean merged branches (with report)",
+			"type": "shell",
+			"command": "powershell",
+			"args": [
+				"-NoProfile",
+				"-ExecutionPolicy",
+				"Bypass",
+				"-File",
+				"c:/Users/friem/OneDrive/Documenten/GitHub/artwall/scripts/git-clean-merged.ps1"
+			],
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
 		}
 	]
 }
