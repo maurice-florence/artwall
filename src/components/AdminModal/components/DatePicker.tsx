@@ -1,6 +1,6 @@
 // src/components/AdminModal/components/DatePicker.tsx
 // filepath: c:\Users\friem\OneDrive\Documenten\GitHub\artwall\src\components\AdminModal\components\DatePicker.tsx
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import styled from 'styled-components';
 
 interface DatePickerProps {
@@ -171,7 +171,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
   const currentMonth = new Date().getMonth() + 1;
   const currentDay = new Date().getDate();
 
-  const months = [
+  const months = useMemo(() => ([
     { value: 1, label: 'Januari' },
     { value: 2, label: 'Februari' },
     { value: 3, label: 'Maart' },
@@ -184,7 +184,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
     { value: 10, label: 'Oktober' },
     { value: 11, label: 'November' },
     { value: 12, label: 'December' }
-  ];
+  ]), []);
 
   const validateDate = useCallback((year?: number, month?: number, day?: number): boolean => {
     setError(null);

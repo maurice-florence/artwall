@@ -347,39 +347,25 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin }: ArtworkCardProps) => {
       audioUrl = artwork.mediaUrls.find(url => !isImageUrl(url));
     }
 
-
-    // Slider state for all cards with images, only on card back
-    const [currentImage, setCurrentImage] = useState(0);
-
-    // Blank card rendering
-    const blank = !artwork.title && !artwork.description && !artwork.coverImageUrl;
-    if (blank) {
-      return null;
-    }
-
+    // Determine base booleans before hooks
     const isWriting = isWritingMedium(artwork.medium);
     const isAudio = isAudioMedium(artwork.medium);
     const hasImage = images.length > 0;
-    const imageUrl = hasImage ? getImageUrl(images[0], 'card') : undefined;
 
-    const start = Math.floor(cardText.length / 3);
-    const textPreview = cardText.slice(start);
-
-    // Generate gradient for cards without images — memoized and keyed by
-    // artwork identity + relevant theme fields to avoid recalculation when
-    // unrelated theme properties change.
-    const themeFingerprint = `${(theme as any).primary || ''}|${(theme as any).complementary || ''}|${(theme as any).body || ''}`;
+    // Hooks must be declared before any early returns
+    // Slider state for all cards with images, only on card back
+    const [currentImage, setCurrentImage] = useState(0);
 
     const uniqueGradient = useMemo(() => {
       if ((isWriting || isAudio) && !hasImage) {
         return generateUniqueGradient(artwork.id || artwork.title, theme, artwork.medium);
       }
       return undefined;
-    }, [artwork.id, artwork.title, artwork.medium, isWriting, isAudio, hasImage, themeFingerprint]);
+    }, [artwork.id, artwork.title, artwork.medium, isWriting, isAudio, hasImage, theme]);
 
     const useDarkText = useMemo(() => {
       return uniqueGradient ? shouldUseDarkText(uniqueGradient) : false;
-    }, [uniqueGradient, themeFingerprint]);
+    }, [uniqueGradient]);
 
     // Allow toggling between gradient and text preview for writing pieces
     const [showPreview, setShowPreview] = useState(false);
@@ -389,6 +375,17 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin }: ArtworkCardProps) => {
         setShowPreview(prev => !prev);
       }
     }, [isWriting, hasImage]);
+
+    // Early return after hooks are declared
+    const blank = !artwork.title && !artwork.description && !artwork.coverImageUrl;
+    if (blank) {
+      return null;
+    }
+
+    const imageUrl = hasImage ? getImageUrl(images[0], 'card') : undefined;
+
+    const start = Math.floor(cardText.length / 3);
+    const textPreview = cardText.slice(start);
 
     // Card front: only show title, image/waveform, language, and footer. No extra text under the title for any medium.
     return (

@@ -1,7 +1,7 @@
 // Removed alignment check line
 // ...existing code...
 // ...existing code...
-import React, { useEffect, useState, useRef, useLayoutEffect } from 'react';
+import React, { useEffect, useState, useRef, useLayoutEffect, useMemo } from 'react';
 import styled from 'styled-components';
 import { FaTimes, FaSoundcloud, FaShareAlt, FaTrash } from 'react-icons/fa';
 import ReactMarkdown from 'react-markdown';
@@ -301,17 +301,19 @@ function getMediaType(url: string): 'image' | 'video' | 'audio' | 'pdf' | 'unkno
     return 'unknown';
   }
 
-  let allMedia: string[] = [];
-  if (item.coverImageUrl) allMedia.push(item.coverImageUrl);
-  if (item.mediaUrl && !allMedia.includes(item.mediaUrl)) allMedia.push(item.mediaUrl);
-  if (item.mediaUrls && Array.isArray(item.mediaUrls)) {
-    item.mediaUrls.forEach(url => {
-      if (url && !allMedia.includes(url)) allMedia.push(url);
-    });
-  }
-  if (item.pdfUrl && !allMedia.includes(item.pdfUrl)) allMedia.push(item.pdfUrl);
-  if (item.audioUrl && !allMedia.includes(item.audioUrl)) allMedia.push(item.audioUrl);
-  allMedia = allMedia.filter(Boolean);
+  const allMedia = useMemo(() => {
+    const media: string[] = [];
+    if (item.coverImageUrl) media.push(item.coverImageUrl);
+    if (item.mediaUrl && !media.includes(item.mediaUrl)) media.push(item.mediaUrl);
+    if (item.mediaUrls && Array.isArray(item.mediaUrls)) {
+      item.mediaUrls.forEach(url => {
+        if (url && !media.includes(url)) media.push(url);
+      });
+    }
+    if (item.pdfUrl && !media.includes(item.pdfUrl)) media.push(item.pdfUrl);
+    if (item.audioUrl && !media.includes(item.audioUrl)) media.push(item.audioUrl);
+    return media.filter(Boolean);
+  }, [item.coverImageUrl, item.mediaUrl, item.mediaUrls, item.pdfUrl, item.audioUrl]);
 
   useLayoutEffect(() => {
     if (textContainerRef.current && imageContainerRef.current && allMedia.length > 1) {
