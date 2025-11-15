@@ -37,6 +37,11 @@ function ensureHttps(url) {
   return url.startsWith('http') ? url : `https://${url}`;
 }
 
+// Remove ANSI color codes to make CLI parsing robust
+function stripAnsi(str) {
+  return String(str).replace(/[\u001B\u009B][[\]()#;?]*(?:((?:;[-a-zA-Z\d\/#&.:=?%@~_]+)*|(?:[a-zA-Z\d]+(?:;[a-zA-Z\d]*)*))?\u0007|(?:\d{1,4}(?:;\d{0,4})*)?[\dA-PR-TZcf-nq-uy=><~])/g, '');
+}
+
 async function main() {
   console.log('[vercel-logs] Collecting latest deployment logs...');
   // Ensure output folder
@@ -51,6 +56,8 @@ async function main() {
   // Try REST API first for reliability (requires VERCEL_TOKEN and project id)
   let deployUrl = process.env.VERCEL_DEPLOY_URL;
   let selectedDeployment = null;
+  let latestAny = null;
+  let latestHealthy = null;
   if (!deployUrl && process.env.VERCEL_TOKEN) {
     try {
       let projectId = process.env.VERCEL_PROJECT_ID;
@@ -79,9 +86,9 @@ async function main() {
           const prod = list
             .filter(d => (String(d.target || d.environment || '').toLowerCase() === 'production'))
             .sort((a, b) => (b.createdAt || b.created || 0) - (a.createdAt || a.created || 0));
-          const pick = prod.find(d => ['ready','building'].includes(String(d.readyState || d.state || '').toLowerCase()))
-                   || prod[0]
-                   || null;
+          latestHealthy = prod.find(d => ['ready','building'].includes(String(d.readyState || d.state || '').toLowerCase())) || null;
+          latestAny = prod[0] || null;
+          const pick = latestHealthy || latestAny || null;
           if (pick) {
             selectedDeployment = pick;
             deployUrl = pick.url ? ensureHttps(pick.url) : null;
@@ -94,17 +101,17 @@ async function main() {
   }
   // Fallback: parse CLI list output to find newest Production URL
   if (!deployUrl) {
-    const listRaw = await run(`npx --yes vercel list${confirm}${token}`);
+  const listRaw = stripAnsi(await run(`npx --yes vercel list${confirm}${token}`));
     // Grab blocks that contain a URL and the word Production; prefer the first URL in the list (newest at top)
     const lines = listRaw.split(/\r?\n/);
     const urls = [];
     for (let i = 0; i < lines.length; i++) {
-      const line = lines[i];
+  const line = stripAnsi(lines[i]);
       const match = line.match(/https?:\/\/\S+/);
       if (match) {
         // Constrain to the same line to avoid bleeding status from adjacent rows
         const isProd = /\bProduction\b/i.test(line);
-        const isHealthy = /(●\s+Ready|●\s+Building)/i.test(line);
+  const isHealthy = /\b(Ready|Building)\b/i.test(line);
         if (isProd && isHealthy) {
           urls.push(match[0]);
         }
@@ -117,12 +124,22 @@ async function main() {
     process.exit(1);
   }
   console.log(`[vercel-logs] Latest: ${deployUrl}`);
+  if (latestHealthy && latestAny && latestHealthy.url !== latestAny.url) {
+    console.log(`[vercel-logs] Latest healthy (Ready/Building): ${ensureHttps(latestHealthy.url)}`);
+    try {
+      writeFileSync(path.join(outDir, 'latest-ready-deployment.json'), JSON.stringify(latestHealthy, null, 2), 'utf8');
+      writeFileSync(path.join(outDir, 'latest-ready-url.txt'), ensureHttps(latestHealthy.url), 'utf8');
+    } catch {}
+  }
   if (selectedDeployment) {
     try {
       writeFileSync(path.join(outDir, 'latest-deployment.json'), JSON.stringify(selectedDeployment, null, 2), 'utf8');
       console.log(`[vercel-logs] Wrote ${path.join(outDir, 'latest-deployment.json')}`);
     } catch {}
   }
+  try {
+    writeFileSync(path.join(outDir, 'latest-url.txt'), deployUrl, 'utf8');
+  } catch {}
 
   // 2) Inspect JSON (build and error context)
   let inspectJson = null;
@@ -169,7 +186,62 @@ async function main() {
     }
   }
 
-  console.log('[vercel-logs] Done. Share vercel-logs/latest-inspect.json and latest-logs.txt for troubleshooting.');
+  // 4) If the selected deployment is in Error, also collect from the most recent healthy (Ready/Building) Production deployment via CLI
+  const isError = (inspectJson && String(inspectJson.readyState || inspectJson.state || '').toLowerCase() === 'error')
+    || (!inspectJson && existsSync(path.join(outDir, 'latest-inspect.txt')) && /(\bCurrently:\s*●\s*Error\b|\bstatus\s*\t?\s*●\s*Error\b)/i.test(readFileSync(path.join(outDir, 'latest-inspect.txt'), 'utf8')));
+  if (isError) {
+    try {
+      const listRaw = stripAnsi(await run(`npx --yes vercel list${confirm}${token}`));
+      const lines = listRaw.split(/\r?\n/);
+      let healthyUrl = null;
+      for (let i = 0; i < lines.length; i++) {
+        const line = stripAnsi(lines[i]);
+        const m = line.match(/https?:\/\/\S+/);
+        if (m) {
+          const isProd = /\bProduction\b/i.test(line);
+          const isHealthy = /\b(Ready|Building)\b/i.test(line);
+          if (isProd && isHealthy) {
+            healthyUrl = ensureHttps(m[0]);
+            break;
+          }
+        }
+      }
+      if (healthyUrl && healthyUrl !== deployUrl) {
+        console.log(`[vercel-logs] Latest healthy (Ready/Building): ${healthyUrl}`);
+        // Inspect healthy
+        const inspH = await tryRun(`npx --yes vercel inspect ${healthyUrl} --json${token}`);
+        if (inspH.ok) {
+          try {
+            const json = JSON.parse(inspH.stdout);
+            writeFileSync(path.join(outDir, 'latest-ready-inspect.json'), JSON.stringify(json, null, 2), 'utf8');
+            console.log(`[vercel-logs] Wrote ${path.join(outDir, 'latest-ready-inspect.json')}`);
+          } catch {}
+        }
+        if (!existsSync(path.join(outDir, 'latest-ready-inspect.json'))) {
+          const inspTxtH = await tryRun(`npx --yes vercel inspect ${healthyUrl}${token}`);
+          const out = [inspTxtH.stdout, inspTxtH.stderr].filter(Boolean).join('\n\n');
+          if (out.trim()) {
+            writeFileSync(path.join(outDir, 'latest-ready-inspect.txt'), out, 'utf8');
+            console.log(`[vercel-logs] Wrote ${path.join(outDir, 'latest-ready-inspect.txt')}`);
+          }
+        }
+        // Logs healthy
+        const logsH = await tryRun(`npx --yes vercel logs ${healthyUrl}${token}`);
+        if (logsH.ok && logsH.stdout.trim()) {
+          writeFileSync(path.join(outDir, 'latest-ready-logs.txt'), logsH.stdout, 'utf8');
+          console.log(`[vercel-logs] Wrote ${path.join(outDir, 'latest-ready-logs.txt')}`);
+        } else {
+          const errOutH = [logsH.stdout, logsH.stderr].filter(Boolean).join('\n\n');
+          if (errOutH.trim()) {
+            writeFileSync(path.join(outDir, 'latest-ready-logs-error.txt'), errOutH, 'utf8');
+            console.log(`[vercel-logs] Wrote ${path.join(outDir, 'latest-ready-logs-error.txt')}`);
+          }
+        }
+      }
+    } catch {}
+  }
+
+  console.log('[vercel-logs] Done. Share vercel-logs/latest-inspect.json (or latest-inspect.txt) and latest-logs.txt (or latest-logs-error.txt). If present, also include latest-ready-* artifacts.');
 }
 
 main().catch((err) => {
