@@ -91,7 +91,7 @@ const CardFront = styled(CardFace)<{
     ($isAudio && !$imageUrl) ? `url('/paper2.png')` : 
   // If no image/gradient, use solid colors
   ($medium === 'writing') ? theme.primary :
-  ($medium === 'audio') ? (theme as any).complementary || theme.cardBg :
+  ($medium === 'audio') ? theme.secondary :
     theme.cardBg
   };
   background-size: cover;
@@ -106,7 +106,7 @@ const CardFront = styled(CardFace)<{
 `;
 
 const CardBack = styled(CardFace)<{ $medium: ArtworkMedium }>`
-  background: ${({ theme, $medium }) => $medium === "audio" ? theme.complementary : theme.primary};
+  background: ${({ theme, $medium }) => $medium === "audio" ? theme.secondary : theme.primary};
   transform: rotateY(180deg);
   padding: 0.7rem;
   justify-content: center;

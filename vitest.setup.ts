@@ -4,13 +4,16 @@ import { vi } from 'vitest';
 // Provide simple mocks for Firebase modules used at module-initialization time
 vi.mock('firebase/database', () => {
   return {
-    getDatabase: () => ({}),
-    ref: () => ({}),
-    onValue: (_ref: any, cb: any) => { return () => {}; },
-    remove: async () => {},
-    update: async () => {},
-    push: () => ({ key: 'mock-key' }),
-    set: async () => {},
+    getDatabase: vi.fn(() => ({})),
+    ref: vi.fn(() => ({})),
+    onValue: vi.fn((_ref: any, _cb: any) => {
+      // return unsubscribe
+      return () => {};
+    }),
+    remove: vi.fn(async () => {}),
+    update: vi.fn(async () => {}),
+    push: vi.fn(() => ({ key: 'mock-key' })),
+    set: vi.fn(async () => {}),
   };
 });
 

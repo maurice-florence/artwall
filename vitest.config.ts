@@ -18,9 +18,11 @@ export default defineConfig({
   },
   resolve: {
     alias: {
+      '@': path.resolve(__dirname, './src'),
       '@/components': path.resolve(__dirname, './src/components'),
       '@/context': path.resolve(__dirname, './src/context'),
       '@/firebase': path.resolve(__dirname, './src/firebase'),
+      '@/config': path.resolve(__dirname, './src/config'),
       '@/themes': path.resolve(__dirname, './src/themes'),
       '@/types': path.resolve(__dirname, './src/types'),
       '@/constants': path.resolve(__dirname, './src/constants'),

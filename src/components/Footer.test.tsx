@@ -14,6 +14,7 @@ vi.mock('@/firebase', () => ({
 }));
 
 vi.mock('firebase/database', () => ({
+  getDatabase: vi.fn(() => ({})),
   ref: vi.fn(),
   onValue: vi.fn((_ref, callback) => {
     // Simulate a Firebase snapshot with some data

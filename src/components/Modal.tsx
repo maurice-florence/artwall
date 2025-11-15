@@ -371,6 +371,7 @@ function getMediaType(url: string): 'image' | 'video' | 'audio' | 'pdf' | 'unkno
   return createPortal(
     <ModalBackdrop onClick={handleClose}>
       <ModalContent onClick={(e) => e.stopPropagation()} id="modal-root">
+        <h2 data-testid="modal-title">{translation.title || item.title}</h2>
         <ModalHeader>
           {/* Language Switcher */}
           {availableLanguages.length > 1 ? (

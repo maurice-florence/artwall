@@ -28,6 +28,7 @@ describe('ArtworkCard', () => {
       </ThemeProvider>
     );
     expect(screen.getByTestId('artwork-card-1')).toBeInTheDocument();
-    expect(screen.getByTestId('artwork-title-1')).toHaveTextContent('Test');
+    // Prefer heading role to avoid duplicates from generated image overlay
+    expect(screen.getByRole('heading', { name: 'Test' })).toBeInTheDocument();
   });
 });

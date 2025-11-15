@@ -90,6 +90,7 @@ export const SmartImage: React.FC<SmartImageProps> = ({
   }
 
   if (disableNext) {
+    // eslint-disable-next-line @next/next/no-img-element
     return <img src={currentSrc} alt={alt} onError={handleError} onLoad={handleLoad} {...imageProps} />;
   }
 

@@ -49,18 +49,19 @@ describe('CategorySpecificFields', () => {
     url3: ''
   };
 
-  const mockProps = {
-    formData: mockFormData,
+  const baseProps = {
     errors: {},
-    updateField: vi.fn()
-  };
+    updateField: vi.fn(),
+    shouldShowField: () => true,
+  } as const;
 
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
   it('renders music fields for music category', () => {
-    renderWithTheme(<CategorySpecificFields {...mockProps} />);
+  const audioFormData = { ...mockFormData, medium: 'audio' as const };
+  renderWithTheme(<CategorySpecificFields {...baseProps} formData={audioFormData} />);
     expect(screen.getByLabelText(/tekst/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/akkoorden/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/soundcloud embed url/i)).toBeInTheDocument();
@@ -68,16 +69,17 @@ describe('CategorySpecificFields', () => {
   });
 
   it('renders media fields for image category', () => {
-    const imageFormData = { ...mockFormData, category: 'image' as const };
-    renderWithTheme(<CategorySpecificFields {...mockProps} formData={imageFormData} />);
+  const drawingFormData = { ...mockFormData, medium: 'drawing' as const };
+  renderWithTheme(<CategorySpecificFields {...baseProps} formData={drawingFormData} />);
     
-    expect(screen.getByLabelText(/media type/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/media url/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/^[Mm]edia Type$/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/^[Mm]edia URL$/)).toBeInTheDocument();
   });
 
   it('renders nothing for categories without specific fields', () => {
-    const poemFormData = { ...mockFormData, category: 'poem' as const };
-    renderWithTheme(<CategorySpecificFields {...mockProps} formData={poemFormData} />);
+  const poemFormData = { ...mockFormData, medium: 'writing' as const };
+  // For writing, mimic that smart logic hides these fields
+  renderWithTheme(<CategorySpecificFields {...baseProps} shouldShowField={() => false} formData={poemFormData} />);
     
     expect(screen.queryByLabelText('Tekst')).not.toBeInTheDocument();
     expect(screen.queryByLabelText('Media Type')).not.toBeInTheDocument();
