@@ -4,52 +4,37 @@ type ImageSize = 'thumbnail' | 'card' | 'full' | 'original';
 
 /**
  * Gets the URL for a resized image variant.
- * Firebase Storage Resize Images extension creates files in format: {path}_{width}x{height}.{ext}
- * Falls back to original image if resized version is not available.
  * @param originalUrl The original Firebase Storage URL
  * @param size The desired size variant ('thumbnail', 'card', 'full', or 'original')
- * @returns The URL for the resized image, or original if not available
+ * @returns The URL for the resized image
  */
 export function getResizedImageUrl(originalUrl: string, size: ImageSize = 'original'): string {
   if (!originalUrl || size === 'original') return originalUrl;
 
-  // Handle both storage.googleapis.com and firebasestorage.googleapis.com URLs
-  if (!originalUrl.includes('storage.googleapis.com') && !originalUrl.includes('firebasestorage.googleapis.com')) {
+  // Only process URLs from Firebase Storage
+  if (!originalUrl.includes('firebasestorage.googleapis.com')) {
     return originalUrl;
   }
 
-  // Map size to actual dimensions created by Firebase Storage Resize Images extension
-  // These are the actual dimensions observed in the storage bucket (maintaining aspect ratio)
-  const sizeMap: Record<Exclude<ImageSize, 'original'>, string> = {
-    thumbnail: '200x200',  // Small thumbnails
-    card: '480x480',       // Card display size (actual observed size)
-    full: '1200x1200'      // Full resolution
-  };
-
-  const dimensions = sizeMap[size as Exclude<ImageSize, 'original'>];
-  if (!dimensions) return originalUrl;
-
-  // Extract the path part from the URL
-  let pathMatch: RegExpMatchArray | null = null;
-
-  if (originalUrl.includes('firebasestorage.googleapis.com')) {
-    // Format: https://firebasestorage.googleapis.com/v0/b/bucket/o/path?params
-    pathMatch = originalUrl.match(/\/o\/(.*?)\?/);
-  } else if (originalUrl.includes('storage.googleapis.com')) {
-    // Format: https://storage.googleapis.com/bucket/path
-    pathMatch = originalUrl.match(/storage\.googleapis\.com\/[^\/]+\/(.*?)(?:\?|$)/);
-  }
-
+  // Extract the path part from the URL (everything after /o/)
+  const pathMatch = originalUrl.match(/\/o\/(.*?)\?/);
   if (!pathMatch) return originalUrl;
 
   const path = decodeURIComponent(pathMatch[1]);
   
-  // Create the resized image path
+  // Construct the resized image URL
   // Firebase extension format: {filename}_{dimensions}.{ext}
   const extension = path.split('.').pop();
   const basePath = path.slice(0, -(extension?.length || 0) - 1);
-  const resizedPath = `${basePath}_${dimensions}.${extension}`;
-  
+  // Map legacy size tokens to actual dimensions
+  const sizeMap: Record<Exclude<ImageSize, 'original'>, string> = {
+    thumbnail: '200x200',
+    card: '480x480',
+    full: '1200x1200',
+  };
+  const dims = sizeMap[size as Exclude<ImageSize, 'original'>] || '1200x1200';
+  const resizedPath = `${basePath}_${dims}.${extension}`;
+
   // Reconstruct URL based on original format
   if (originalUrl.includes('firebasestorage.googleapis.com')) {
     const bucketMatch = originalUrl.match(/\/b\/([^\/]+)\/o\//);
@@ -85,4 +70,53 @@ export async function getResizedImageUrlWithFallback(originalUrl: string, size: 
   }
   
   return originalUrl;
+}
+
+/**
+ * Derives the original image URL from a possibly resized Firebase URL.
+ * It removes the _{width}x{height} suffix before the file extension when present.
+ * If the URL doesn't match known Firebase formats or has no resize suffix, returns the input unchanged.
+ */
+export function getOriginalImageUrl(possiblyResizedUrl: string): string {
+  if (!possiblyResizedUrl) return possiblyResizedUrl;
+
+  // Only operate on Firebase Storage URLs we know how to transform
+  const isFirebase = possiblyResizedUrl.includes('firebasestorage.googleapis.com') || possiblyResizedUrl.includes('storage.googleapis.com');
+  if (!isFirebase) return possiblyResizedUrl;
+
+  try {
+    // Extract the path portion, operate on filename, then reconstruct
+    let pathMatch: RegExpMatchArray | null = null;
+    let bucket: string | undefined;
+
+    if (possiblyResizedUrl.includes('firebasestorage.googleapis.com')) {
+      pathMatch = possiblyResizedUrl.match(/\/o\/(.*?)\?/);
+      const bucketMatch = possiblyResizedUrl.match(/\/b\/([^\/]+)\//);
+      bucket = bucketMatch ? bucketMatch[1] : undefined;
+    } else {
+      pathMatch = possiblyResizedUrl.match(/storage\.googleapis\.com\/[^\/]+\/(.*?)(?:\?|$)/);
+      const bucketMatch = possiblyResizedUrl.match(/storage\.googleapis\.com\/([^\/]+)\//);
+      bucket = bucketMatch ? bucketMatch[1] : undefined;
+    }
+
+    if (!pathMatch) return possiblyResizedUrl;
+
+    const encodedPath = pathMatch[1];
+    const decodedPath = decodeURIComponent(encodedPath);
+
+    // Remove _{width}x{height} just before the file extension
+    const originalPath = decodedPath.replace(/_(\d+)x(\d+)(?=\.[^.]+$)/, '');
+
+    // Rebuild the URL in the same host style
+    if (possiblyResizedUrl.includes('firebasestorage.googleapis.com')) {
+      const params = possiblyResizedUrl.includes('?') ? possiblyResizedUrl.split('?')[1] : 'alt=media';
+      const finalBucket = bucket || 'artwall-by-jr.appspot.com';
+      return `https://firebasestorage.googleapis.com/v0/b/${finalBucket}/o/${encodeURIComponent(originalPath)}?${params}`;
+    } else {
+      const finalBucket = bucket || 'artwall-by-jr.firebasestorage.app';
+      return `https://storage.googleapis.com/${finalBucket}/${originalPath}`;
+    }
+  } catch {
+    return possiblyResizedUrl;
+  }
 }

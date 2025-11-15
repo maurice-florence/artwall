@@ -6,7 +6,6 @@ import cardSizesJson from '@/constants/card-sizes.json';
 import GeneratedImage from './GeneratedImage';
 import { isWritingMedium, isAudioMedium } from '../constants/medium';
 import { generateUniqueGradient, shouldUseDarkText } from '@/utils/gradient-generator';
-import { IMAGE_OVERLAY } from '@/config/gradient-settings';
 
 // Removed WritingCardSVG import
 
@@ -92,7 +91,7 @@ const CardFront = styled(CardFace)<{
     ($isAudio && !$imageUrl) ? `url('/paper2.png')` : 
   // If no image/gradient, use solid colors
   ($medium === 'writing') ? theme.primary :
-  ($medium === 'audio') ? (theme as any).secondary || theme.cardBg :
+  ($medium === 'audio') ? (theme as any).complementary || theme.cardBg :
     theme.cardBg
   };
   background-size: cover;
@@ -107,11 +106,7 @@ const CardFront = styled(CardFace)<{
 `;
 
 const CardBack = styled(CardFace)<{ $medium: ArtworkMedium }>`
-  background: ${({ theme, $medium }) => 
-    $medium === "audio" ? theme.secondary : 
-    ($medium === "drawing" || $medium === "sculpture") ? theme.tertiary : 
-    $medium === "other" ? (theme as any).accent || theme.primary :
-    theme.primary};
+  background: ${({ theme, $medium }) => $medium === "audio" ? theme.complementary : theme.primary};
   transform: rotateY(180deg);
   padding: 0.7rem;
   justify-content: center;
@@ -187,22 +182,6 @@ const CardImage = styled.img<{ $fillAvailable?: boolean }>`
   position: absolute;
   top: 0;
   left: 0;
-`;
-
-const ImageOverlay = styled.div<{ $color: string }>`
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  border-radius: 12px;
-  background: linear-gradient(
-    ${IMAGE_OVERLAY.angle}deg, 
-    ${props => props.$color}${Math.round(IMAGE_OVERLAY.startOpacity * 2.55).toString(16).padStart(2, '0')} 0%, 
-    ${props => props.$color}${Math.round(IMAGE_OVERLAY.endOpacity * 2.55).toString(16).padStart(2, '0')} 100%
-  );
-  pointer-events: none;
-  z-index: 1;
 `;
 
 const ProzaImage = styled.img`
@@ -297,51 +276,6 @@ const AudioTextOverlay = styled(TextOverlay)`
 const ArtworkCard = ({ artwork, onSelect, isAdmin }: ArtworkCardProps) => {
     const theme = useTheme();
 
-    // All hooks must be called at the top level, before any conditional logic
-    // Slider state for all cards with images, only on card back
-    const [currentImage, setCurrentImage] = useState(0);
-    
-    // Basic calculations for memoization
-    const isWriting = isWritingMedium(artwork.medium);
-    const isAudio = isAudioMedium(artwork.medium);
-    
-    // Accept either a single string or an array of strings for images
-    let images: string[] = [];
-    if (Array.isArray(artwork.coverImageUrl)) {
-      images = artwork.coverImageUrl.filter(isImageUrl);
-    } else if (artwork.coverImageUrl && isImageUrl(artwork.coverImageUrl)) {
-      images = [artwork.coverImageUrl];
-    } else if (Array.isArray(artwork.mediaUrls) && artwork.mediaUrls.length > 0) {
-      images = artwork.mediaUrls.filter(isImageUrl);
-    }
-    
-    const hasImage = images.length > 0;
-    
-    // Generate gradient for cards without images — memoized and keyed by
-    // artwork identity + relevant theme fields to avoid recalculation when
-    // unrelated theme properties change.
-    const themeFingerprint = `${(theme as any).primary || ''}|${(theme as any).secondary || ''}|${(theme as any).tertiary || ''}|${(theme as any).body || ''}`;
-
-    const uniqueGradient = useMemo(() => {
-      if ((isWriting || isAudio) && !hasImage) {
-        return generateUniqueGradient(artwork.id || artwork.title, theme, artwork.medium);
-      }
-      return undefined;
-    }, [artwork.id, artwork.title, artwork.medium, isWriting, isAudio, hasImage, theme]);
-
-    const useDarkText = useMemo(() => {
-      return uniqueGradient ? shouldUseDarkText(uniqueGradient) : false;
-    }, [uniqueGradient]);
-
-    // Allow toggling between gradient and text preview for writing pieces
-    const [showPreview, setShowPreview] = useState(false);
-    const togglePreview = useCallback((e: React.MouseEvent) => {
-      if (isWriting && !hasImage) {
-        e.stopPropagation();
-        setShowPreview(prev => !prev);
-      }
-    }, [isWriting, hasImage]);
-
     // Card sizing logic: only 'novels' and 'songs' get special sizing, all others use standard size
     const formattedDate = new Date(artwork.year, (artwork.month || 1) - 1, artwork.day || 1)
       .toLocaleDateString('nl-NL', { month: 'short', year: 'numeric' });
@@ -395,6 +329,16 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin }: ArtworkCardProps) => {
     let maxLines = 8;
     if (subtype === 'novel') maxLines = 16;
 
+    // Accept either a single string or an array of strings for images
+    let images: string[] = [];
+    if (Array.isArray(artwork.coverImageUrl)) {
+      images = artwork.coverImageUrl.filter(isImageUrl);
+    } else if (artwork.coverImageUrl && isImageUrl(artwork.coverImageUrl)) {
+      images = [artwork.coverImageUrl];
+    } else if (Array.isArray(artwork.mediaUrls) && artwork.mediaUrls.length > 0) {
+      images = artwork.mediaUrls.filter(isImageUrl);
+    }
+
     // For audio: get the first available mediaUrl (mediaUrl or mediaUrls)
     let audioUrl: string | undefined = undefined;
     if (artwork.mediaUrl) {
@@ -403,28 +347,42 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin }: ArtworkCardProps) => {
       audioUrl = artwork.mediaUrls.find(url => !isImageUrl(url));
     }
 
-    // Blank card rendering
+    // Determine base booleans before hooks
+    const isWriting = isWritingMedium(artwork.medium);
+    const isAudio = isAudioMedium(artwork.medium);
+    const hasImage = images.length > 0;
+
+    // Hooks must be declared before any early returns
+    // Slider state for all cards with images, only on card back
+    const [currentImage, setCurrentImage] = useState(0);
+
+    const uniqueGradient = useMemo(() => {
+      if ((isWriting || isAudio) && !hasImage) {
+        return generateUniqueGradient(artwork.id || artwork.title, theme, artwork.medium);
+      }
+      return undefined;
+    }, [artwork.id, artwork.title, artwork.medium, isWriting, isAudio, hasImage, theme]);
+
+    const useDarkText = useMemo(() => {
+      return uniqueGradient ? shouldUseDarkText(uniqueGradient) : false;
+    }, [uniqueGradient]);
+
+    // Allow toggling between gradient and text preview for writing pieces
+    const [showPreview, setShowPreview] = useState(false);
+    const togglePreview = useCallback((e: React.MouseEvent) => {
+      if (isWriting && !hasImage) {
+        e.stopPropagation();
+        setShowPreview(prev => !prev);
+      }
+    }, [isWriting, hasImage]);
+
+    // Early return after hooks are declared
     const blank = !artwork.title && !artwork.description && !artwork.coverImageUrl;
     if (blank) {
       return null;
     }
 
     const imageUrl = hasImage ? getImageUrl(images[0], 'card') : undefined;
-
-    // Determine overlay tint per medium
-    const overlayColor = useMemo(() => {
-      switch (artwork.medium) {
-        case 'writing':
-          return (theme as any).primary;
-        case 'audio':
-          return (theme as any).secondary;
-        case 'drawing':
-        case 'sculpture':
-          return (theme as any).tertiary;
-        default:
-          return (theme as any).accent || (theme as any).primary;
-      }
-    }, [artwork.medium, theme]);
 
     const start = Math.floor(cardText.length / 3);
     const textPreview = cardText.slice(start);
@@ -444,18 +402,12 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin }: ArtworkCardProps) => {
           >
             {/* Show image as proper img element if available */}
             {imageUrl ? (
-              <>
-                <CardImage 
-                  src={imageUrl} 
-                  alt={artwork.title || 'Artwork'} 
-                  loading="lazy"
-                  decoding="async"
-                />
-                {/* Add gradient overlay for all image cards with per-medium tint */}
-                {IMAGE_OVERLAY.enabled && (
-                  <ImageOverlay $color={overlayColor} />
-                )}
-              </>
+              <CardImage 
+                src={imageUrl} 
+                alt={artwork.title || 'Artwork'} 
+                loading="lazy"
+                decoding="async"
+              />
             ) : (isWriting || isAudio) && !hasImage ? (
               isWriting ? (
                 showPreview ? (
