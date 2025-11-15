@@ -10,6 +10,13 @@
 			"problemMatcher": [
 				"$tsc"
 			]
+		},
+		{
+			"label": "Vercel: Collect latest deploy logs",
+			"type": "shell",
+			"command": "npm run vercel:collect",
+			"problemMatcher": [],
+			"group": "test"
 		}
 	]
 }

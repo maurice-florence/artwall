@@ -52,3 +52,4 @@ serviceAccountKey_artwall.json
 # cache
 .__pycache__
 __pycache__/
+vercel-logs/

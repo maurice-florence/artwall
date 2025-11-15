@@ -10,7 +10,8 @@
     "test": "vitest",
     "test:watch": "vitest --watch",
     "test:coverage": "vitest --coverage",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "vercel:collect": "node scripts/collect-vercel-logs.mjs"
   },
   "dependencies": {
     "@testing-library/jest-dom": "^6.6.4",

@@ -249,6 +249,37 @@ npx cypress run
 npm run type-check
 ```
 
+### Vercel deployment logs (fetch locally)
+
+Sometimes a Vercel deployment fails even when the repo builds locally. To pull the latest deployment details and logs into this workspace for troubleshooting:
+
+1. Authenticate Vercel CLI once on this machine (or set `VERCEL_TOKEN` in your environment):
+
+- Recommended: run `npx vercel login` in a terminal and follow the prompt.
+- Alternatively, set `VERCEL_TOKEN` as an environment variable. On Windows PowerShell:
+
+  ```powershell
+  $Env:VERCEL_TOKEN = "<your-token>"
+  npm run vercel:collect
+  # optional: remove it from the current session
+  Remove-Item Env:VERCEL_TOKEN
+  ```
+
+1. Run the built-in VS Code task:
+
+- Run Task → "Vercel: Collect latest deploy logs"
+
+Or via npm:
+
+- `npm run vercel:collect`
+
+This will create files under `vercel-logs/`:
+
+- `latest-inspect.json` — structured data from `vercel inspect` (includes deployment/build metadata, error context when available)
+- `latest-logs.txt` — output from `vercel logs <deployment> --all --since 24h`
+
+Share these files (or point Copilot to them) and we can troubleshoot without copy/paste from the Vercel UI.
+
 ---
 
 ## 🎨 Features Deep Dive
