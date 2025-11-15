@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { exec } from 'node:child_process';
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, writeFileSync, readFileSync, existsSync } from 'node:fs';
 import { promisify } from 'node:util';
 import path from 'node:path';
 
@@ -47,28 +47,82 @@ async function main() {
   const token = process.env.VERCEL_TOKEN ? ` --token=${process.env.VERCEL_TOKEN}` : '';
   const confirm = ' --yes';
 
-  // 1) Get latest deployment URL
-  // Prefer explicit override via env if provided
+  // 1) Get latest Production deployment URL
+  // Try REST API first for reliability (requires VERCEL_TOKEN and project id)
   let deployUrl = process.env.VERCEL_DEPLOY_URL;
-  if (!deployUrl) {
-    // Fallback: parse text output of `vercel list --limit 1`
-  const listRaw = await run(`npx --yes vercel list${confirm}${token}`);
-    // Extract domain-like token, prefer *.vercel.app
-    const matches = [];
-    const domainRegex = /([a-z0-9.-]+\.(?:vercel\.app|[a-z0-9.-]+\.[a-z]{2,}))/gi;
-    let m;
-    while ((m = domainRegex.exec(listRaw)) !== null) {
-      matches.push(m[1]);
+  let selectedDeployment = null;
+  if (!deployUrl && process.env.VERCEL_TOKEN) {
+    try {
+      let projectId = process.env.VERCEL_PROJECT_ID;
+      let teamId = process.env.VERCEL_TEAM_ID;
+      if (!projectId) {
+        const projectFile = path.resolve('.vercel/project.json');
+        if (existsSync(projectFile)) {
+          const pj = JSON.parse(readFileSync(projectFile, 'utf8'));
+          projectId = pj.projectId || pj.projectIdOrName || pj.project || null;
+          teamId = teamId || pj.orgId || pj.teamId || null;
+        }
+      }
+      if (projectId) {
+  const url = new URL('https://api.vercel.com/v2/deployments');
+        url.searchParams.set('projectId', projectId);
+        url.searchParams.set('limit', '20');
+        url.searchParams.set('target', 'production');
+        if (teamId) url.searchParams.set('teamId', teamId);
+        const res = await fetch(url, {
+          headers: { Authorization: `Bearer ${process.env.VERCEL_TOKEN}` },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const list = Array.isArray(data.deployments) ? data.deployments : (Array.isArray(data) ? data : []);
+          // Filter production target; prefer ready/building
+          const prod = list
+            .filter(d => (String(d.target || d.environment || '').toLowerCase() === 'production'))
+            .sort((a, b) => (b.createdAt || b.created || 0) - (a.createdAt || a.created || 0));
+          const pick = prod.find(d => ['ready','building'].includes(String(d.readyState || d.state || '').toLowerCase()))
+                   || prod[0]
+                   || null;
+          if (pick) {
+            selectedDeployment = pick;
+            deployUrl = pick.url ? ensureHttps(pick.url) : null;
+          }
+        }
+      }
+    } catch (e) {
+      // Ignore API errors and fall back to CLI parsing
     }
-  const preferred = matches.find((u) => /vercel\.app$/i.test(u)) || matches[0];
-    if (!preferred) {
-      console.error('[vercel-logs] Could not parse latest deployment URL from `vercel list`. You can set VERCEL_DEPLOY_URL to override.');
-      process.exit(1);
-    }
-    deployUrl = preferred;
   }
-  deployUrl = ensureHttps(deployUrl);
+  // Fallback: parse CLI list output to find newest Production URL
+  if (!deployUrl) {
+    const listRaw = await run(`npx --yes vercel list${confirm}${token}`);
+    // Grab blocks that contain a URL and the word Production; prefer the first URL in the list (newest at top)
+    const lines = listRaw.split(/\r?\n/);
+    const urls = [];
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      const match = line.match(/https?:\/\/\S+/);
+      if (match) {
+        // Constrain to the same line to avoid bleeding status from adjacent rows
+        const isProd = /\bProduction\b/i.test(line);
+        const isHealthy = /(●\s+Ready|●\s+Building)/i.test(line);
+        if (isProd && isHealthy) {
+          urls.push(match[0]);
+        }
+      }
+    }
+    deployUrl = ensureHttps(urls[0] || urls.find(u => /vercel\.app$/i.test(u)) || urls[0]);
+  }
+  if (!deployUrl) {
+    console.error('[vercel-logs] Unable to determine latest Production deployment URL. Set VERCEL_DEPLOY_URL explicitly.');
+    process.exit(1);
+  }
   console.log(`[vercel-logs] Latest: ${deployUrl}`);
+  if (selectedDeployment) {
+    try {
+      writeFileSync(path.join(outDir, 'latest-deployment.json'), JSON.stringify(selectedDeployment, null, 2), 'utf8');
+      console.log(`[vercel-logs] Wrote ${path.join(outDir, 'latest-deployment.json')}`);
+    } catch {}
+  }
 
   // 2) Inspect JSON (build and error context)
   let inspectJson = null;
