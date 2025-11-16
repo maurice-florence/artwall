@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, RefObject } from 'react';
+import { useState, useCallback, useEffect, useRef, RefObject } from 'react';
 
 /**
  * A reusable hook for managing dropdown open/close state with animations.
@@ -7,13 +7,20 @@ import { useState, useCallback, useEffect, RefObject } from 'react';
 export function useDropdown(ref: RefObject<HTMLElement | null>) {
   const [isMounted, setIsMounted] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
+  const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const close = useCallback(() => {
     if (!isMounted) return;
     setIsClosing(true);
-    window.setTimeout(() => {
+    // Clear any existing close timer before setting a new one
+    if (closeTimeoutRef.current) {
+      clearTimeout(closeTimeoutRef.current);
+      closeTimeoutRef.current = null;
+    }
+    closeTimeoutRef.current = setTimeout(() => {
       setIsMounted(false);
       setIsClosing(false);
+      closeTimeoutRef.current = null;
     }, 180); // Match animation duration
   }, [isMounted]);
 
@@ -51,6 +58,16 @@ export function useDropdown(ref: RefObject<HTMLElement | null>) {
       };
     }
   }, [isMounted, ref, close]);
+
+  // Ensure pending timers are cleared on unmount to avoid setState after teardown
+  useEffect(() => {
+    return () => {
+      if (closeTimeoutRef.current) {
+        clearTimeout(closeTimeoutRef.current);
+        closeTimeoutRef.current = null;
+      }
+    };
+  }, []);
 
   return { isMounted, isClosing, toggle, close };
 }

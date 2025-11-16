@@ -149,13 +149,13 @@ const CardBackTitle = styled(CardTitle)`
 `;
 
 const CardBackFooter = styled(CardFooter)`
-    color: ${({ theme }) => theme.body};
+  color: ${({ theme }) => theme.body};
 `;
 
 const CardCategory = styled.div`
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 `;
 
 const AudioIconOverlay = styled.div`
@@ -389,15 +389,10 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin }: ArtworkCardProps) => {
       }
     }, [isWriting, hasImage]);
 
-    // Early return after hooks are declared
-    const blank = !artwork.title && !artwork.description && !artwork.coverImageUrl;
-    if (blank) {
-      return null;
-    }
-
+    // Determine image URL for overlay computation
     const imageUrl = hasImage ? getImageUrl(images[0], 'card') : undefined;
 
-    // Build a theme-based gradient overlay for images when enabled
+    // Build a theme-based gradient overlay for images when enabled (must be before any returns)
     const imageOverlayBg = useMemo(() => {
       if (!IMAGE_OVERLAY.enabled || !imageUrl) return '';
       const colorHex = (theme as any)[IMAGE_OVERLAY.colorSource] as string;
@@ -413,6 +408,12 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin }: ArtworkCardProps) => {
       const endA = Math.max(0, Math.min(100, IMAGE_OVERLAY.endOpacity)) / 100;
       return `linear-gradient(${IMAGE_OVERLAY.angle}deg, rgba(${r}, ${g}, ${b}, ${startA}) 0%, rgba(${r}, ${g}, ${b}, ${endA}) 100%)`;
     }, [imageUrl, theme]);
+
+    // Early return must happen after all hooks
+    const blank = !artwork.title && !artwork.description && !artwork.coverImageUrl;
+    if (blank) {
+      return null;
+    }
 
     const start = Math.floor(cardText.length / 3);
     const textPreview = cardText.slice(start);

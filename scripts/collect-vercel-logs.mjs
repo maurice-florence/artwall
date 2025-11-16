@@ -58,6 +58,7 @@ async function main() {
   let selectedDeployment = null;
   let latestAny = null;
   let latestHealthy = null;
+  let latestError = null;
   if (!deployUrl && process.env.VERCEL_TOKEN) {
     try {
       let projectId = process.env.VERCEL_PROJECT_ID;
@@ -87,8 +88,10 @@ async function main() {
             .filter(d => (String(d.target || d.environment || '').toLowerCase() === 'production'))
             .sort((a, b) => (b.createdAt || b.created || 0) - (a.createdAt || a.created || 0));
           latestHealthy = prod.find(d => ['ready','building'].includes(String(d.readyState || d.state || '').toLowerCase())) || null;
+          latestError = prod.find(d => String(d.readyState || d.state || '').toLowerCase() === 'error') || null;
           latestAny = prod[0] || null;
-          const pick = latestHealthy || latestAny || null;
+          // Prefer the newest Error if one exists so we can capture failure details, else healthy, else any
+          const pick = latestError || latestHealthy || latestAny || null;
           if (pick) {
             selectedDeployment = pick;
             deployUrl = pick.url ? ensureHttps(pick.url) : null;
@@ -112,12 +115,17 @@ async function main() {
         // Constrain to the same line to avoid bleeding status from adjacent rows
         const isProd = /\bProduction\b/i.test(line);
   const isHealthy = /\b(Ready|Building)\b/i.test(line);
-        if (isProd && isHealthy) {
-          urls.push(match[0]);
+  const isError = /\bError\b/i.test(line);
+        if (isProd && (isError || isHealthy)) {
+          // Push errors first so they take precedence
+          urls.push((isError ? 'ERR:' : 'OK:') + match[0]);
         }
       }
     }
-    deployUrl = ensureHttps(urls[0] || urls.find(u => /vercel\.app$/i.test(u)) || urls[0]);
+    // Prefer newest error
+    const err = urls.find(u => u.startsWith('ERR:'));
+    const ok = urls.find(u => u.startsWith('OK:'));
+    deployUrl = ensureHttps((err || ok || '').replace(/^\w+:/, ''));
   }
   if (!deployUrl) {
     console.error('[vercel-logs] Unable to determine latest Production deployment URL. Set VERCEL_DEPLOY_URL explicitly.');
@@ -190,6 +198,12 @@ async function main() {
   const isError = (inspectJson && String(inspectJson.readyState || inspectJson.state || '').toLowerCase() === 'error')
     || (!inspectJson && existsSync(path.join(outDir, 'latest-inspect.txt')) && /(\bCurrently:\s*●\s*Error\b|\bstatus\s*\t?\s*●\s*Error\b)/i.test(readFileSync(path.join(outDir, 'latest-inspect.txt'), 'utf8')));
   if (isError) {
+    // If API provided a latest healthy, persist its URL
+    if (latestHealthy && latestHealthy.url) {
+      try {
+        writeFileSync(path.join(outDir, 'latest-ready-url.txt'), ensureHttps(latestHealthy.url), 'utf8');
+      } catch {}
+    }
     try {
       const listRaw = stripAnsi(await run(`npx --yes vercel list${confirm}${token}`));
       const lines = listRaw.split(/\r?\n/);
