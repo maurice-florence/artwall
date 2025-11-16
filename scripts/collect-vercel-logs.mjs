@@ -90,8 +90,8 @@ async function main() {
           latestHealthy = prod.find(d => ['ready','building'].includes(String(d.readyState || d.state || '').toLowerCase())) || null;
           latestError = prod.find(d => String(d.readyState || d.state || '').toLowerCase() === 'error') || null;
           latestAny = prod[0] || null;
-          // Prefer the newest Error if one exists so we can capture failure details, else healthy, else any
-          const pick = latestError || latestHealthy || latestAny || null;
+          // Prefer the newest healthy (Ready/Building). If none, fall back to newest (may be Error).
+          const pick = latestHealthy || latestAny || latestError || null;
           if (pick) {
             selectedDeployment = pick;
             deployUrl = pick.url ? ensureHttps(pick.url) : null;
@@ -106,26 +106,31 @@ async function main() {
   if (!deployUrl) {
   const listRaw = stripAnsi(await run(`npx --yes vercel list${confirm}${token}`));
     // Grab blocks that contain a URL and the word Production; prefer the first URL in the list (newest at top)
-    const lines = listRaw.split(/\r?\n/);
-    const urls = [];
+  const lines = listRaw.split(/\r?\n/);
+    const okUrls = [];
+    const errUrls = [];
     for (let i = 0; i < lines.length; i++) {
   const line = stripAnsi(lines[i]);
       const match = line.match(/https?:\/\/\S+/);
       if (match) {
-        // Constrain to the same line to avoid bleeding status from adjacent rows
-        const isProd = /\bProduction\b/i.test(line);
-  const isHealthy = /\b(Ready|Building)\b/i.test(line);
-  const isError = /\bError\b/i.test(line);
+        // Consider a small window to account for line wrapping in the CLI table
+        const windowText = [lines[i], lines[i + 1] || '', lines[i + 2] || '']
+          .map(stripAnsi)
+          .join(' ');
+        const compact = windowText.replace(/\s+/g, '');
+        const isProd = /Production/i.test(compact) && !/Preview/i.test(compact);
+        const isHealthy = /(Ready|Building)/i.test(compact);
+        const isError = /Error/i.test(compact);
         if (isProd && (isError || isHealthy)) {
-          // Push errors first so they take precedence
-          urls.push((isError ? 'ERR:' : 'OK:') + match[0]);
+          if (isHealthy) okUrls.push(match[0]);
+          else if (isError) errUrls.push(match[0]);
         }
       }
     }
-    // Prefer newest error
-    const err = urls.find(u => u.startsWith('ERR:'));
-    const ok = urls.find(u => u.startsWith('OK:'));
-    deployUrl = ensureHttps((err || ok || '').replace(/^\w+:/, ''));
+    // Prefer newest healthy (Ready/Building); else newest error
+    const ok = okUrls[0];
+    const err = errUrls[0];
+    deployUrl = ensureHttps(ok || err || '');
   }
   if (!deployUrl) {
     console.error('[vercel-logs] Unable to determine latest Production deployment URL. Set VERCEL_DEPLOY_URL explicitly.');
