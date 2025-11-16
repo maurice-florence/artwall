@@ -40,7 +40,7 @@ const CardContainer = styled.div<{ $medium: ArtworkMedium; $subtype?: string; $b
   font-size: 0.75rem;
 
   @media (max-width: 768px) {
-    grid-column: span 2;
+    grid-column: span 1;
     grid-row: span 1;
     min-width: 0;
     max-width: 100vw;
@@ -395,7 +395,7 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin }: ArtworkCardProps) => {
     const [showPreview, setShowPreview] = useState(false);
     const togglePreview = useCallback((e: React.MouseEvent) => {
       if (isWriting && !hasImage) {
-        e.stopPropagation();
+        // Allow parent onClick to still fire so the modal opens on tap
         setShowPreview(prev => !prev);
       }
     }, [isWriting, hasImage]);
