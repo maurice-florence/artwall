@@ -56,9 +56,12 @@ const CardInner = styled.div`
   transition: transform 0.6s;
   transform-style: preserve-3d;
   cursor: pointer;
-
-  ${CardContainer}:hover & {
-    transform: rotateY(180deg);
+  
+  /* Only enable flip on devices that support hover and precise pointer */
+  @media (hover: hover) and (pointer: fine) {
+    ${CardContainer}:hover & {
+      transform: rotateY(180deg);
+    }
   }
 `;
 
@@ -104,6 +107,10 @@ const CardFront = styled(CardFace)<{
   justify-content: space-between;
   display: flex;
   flex-direction: column;
+  @media (max-width: 768px) {
+    padding: 0.5rem;
+    font-size: 0.7rem;
+  }
 `;
 
 const CardBack = styled(CardFace)<{ $medium: ArtworkMedium }>`
@@ -116,6 +123,10 @@ const CardBack = styled(CardFace)<{ $medium: ArtworkMedium }>`
   font-size: 0.7rem;
   /* border removed */
   box-sizing: border-box;
+  @media (max-width: 768px) {
+    padding: 0.5rem;
+    font-size: 0.65rem;
+  }
 `;
 
 const TitleOverlay = styled.div`
@@ -421,7 +432,7 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin }: ArtworkCardProps) => {
     // Card front: only show title, image/waveform, language, and footer. No extra text under the title for any medium.
     return (
       <CardContainer $medium={artwork.medium} $subtype={subtype} onClick={onSelect} data-testid={`artwork-card-${artwork.id}`}>
-        <CardInner>
+  <CardInner data-flip={typeof window !== 'undefined' && window.matchMedia ? (window.matchMedia('(hover: hover) and (pointer: fine)').matches ? 'hover-only' : 'disabled') : 'disabled'}>
           <CardFront 
             $medium={artwork.medium} 
             $imageUrl={imageUrl} 
@@ -439,6 +450,8 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin }: ArtworkCardProps) => {
                   alt={artwork.title || 'Artwork'} 
                   loading="lazy"
                   decoding="async"
+                  srcSet={`${getImageUrl(images[0], 'thumbnail')} 200w, ${getImageUrl(images[0], 'card')} 480w, ${getImageUrl(images[0], 'full')} 1200w`}
+                  sizes="(max-width: 480px) 90vw, (max-width: 768px) 45vw, 360px"
                 />
                 {imageOverlayBg && (
                   <ImageGradientOverlay $bg={imageOverlayBg} aria-hidden="true" />
