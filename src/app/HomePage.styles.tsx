@@ -36,23 +36,24 @@ export const CollageContainer = styled.main`
     grid-template-columns: repeat(5, 1fr);
   }
   @media (max-width: 1024px) {
-    grid-template-columns: repeat(3, 1fr);
+    /* Desktop-to-tablet: tighten slightly but keep card size */
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
     grid-auto-rows: 210px;
     padding: 1rem;
   }
   @media (max-width: 768px) {
-    /* Ensure at least three cards per row on portrait mobile */
-    grid-template-columns: repeat(3, 1fr);
-    /* Make cards shorter on mobile */
+    /* Unified mobile layout: auto-fill consistent card width, constant height for orientation */
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
     grid-auto-rows: 150px;
-    padding: 0.75rem;
+    padding: 0.5rem;
+    gap: 2px; /* reduced whitespace between cards */
   }
   @media (max-width: 480px) {
-    /* Keep three columns even on very small devices as requested */
-    grid-template-columns: repeat(3, 1fr);
-    /* Slightly smaller again on very small phones */
-    grid-auto-rows: 130px;
+    /* Same sizing even on very small phones to keep consistency */
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    grid-auto-rows: 150px;
     padding: 0.4rem;
+    gap: 2px;
   }
 `;
 

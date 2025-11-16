@@ -46,6 +46,7 @@ const CardContainer = styled.div<{ $medium: ArtworkMedium; $subtype?: string; $b
     max-width: 100vw;
     min-height: 60px;
     font-size: 0.65rem;
+    aspect-ratio: 4 / 5; /* keep consistent sizing across orientation */
   }
 `;
 

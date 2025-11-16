@@ -62,9 +62,10 @@ const RightSection = styled.div`
   align-items: center;
   gap: 0.5rem; /* match IconsWrapper gap for consistent spacing */
   @media (max-width: 768px) {
-    justify-content: center;
+    justify-content: flex-start; /* left align on mobile */
     order: 2; /* second row on mobile */
     flex-wrap: wrap;
+    width: 100%;
   }
 `;
 
@@ -111,8 +112,9 @@ const IconsWrapper = styled.div`
   gap: 0.5rem;
   @media (max-width: 768px) {
     order: 1; /* first row on mobile */
-    justify-content: center;
+    justify-content: flex-start; /* left align on mobile */
     flex-wrap: wrap;
+    width: 100%;
   }
 `;
 
