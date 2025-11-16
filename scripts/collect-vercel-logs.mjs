@@ -301,7 +301,30 @@ async function main() {
   if (process.env.VERCEL_BYPASS_TOKEN) {
     try {
       // Prefer a healthy deployment for env-check when available
-  const baseUrlForEnv = ensureHttps((latestHealthy && latestHealthy.url) ? latestHealthy.url : (latestHealthyUrlStr || deployUrl));
+      let baseUrlForEnv = ensureHttps((latestHealthy && latestHealthy.url) ? latestHealthy.url : (latestHealthyUrlStr || deployUrl));
+      // If still not obviously healthy, parse CLI list now to pick the newest Ready Production URL
+      if (!latestHealthy && !latestHealthyUrlStr) {
+        try {
+          const listRawNow = stripAnsi(await run(`npx --yes vercel list${confirm}${token}`));
+          const linesNow = listRawNow.split(/\r?\n/);
+          for (let i = 0; i < linesNow.length; i++) {
+            const lineNow = stripAnsi(linesNow[i]);
+            const mNow = lineNow.match(/https?:\/\/\S+/);
+            if (mNow) {
+              const windowNow = [linesNow[i], linesNow[i + 1] || '', linesNow[i + 2] || '']
+                .map(stripAnsi)
+                .join(' ')
+                .replace(/\s+/g, '');
+              const isProdNow = /Production/i.test(windowNow) && !/Preview/i.test(windowNow);
+              const isHealthyNow = /(Ready|Building)/i.test(windowNow);
+              if (isProdNow && isHealthyNow) {
+                baseUrlForEnv = ensureHttps(mNow[0]);
+                break;
+              }
+            }
+          }
+        } catch {}
+      }
       const base = new URL(baseUrlForEnv);
       const envPath = '/api/env-check';
       const withBypass = new URL(envPath, base);
