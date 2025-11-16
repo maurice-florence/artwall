@@ -136,6 +136,41 @@ async function main() {
     console.error('[vercel-logs] Unable to determine latest Production deployment URL. Set VERCEL_DEPLOY_URL explicitly.');
     process.exit(1);
   }
+
+  // Override VERCEL_DEPLOY_URL if it points to an Error deployment and a newer healthy one exists
+  if (process.env.VERCEL_DEPLOY_URL) {
+    try {
+      const listRawOverride = stripAnsi(await run(`npx --yes vercel list${confirm}${token}`));
+      const linesO = listRawOverride.split(/\r?\n/);
+      const entries = [];
+      for (let i = 0; i < linesO.length; i++) {
+        const line = stripAnsi(linesO[i]);
+        const match = line.match(/https?:\/\/\S+/);
+        if (match) {
+          const windowText = [linesO[i], linesO[i + 1] || '', linesO[i + 2] || '']
+            .map(stripAnsi)
+            .join(' ');
+          const compact = windowText.replace(/\s+/g, '');
+          const isProd = /Production/i.test(compact) && !/Preview/i.test(compact);
+          const isHealthy = /(Ready|Building)/i.test(compact);
+          const isError = /Error/i.test(compact);
+          if (isProd && (isHealthy || isError)) {
+            entries.push({ url: ensureHttps(match[0]), isHealthy, isError });
+          }
+        }
+      }
+      const envUrl = ensureHttps(process.env.VERCEL_DEPLOY_URL);
+      const envEntryIndex = entries.findIndex(e => e.url === envUrl);
+      if (envEntryIndex !== -1 && entries[envEntryIndex].isError) {
+        // Find first healthy entry that appears before the error (newer)
+        const newerHealthy = entries.find((e, idx) => e.isHealthy && idx < envEntryIndex);
+        if (newerHealthy) {
+          console.log(`[vercel-logs] Overriding VERCEL_DEPLOY_URL (Error) with newer healthy deployment: ${newerHealthy.url}`);
+          deployUrl = newerHealthy.url;
+        }
+      }
+    } catch {}
+  }
   console.log(`[vercel-logs] Latest: ${deployUrl}`);
   if (latestHealthy && latestAny && latestHealthy.url !== latestAny.url) {
     console.log(`[vercel-logs] Latest healthy (Ready/Building): ${ensureHttps(latestHealthy.url)}`);
