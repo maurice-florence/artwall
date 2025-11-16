@@ -298,7 +298,9 @@ async function main() {
   // 5) Optionally fetch the env-check endpoint using a Vercel bypass token
   if (process.env.VERCEL_BYPASS_TOKEN) {
     try {
-      const base = new URL(deployUrl);
+      // Prefer a healthy deployment for env-check when available
+      const baseUrlForEnv = ensureHttps((latestHealthy && latestHealthy.url) ? latestHealthy.url : deployUrl);
+      const base = new URL(baseUrlForEnv);
       const envPath = '/api/env-check';
       const withBypass = new URL(envPath, base);
       withBypass.searchParams.set('x-vercel-set-bypass-cookie', 'true');
@@ -324,15 +326,26 @@ async function main() {
       const r2 = await fetch(envUrl, {
         headers: {
           ...(cookieHeader ? { Cookie: cookieHeader } : {}),
+          // Also include the bypass header directly to support environments where cookies aren't captured
+          'x-vercel-protection-bypass': process.env.VERCEL_BYPASS_TOKEN,
           Accept: 'application/json',
         },
       });
-      const bodyText = await r2.text();
+      // If still unauthorized, try once more passing the bypass token as query param directly
+      let finalStatus = r2.status;
+      let bodyText = await r2.text();
+      if (finalStatus === 401) {
+        const direct = new URL(envPath, base);
+        direct.searchParams.set('x-vercel-protection-bypass', process.env.VERCEL_BYPASS_TOKEN);
+        const r3 = await fetch(direct, { headers: { Accept: 'application/json' } });
+        finalStatus = r3.status;
+        bodyText = await r3.text();
+      }
       let parsed;
       try { parsed = JSON.parse(bodyText); } catch { parsed = { raw: bodyText }; }
       writeFileSync(
         path.join(outDir, 'env-check.json'),
-        JSON.stringify({ url: envUrl, status: r2.status, data: parsed }, null, 2),
+        JSON.stringify({ url: envUrl, status: finalStatus, data: parsed }, null, 2),
         'utf8'
       );
       console.log(`[vercel-logs] Wrote ${path.join(outDir, 'env-check.json')}`);
