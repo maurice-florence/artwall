@@ -43,14 +43,16 @@ export const CollageContainer = styled.main`
   @media (max-width: 768px) {
     /* Ensure at least three cards per row on portrait mobile */
     grid-template-columns: repeat(3, 1fr);
-    grid-auto-rows: 180px;
+    /* Make cards shorter on mobile */
+    grid-auto-rows: 150px;
     padding: 0.75rem;
   }
   @media (max-width: 480px) {
     /* Keep three columns even on very small devices as requested */
     grid-template-columns: repeat(3, 1fr);
-    grid-auto-rows: 160px;
-    padding: 0.5rem;
+    /* Slightly smaller again on very small phones */
+    grid-auto-rows: 130px;
+    padding: 0.4rem;
   }
 `;
 

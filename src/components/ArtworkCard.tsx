@@ -44,8 +44,8 @@ const CardContainer = styled.div<{ $medium: ArtworkMedium; $subtype?: string; $b
     grid-row: span 1;
     min-width: 0;
     max-width: 100vw;
-    min-height: 80px;
-    font-size: 0.7rem;
+    min-height: 60px;
+    font-size: 0.65rem;
   }
 `;
 
@@ -108,8 +108,8 @@ const CardFront = styled(CardFace)<{
   display: flex;
   flex-direction: column;
   @media (max-width: 768px) {
-    padding: 0.5rem;
-    font-size: 0.7rem;
+    padding: 0.4rem;
+    font-size: 0.65rem;
   }
 `;
 
@@ -124,8 +124,8 @@ const CardBack = styled(CardFace)<{ $medium: ArtworkMedium }>`
   /* border removed */
   box-sizing: border-box;
   @media (max-width: 768px) {
-    padding: 0.5rem;
-    font-size: 0.65rem;
+    padding: 0.4rem;
+    font-size: 0.6rem;
   }
 `;
 
@@ -141,6 +141,9 @@ const CardTitle = styled.h3`
   margin: 0;
   font-weight: bold;
   color: ${({ theme }) => theme.cardText};
+  @media (max-width: 768px) {
+    font-size: 0.95rem;
+  }
 `;
 
 const CardFooter = styled.div`
@@ -153,6 +156,10 @@ const CardFooter = styled.div`
   padding: 0.5rem;
   border-radius: 4px;
   color: ${({ theme }) => theme.cardText};
+  @media (max-width: 768px) {
+    font-size: 0.7rem;
+    padding: 0.4rem;
+  }
 `;
 
 const CardBackTitle = styled(CardTitle)`
