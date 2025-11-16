@@ -6,6 +6,7 @@ import cardSizesJson from '@/constants/card-sizes.json';
 import GeneratedImage from './GeneratedImage';
 import { isWritingMedium, isAudioMedium } from '../constants/medium';
 import { generateUniqueGradient, shouldUseDarkText } from '@/utils/gradient-generator';
+import { IMAGE_OVERLAY } from '@/config/gradient-settings';
 
 // Removed WritingCardSVG import
 
@@ -182,6 +183,18 @@ const CardImage = styled.img<{ $fillAvailable?: boolean }>`
   position: absolute;
   top: 0;
   left: 0;
+`;
+
+const ImageGradientOverlay = styled.div<{ $bg: string }>`
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 12px;
+  pointer-events: none;
+  z-index: 1; /* above image, below any explicit overlays */
+  background: ${({ $bg }) => $bg};
 `;
 
 const ProzaImage = styled.img`
@@ -384,6 +397,23 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin }: ArtworkCardProps) => {
 
     const imageUrl = hasImage ? getImageUrl(images[0], 'card') : undefined;
 
+    // Build a theme-based gradient overlay for images when enabled
+    const imageOverlayBg = useMemo(() => {
+      if (!IMAGE_OVERLAY.enabled || !imageUrl) return '';
+      const colorHex = (theme as any)[IMAGE_OVERLAY.colorSource] as string;
+      // Convert #RRGGBB to rgba
+      const hex = colorHex?.replace('#', '');
+      if (!hex || (hex.length !== 6 && hex.length !== 3)) return '';
+      const expand = (h: string) => (h.length === 3 ? h.split('').map(c => c + c).join('') : h);
+      const full = expand(hex);
+      const r = parseInt(full.substring(0, 2), 16);
+      const g = parseInt(full.substring(2, 4), 16);
+      const b = parseInt(full.substring(4, 6), 16);
+      const startA = Math.max(0, Math.min(100, IMAGE_OVERLAY.startOpacity)) / 100;
+      const endA = Math.max(0, Math.min(100, IMAGE_OVERLAY.endOpacity)) / 100;
+      return `linear-gradient(${IMAGE_OVERLAY.angle}deg, rgba(${r}, ${g}, ${b}, ${startA}) 0%, rgba(${r}, ${g}, ${b}, ${endA}) 100%)`;
+    }, [imageUrl, theme]);
+
     const start = Math.floor(cardText.length / 3);
     const textPreview = cardText.slice(start);
 
@@ -402,12 +432,17 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin }: ArtworkCardProps) => {
           >
             {/* Show image as proper img element if available */}
             {imageUrl ? (
-              <CardImage 
-                src={imageUrl} 
-                alt={artwork.title || 'Artwork'} 
-                loading="lazy"
-                decoding="async"
-              />
+              <>
+                <CardImage 
+                  src={imageUrl} 
+                  alt={artwork.title || 'Artwork'} 
+                  loading="lazy"
+                  decoding="async"
+                />
+                {imageOverlayBg && (
+                  <ImageGradientOverlay $bg={imageOverlayBg} aria-hidden="true" />
+                )}
+              </>
             ) : (isWriting || isAudio) && !hasImage ? (
               isWriting ? (
                 showPreview ? (

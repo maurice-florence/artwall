@@ -35,9 +35,23 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
   const [gridGap] = useState<number>(blueprintTheme.gridGap || 24);
 
   useEffect(() => {
+    // Prefer a persisted theme name for stability; fall back to legacy stored object
+    const savedThemeName = localStorage.getItem('artwall-theme-name') as ThemeName | null;
+    if (savedThemeName && themes[savedThemeName]) {
+      setThemeObject(themes[savedThemeName]);
+      return;
+    }
     const savedTheme = localStorage.getItem('artwall-theme');
     if (savedTheme) {
-      setThemeObject(JSON.parse(savedTheme));
+      try {
+        const parsed = JSON.parse(savedTheme);
+        // Very light validation
+        if (parsed && parsed.primary && parsed.secondary && parsed.tertiary) {
+          setThemeObject(parsed as Theme);
+        }
+      } catch {
+        // ignore invalid legacy value
+      }
     }
   }, []);
 
@@ -45,6 +59,10 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
     const newTheme = themes[themeName];
     if (newTheme) {
       setThemeObject(newTheme);
+      // persist the chosen theme by name
+      try {
+        localStorage.setItem('artwall-theme-name', themeName);
+      } catch {}
     }
   };
 
@@ -58,12 +76,17 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const saveThemeAsDefault = () => {
-    localStorage.setItem('artwall-theme', JSON.stringify(themeObject));
+    try {
+      localStorage.setItem('artwall-theme', JSON.stringify(themeObject));
+    } catch {}
   };
 
   const resetTheme = () => {
     // Clear any saved custom theme and reset to the blueprint defaults
-    localStorage.removeItem('artwall-theme');
+    try {
+      localStorage.removeItem('artwall-theme');
+      localStorage.removeItem('artwall-theme-name');
+    } catch {}
     setThemeObject(blueprintTheme);
   };
 
