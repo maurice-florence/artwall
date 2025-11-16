@@ -58,6 +58,7 @@ async function main() {
   let selectedDeployment = null;
   let latestAny = null;
   let latestHealthy = null;
+  let latestHealthyUrlStr = null; // from CLI fallback parsing
   let latestError = null;
   if (!deployUrl && process.env.VERCEL_TOKEN) {
     try {
@@ -128,9 +129,10 @@ async function main() {
       }
     }
     // Prefer newest healthy (Ready/Building); else newest error
-    const ok = okUrls[0];
+  const ok = okUrls[0];
     const err = errUrls[0];
-    deployUrl = ensureHttps(ok || err || '');
+  deployUrl = ensureHttps(ok || err || '');
+  if (ok) latestHealthyUrlStr = ensureHttps(ok);
   }
   if (!deployUrl) {
     console.error('[vercel-logs] Unable to determine latest Production deployment URL. Set VERCEL_DEPLOY_URL explicitly.');
@@ -299,7 +301,7 @@ async function main() {
   if (process.env.VERCEL_BYPASS_TOKEN) {
     try {
       // Prefer a healthy deployment for env-check when available
-      const baseUrlForEnv = ensureHttps((latestHealthy && latestHealthy.url) ? latestHealthy.url : deployUrl);
+  const baseUrlForEnv = ensureHttps((latestHealthy && latestHealthy.url) ? latestHealthy.url : (latestHealthyUrlStr || deployUrl));
       const base = new URL(baseUrlForEnv);
       const envPath = '/api/env-check';
       const withBypass = new URL(envPath, base);
