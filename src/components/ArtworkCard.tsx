@@ -391,14 +391,17 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin }: ArtworkCardProps) => {
       return uniqueGradient ? shouldUseDarkText(uniqueGradient) : false;
     }, [uniqueGradient]);
 
-    // Allow toggling between gradient and text preview for writing pieces
+    // Ensure poetry/writing cards open modal on tap (mobile-friendly)
     const [showPreview, setShowPreview] = useState(false);
-    const togglePreview = useCallback((e: React.MouseEvent) => {
+    const handleFrontClick = useCallback((e: React.MouseEvent) => {
       if (isWriting && !hasImage) {
-        // Allow parent onClick to still fire so the modal opens on tap
-        setShowPreview(prev => !prev);
+        // Open the modal immediately and prevent duplicate parent click
+        e.stopPropagation();
+        onSelect();
+        return;
       }
-    }, [isWriting, hasImage]);
+      // For non-writing cards, allow parent container onClick to handle selection
+    }, [isWriting, hasImage, onSelect]);
 
     // Determine image URL for overlay computation
     const imageUrl = hasImage ? getImageUrl(images[0], 'card') : undefined;
@@ -440,7 +443,7 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin }: ArtworkCardProps) => {
             $isAudio={isAudio}
             $gradient={uniqueGradient}
             $useDarkText={useDarkText}
-            onClick={togglePreview}
+            onClick={handleFrontClick}
           >
             {/* Show image as proper img element if available */}
             {imageUrl ? (

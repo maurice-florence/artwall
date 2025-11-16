@@ -62,7 +62,9 @@ const RightSection = styled.div`
   align-items: center;
   gap: 0.5rem; /* match IconsWrapper gap for consistent spacing */
   @media (max-width: 768px) {
-    justify-content: space-between;
+    justify-content: center;
+    order: 2; /* second row on mobile */
+    flex-wrap: wrap;
   }
 `;
 
@@ -72,6 +74,7 @@ const SearchWrapper = styled.div`
   align-items: center;
   @media (max-width: 768px) {
     width: 100%;
+    order: 3; /* search last on mobile */
   }
 `;
 
@@ -106,6 +109,11 @@ const IconsWrapper = styled.div`
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  @media (max-width: 768px) {
+    order: 1; /* first row on mobile */
+    justify-content: center;
+    flex-wrap: wrap;
+  }
 `;
 
 const MEDIUM_ICONS: Record<string, React.ReactNode> = {
