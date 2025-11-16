@@ -48,8 +48,22 @@ async function main() {
   const outDir = path.resolve('vercel-logs');
   mkdirSync(outDir, { recursive: true });
 
-  // If a Vercel token is provided, pass it to all CLI commands to enable non-interactive auth
-  const token = process.env.VERCEL_TOKEN ? ` --token=${process.env.VERCEL_TOKEN}` : '';
+  // Determine if provided Vercel token appears valid (simple probe). If invalid, don't pass to CLI.
+  let tokenValid = false;
+  let token = '';
+  if (process.env.VERCEL_TOKEN) {
+    try {
+      const probeProjectId = process.env.VERCEL_PROJECT_ID || (existsSync('.vercel/project.json') ? JSON.parse(readFileSync('.vercel/project.json','utf8')).projectId : null);
+      if (probeProjectId) {
+        const probeUrl = new URL(`https://api.vercel.com/v2/projects/${probeProjectId}`);
+        const teamIdProbe = process.env.VERCEL_TEAM_ID;
+        if (teamIdProbe) probeUrl.searchParams.set('teamId', teamIdProbe);
+        const probeRes = await fetch(probeUrl, { headers: { Authorization: `Bearer ${process.env.VERCEL_TOKEN}` } });
+        tokenValid = probeRes.ok;
+      }
+    } catch {}
+    if (tokenValid) token = ` --token=${process.env.VERCEL_TOKEN}`;
+  }
   const confirm = ' --yes';
 
   // 1) Get latest Production deployment URL
@@ -146,8 +160,18 @@ async function main() {
     deployUrl = cliOkUrl;
   }
   if (!deployUrl) {
-    console.error('[vercel-logs] Unable to determine latest Production deployment URL. Set VERCEL_DEPLOY_URL explicitly.');
-    process.exit(1);
+    // As a last resort, attempt a very loose parse for any URL (including Preview) so we still capture diagnostics.
+    try {
+      const looseRaw = stripAnsi(await run(`npx --yes vercel list${confirm}${token}`));
+      const firstLoose = looseRaw.match(/https?:\/\/\S+/);
+      if (firstLoose) deployUrl = ensureHttps(firstLoose[0]);
+    } catch {}
+    if (!deployUrl) {
+      console.error('[vercel-logs] Unable to determine ANY deployment URL. Provide VERCEL_DEPLOY_URL to continue.');
+      process.exit(1);
+    } else {
+      console.warn('[vercel-logs] Falling back to first listed URL (may be Preview).');
+    }
   }
 
   // Override VERCEL_DEPLOY_URL if it points to an Error deployment and a newer healthy one exists
@@ -238,7 +262,12 @@ async function main() {
     } else {
       const errOut = [res.stdout, res.stderr].filter(Boolean).join('\n\n');
       if (errOut.trim()) {
-        writeFileSync(path.join(outDir, 'latest-logs-error.txt'), errOut, 'utf8');
+        let annotated = errOut;
+        if (/socket hang up/i.test(errOut)) {
+          const meta = { type: 'runtime-stream-error', reason: 'socket hang up', hint: 'Transient network or idle log stream; usually safe to ignore unless persistent.' };
+          annotated += `\n\n---\n${JSON.stringify(meta, null, 2)}\n`;
+        }
+        writeFileSync(path.join(outDir, 'latest-logs-error.txt'), annotated, 'utf8');
         console.log(`[vercel-logs] Wrote ${path.join(outDir, 'latest-logs-error.txt')}`);
       } else {
         console.warn('[vercel-logs] vercel logs failed; no output captured.');
@@ -383,6 +412,102 @@ async function main() {
       writeFileSync(path.join(outDir, 'env-check-error.txt'), msg, 'utf8');
       console.warn('[vercel-logs] env-check fetch failed; wrote env-check-error.txt');
     }
+  }
+
+  // 6) Summarize the run for quick human/tooling consumption
+  try {
+    // Determine selection path
+    let selectionVia = 'unknown';
+    const envUrl = ensureHttps(process.env.VERCEL_DEPLOY_URL || '');
+    const apiHealthyUrl = latestHealthy && latestHealthy.url ? ensureHttps(latestHealthy.url) : null;
+    const apiAnyUrl = latestAny && latestAny.url ? ensureHttps(latestAny.url) : null;
+    if (selectedDeployment && selectedDeployment.url && deployUrl && deployUrl.includes(selectedDeployment.url)) {
+      selectionVia = (apiHealthyUrl && deployUrl === apiHealthyUrl) ? 'api-healthy' : 'api-latest';
+    } else if (cliOkUrl && deployUrl === cliOkUrl) {
+      selectionVia = 'cli-healthy';
+    } else if (envUrl && envUrl === deployUrl) {
+      selectionVia = 'env';
+    } else if (cliErrUrl && deployUrl === cliErrUrl) {
+      selectionVia = 'cli-error';
+    } else if (latestHealthyUrlStr && deployUrl === latestHealthyUrlStr) {
+      selectionVia = 'cli-first-healthy-or-first';
+    } else {
+      selectionVia = 'cli-first-url';
+    }
+
+    const artifacts = {
+      latestUrlTxt: existsSync(path.join(outDir, 'latest-url.txt')),
+      latestInspectJson: existsSync(path.join(outDir, 'latest-inspect.json')),
+      latestInspectTxt: existsSync(path.join(outDir, 'latest-inspect.txt')),
+      latestLogsTxt: existsSync(path.join(outDir, 'latest-logs.txt')),
+      latestLogsErrorTxt: existsSync(path.join(outDir, 'latest-logs-error.txt')),
+      latestDeploymentJson: existsSync(path.join(outDir, 'latest-deployment.json')),
+      latestReadyDeploymentJson: existsSync(path.join(outDir, 'latest-ready-deployment.json')),
+      latestReadyUrlTxt: existsSync(path.join(outDir, 'latest-ready-url.txt')),
+      latestReadyInspectJson: existsSync(path.join(outDir, 'latest-ready-inspect.json')),
+      latestReadyInspectTxt: existsSync(path.join(outDir, 'latest-ready-inspect.txt')),
+      latestReadyLogsTxt: existsSync(path.join(outDir, 'latest-ready-logs.txt')),
+      latestReadyLogsErrorTxt: existsSync(path.join(outDir, 'latest-ready-logs-error.txt')),
+      envCheckJson: existsSync(path.join(outDir, 'env-check.json')),
+      envCheckErrorTxt: existsSync(path.join(outDir, 'env-check-error.txt')),
+    };
+
+    // Optional env-check details
+    let envCheck = null;
+    if (artifacts.envCheckJson) {
+      try {
+        const ecRaw = readFileSync(path.join(outDir, 'env-check.json'), 'utf8');
+        const ec = JSON.parse(ecRaw);
+        envCheck = {
+          url: ec.url || null,
+          status: ec.status,
+          ok: typeof ec.status === 'number' ? (ec.status >= 200 && ec.status < 400) : false,
+          protected: ec.status === 401 || /Authentication Required/i.test(JSON.stringify(ec.data || {})),
+        };
+      } catch {}
+    }
+
+    const warnings = [];
+    if (process.env.VERCEL_TOKEN && !tokenValid) {
+      warnings.push('VERCEL_TOKEN provided but appears invalid for this project/team; falling back to CLI.');
+    }
+    if (envCheck && envCheck.status === 401) {
+      warnings.push('env-check returned 401 (likely SSO-protected); bypass token cannot bypass SSO.');
+    }
+    const errorDetected = (inspectJson && String(inspectJson.readyState || inspectJson.state || '').toLowerCase() === 'error')
+      || (!inspectJson && artifacts.latestInspectTxt && /(\bCurrently:\s*●\s*Error\b|\bstatus\s*\t?\s*●\s*Error\b)/i.test(readFileSync(path.join(outDir, 'latest-inspect.txt'), 'utf8')));
+    if (errorDetected) {
+      warnings.push('Selected deployment appears to be in Error state; see latest-inspect.* and latest-logs*.');
+    }
+
+    const summary = {
+      timestamp: new Date().toISOString(),
+      selectedUrl: deployUrl,
+      selection: {
+        via: selectionVia,
+        envProvided: envUrl || null,
+        api: {
+          used: !!selectedDeployment,
+          latestAny: apiAnyUrl,
+          latestHealthy: apiHealthyUrl,
+          latestError: latestError && latestError.url ? ensureHttps(latestError.url) : null,
+        },
+        cli: {
+          okUrl: cliOkUrl || null,
+          errUrl: cliErrUrl || null,
+          firstHealthyOrFirst: latestHealthyUrlStr || null,
+        },
+      },
+      token: { present: !!process.env.VERCEL_TOKEN, valid: tokenValid },
+      artifacts,
+      envCheck,
+      warnings,
+    };
+
+    writeFileSync(path.join(outDir, 'summary.json'), JSON.stringify(summary, null, 2), 'utf8');
+    console.log(`[vercel-logs] Wrote ${path.join(outDir, 'summary.json')}`);
+  } catch (e) {
+    // Non-fatal
   }
 
   console.log('[vercel-logs] Done. Share vercel-logs/latest-inspect.json (or latest-inspect.txt) and latest-logs.txt (or latest-logs-error.txt). If present, also include latest-ready-* artifacts.');

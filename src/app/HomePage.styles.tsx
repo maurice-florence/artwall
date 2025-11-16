@@ -41,13 +41,15 @@ export const CollageContainer = styled.main`
     padding: 1rem;
   }
   @media (max-width: 768px) {
-    grid-template-columns: repeat(2, 1fr);
-    grid-auto-rows: 200px;
+    /* Ensure at least three cards per row on portrait mobile */
+    grid-template-columns: repeat(3, 1fr);
+    grid-auto-rows: 180px;
     padding: 0.75rem;
   }
   @media (max-width: 480px) {
-    grid-template-columns: 1fr;
-    grid-auto-rows: 200px;
+    /* Keep three columns even on very small devices as requested */
+    grid-template-columns: repeat(3, 1fr);
+    grid-auto-rows: 160px;
     padding: 0.5rem;
   }
 `;
