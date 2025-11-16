@@ -103,36 +103,47 @@ async function main() {
       // Ignore API errors and fall back to CLI parsing
     }
   }
-  // Fallback: parse CLI list output to find newest Production URL
-  if (!deployUrl) {
-  const listRaw = stripAnsi(await run(`npx --yes vercel list${confirm}${token}`));
+  // Parse CLI list output to identify newest healthy Production URL (do this even if deployUrl is preset)
+  let cliOkUrl = null;
+  let cliErrUrl = null;
+  try {
+    const listRaw = stripAnsi(await run(`npx --yes vercel list${confirm}${token}`));
     // Grab blocks that contain a URL and the word Production; prefer the first URL in the list (newest at top)
-  const lines = listRaw.split(/\r?\n/);
+    const lines = listRaw.split(/\r?\n/);
     const okUrls = [];
     const errUrls = [];
+    let firstUrl = null;
     for (let i = 0; i < lines.length; i++) {
-  const line = stripAnsi(lines[i]);
+      const line = stripAnsi(lines[i]);
       const match = line.match(/https?:\/\/\S+/);
       if (match) {
+        if (!firstUrl) firstUrl = match[0];
         // Consider a small window to account for line wrapping in the CLI table
         const windowText = [lines[i], lines[i + 1] || '', lines[i + 2] || '']
           .map(stripAnsi)
           .join(' ');
         const compact = windowText.replace(/\s+/g, '');
         const isProd = /Production/i.test(compact) && !/Preview/i.test(compact);
-        const isHealthy = /(Ready|Building)/i.test(compact);
         const isError = /Error/i.test(compact);
-        if (isProd && (isError || isHealthy)) {
-          if (isHealthy) okUrls.push(match[0]);
-          else if (isError) errUrls.push(match[0]);
+        if (isProd) {
+          if (isError) errUrls.push(match[0]);
+          else okUrls.push(match[0]);
         }
       }
     }
     // Prefer newest healthy (Ready/Building); else newest error
-  const ok = okUrls[0];
-    const err = errUrls[0];
-  deployUrl = ensureHttps(ok || err || '');
-  if (ok) latestHealthyUrlStr = ensureHttps(ok);
+    cliOkUrl = okUrls[0] ? ensureHttps(okUrls[0]) : null;
+    cliErrUrl = errUrls[0] ? ensureHttps(errUrls[0]) : null;
+    if (!latestHealthyUrlStr && (cliOkUrl || firstUrl)) latestHealthyUrlStr = ensureHttps(cliOkUrl || firstUrl);
+  } catch {}
+
+  // Choose deployUrl with preference: API healthy > CLI healthy > existing deployUrl > CLI error
+  if (!deployUrl) {
+    deployUrl = ensureHttps((latestHealthy && latestHealthy.url) ? latestHealthy.url : (cliOkUrl || cliErrUrl || ''));
+  } else if (cliOkUrl && deployUrl !== cliOkUrl) {
+    // If an env-provided or previously selected URL differs from the newest healthy from CLI, prefer the healthy one
+    console.log(`[vercel-logs] Using newest healthy Production: ${cliOkUrl} (was ${deployUrl})`);
+    deployUrl = cliOkUrl;
   }
   if (!deployUrl) {
     console.error('[vercel-logs] Unable to determine latest Production deployment URL. Set VERCEL_DEPLOY_URL explicitly.');
@@ -154,10 +165,9 @@ async function main() {
             .join(' ');
           const compact = windowText.replace(/\s+/g, '');
           const isProd = /Production/i.test(compact) && !/Preview/i.test(compact);
-          const isHealthy = /(Ready|Building)/i.test(compact);
           const isError = /Error/i.test(compact);
-          if (isProd && (isHealthy || isError)) {
-            entries.push({ url: ensureHttps(match[0]), isHealthy, isError });
+          if (isProd) {
+            entries.push({ url: ensureHttps(match[0]), isHealthy: !isError, isError });
           }
         }
       }
@@ -307,22 +317,16 @@ async function main() {
         try {
           const listRawNow = stripAnsi(await run(`npx --yes vercel list${confirm}${token}`));
           const linesNow = listRawNow.split(/\r?\n/);
+          let picked = null;
           for (let i = 0; i < linesNow.length; i++) {
             const lineNow = stripAnsi(linesNow[i]);
             const mNow = lineNow.match(/https?:\/\/\S+/);
             if (mNow) {
-              const windowNow = [linesNow[i], linesNow[i + 1] || '', linesNow[i + 2] || '']
-                .map(stripAnsi)
-                .join(' ')
-                .replace(/\s+/g, '');
-              const isProdNow = /Production/i.test(windowNow) && !/Preview/i.test(windowNow);
-              const isHealthyNow = /(Ready|Building)/i.test(windowNow);
-              if (isProdNow && isHealthyNow) {
-                baseUrlForEnv = ensureHttps(mNow[0]);
-                break;
-              }
+              picked = ensureHttps(mNow[0]);
+              break;
             }
           }
+          if (picked) baseUrlForEnv = picked;
         } catch {}
       }
       const base = new URL(baseUrlForEnv);
