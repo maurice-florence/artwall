@@ -6,47 +6,56 @@ A modern, interactive timeline and archive for creative works, built with Next.j
 [![Next.js](https://img.shields.io/badge/Next.js-15.5-black.svg)](https://nextjs.org/)
 [![React](https://img.shields.io/badge/React-19.0-61dafb.svg)](https://reactjs.org/)
 [![Firebase](https://img.shields.io/badge/Firebase-11.10-orange.svg)](https://firebase.google.com/)
-
----
-
-## 📖 Overview
-
 **Artwall** is a personal digital archive and interactive timeline for creative works across multiple mediums (writing, drawing, audio, sculpture, and more). It provides a rich, filterable interface to organize, browse, and manage your creative output over time.
+
+## Mobile and PWA notes
+
+Artwall includes a mobile-first experience and basic PWA support:
+
+- Responsive layout: smaller paddings, stacked header controls, and grid column limits for phones and tablets.
+- Mobile navigation: a hamburger button opens an overlay Sidebar drawer on small screens.
+- Touch-friendly cards: flip animation is disabled on touch/coarse-pointer devices.
+- Optimized images: responsive `srcSet`/`sizes` for card thumbnails (200w/480w/1200w) to reduce mobile bandwidth.
+- PWA basics: `public/manifest.json` and a simple `public/sw.js` cache common assets. The service worker is registered from `layout.tsx`.
+
+Install prompt and icons:
+
+- Add app icons at `public/icon-192.png` and `public/icon-512.png` for install banners on Android and desktop.
+
+Offline behavior (basic):
+
+- Static assets are cached. Dynamic requests are fetched network-first with a fallback 503 response when offline. You can customize `public/sw.js` for advanced strategies.
+
+Troubleshooting:
+
+- If icons don’t appear on install prompt, ensure the icon files exist and `manifest.json` references match.
+- Clear site data (Application tab) when testing service worker updates.
 
 ### Key Capabilities
 
 - 📅 **Timeline View**: Browse works chronologically by year
 - 🎨 **Multi-Medium Support**: Writing, drawing, audio, sculpture, and custom categories
 - 🔍 **Advanced Filtering**: Filter by medium, subtype, year, evaluation, and rating
-- 🎯 **Smart Forms**: Intelligent form validation with context-aware suggestions
-- 🌍 **Multi-Language**: Support for multiple language translations per artwork
+- **Multi-Language**: Support for multiple language translations per artwork
 - 📊 **Statistics Dashboard**: Insights into your creative productivity
 - 🎨 **Custom Theming**: Save and switch between custom color themes
-- 📱 **Fully Responsive**: Optimized for desktop, tablet, and mobile
 
 ---
+
 
 ## ✨ Features
 
 ### Core Functionality
 
-- **Next.js 15 App Router** with server-side rendering and dynamic routing
-- **TypeScript** with strict type checking for enhanced developer experience
-- **Firebase Integration**:
-  - Realtime Database for artwork metadata
-  - Cloud Storage for media files (images, audio, video, PDFs)
-  - Authentication for secure access
+- Cloud Storage for media files (images, audio, video, PDFs)
+- Authentication for secure access
 - **Styled-components** for component-scoped styling and theming
-- **Context API** for global state management (artworks, filters, themes)
 
 ### UI Components
 
-- **AdminModal**: Full-featured CRUD interface for managing artworks
 - **Smart Form System**: Context-aware validation with real-time feedback
 - **Modal Viewer**: Rich artwork detail view with media playback
 - **Filterable Header**: Quick access to medium, evaluation, and rating filters
-- **Sidebar**: Year-based timeline navigation
-- **Theme Editor**: Customize and save color schemes
 - **Responsive Cards**: Adaptive card layouts for different mediums
 
 ### Media Support

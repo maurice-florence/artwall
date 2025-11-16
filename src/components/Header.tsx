@@ -6,39 +6,54 @@ import ThemeEditor from './ThemeEditor';
 import { MEDIUMS, MEDIUM_LABELS, SUBTYPE_LABELS } from '@/constants/medium';
 import { useDropdown } from '@/hooks/useDropdown';
 import { BaseIconButton, Dropdown } from './common';
+import useIsMobile from '@/hooks/useIsMobile';
 
 const HeaderWrapper = styled.header`
   background: ${({ theme }) => theme.body};
   color: ${({ theme }) => theme.headerText};
   font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-  padding: 1rem 2rem;
+  padding: 0.75rem 1rem;
   display: flex;
   flex-direction: column;
   position: sticky;
   top: 0;
   z-index: 100;
+  @media (max-width: 768px) {
+    padding: 0.5rem 0.75rem;
+  }
 `;
 
 const ControlsRow = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
+  gap: 0.75rem;
   width: 100%;
+  @media (max-width: 768px) {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+  }
 `;
 
 const TitleRow = styled.div`
   display: flex;
   align-items: center;
   width: 100%;
+  @media (max-width: 768px) {
+    justify-content: space-between;
+  }
 `;
 
 const Title = styled.h1`
   font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-  font-size: 3.5rem;
+  font-size: 2.4rem;
   font-weight: bold;
   color: ${({ theme }) => theme.primary};
   margin: 0;
+  @media (max-width: 768px) {
+    font-size: 1.8rem;
+  }
 `;
 
 const RightSection = styled.div`
@@ -46,12 +61,18 @@ const RightSection = styled.div`
   display: flex;
   align-items: center;
   gap: 0.5rem; /* match IconsWrapper gap for consistent spacing */
+  @media (max-width: 768px) {
+    justify-content: space-between;
+  }
 `;
 
 const SearchWrapper = styled.div`
   position: relative;
   display: flex;
   align-items: center;
+  @media (max-width: 768px) {
+    width: 100%;
+  }
 `;
 
 const SearchIcon = styled(FaSearch)`
@@ -73,6 +94,10 @@ const SearchInput = styled.input`
     outline: none;
     border-color: ${({ theme }) => theme.primary};
     box-shadow: 0 0 0 2px ${({ theme }) => theme.primary}30;
+  }
+  @media (max-width: 768px) {
+    width: 100%;
+    font-size: 0.95rem;
   }
 `;
 
@@ -148,6 +173,7 @@ const Header: React.FC<HeaderProps> = ({
   selectedRating,
   setSelectedRating,
 }) => {
+  const isMobile = useIsMobile();
   // evaluation dropdown state
   const evalRef = useRef<HTMLDivElement>(null);
   const { isMounted: evalMounted, isClosing: evalClosing, toggle: toggleEvalDropdown, close: closeEvalDropdown } = useDropdown(evalRef);
@@ -200,7 +226,7 @@ const Header: React.FC<HeaderProps> = ({
         <Title data-testid="header-title">Artwall</Title>
       </TitleRow>
       {/* Second row: filters, icons, search, theme */}
-      <ControlsRow data-testid="header-controls-row">
+      <ControlsRow data-testid="header-controls-row" data-stacked={isMobile ? 'true' : 'false'}>
           <IconsWrapper data-testid="header-medium-icons">
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }} data-testid="header-filters">
               <MediumIconButton
@@ -227,7 +253,7 @@ const Header: React.FC<HeaderProps> = ({
               ))}
             </div>
           </IconsWrapper>
-          <SearchWrapper>
+          <SearchWrapper data-fullwidth={isMobile ? 'true' : 'false'}>
             <SearchIcon />
             <SearchInput
               type="text"

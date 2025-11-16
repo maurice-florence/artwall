@@ -13,6 +13,7 @@ import Modal from '@/components/Modal';
 import Footer from '@/components/Footer';
 // import Sidebar from '@/components/Sidebar';
 import Header from '@/components/Header';
+import MobileNav from '@/components/MobileNav';
 import ArtworkCard, { CardContainer } from '@/components/ArtworkCard';
 import YearMarkerCard from '@/components/YearMarker';
 import toast from 'react-hot-toast';
@@ -21,8 +22,9 @@ import { MEDIUMS } from '@/constants/medium'; // Correct import, remove unused '
 // import { useFilterContext } from '@/context/FilterContext';
 import { useArtworks } from '@/context/ArtworksContext';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
-import AdminModal from '@/components/AdminModal';
-import NewEntryModal from '@/components/NewEntryModal';
+import dynamic from 'next/dynamic';
+const AdminModal = dynamic(() => import('@/components/AdminModal'), { ssr: false });
+const NewEntryModal = dynamic(() => import('@/components/NewEntryModal'), { ssr: false });
 
 export interface FilterOptions {
     medium: string;
@@ -71,6 +73,13 @@ export default function HomePage() {
     
         window.addEventListener('scroll', handleScroll);
         return () => window.removeEventListener('scroll', handleScroll);
+    }, []);
+
+    // On small screens, render fewer items initially for faster time-to-interactive
+    useEffect(() => {
+        if (typeof window !== 'undefined' && window.innerWidth < 768) {
+            setVisibleCount(60);
+        }
     }, []);
 
     const availableMediums = useMemo(() => {
@@ -210,7 +219,8 @@ export default function HomePage() {
         <PageLayout>
             {/* Sidebar removed */}
             <MainContent>
-            <Header 
+                        <MobileNav artworks={allArtworks} />
+                        <Header 
               selectedMedium={selectedMedium}
               setSelectedMedium={setSelectedMedium}
               selectedYear={selectedYear}
