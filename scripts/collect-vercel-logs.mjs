@@ -295,6 +295,54 @@ async function main() {
     } catch {}
   }
 
+  // 5) Optionally fetch the env-check endpoint using a Vercel bypass token
+  if (process.env.VERCEL_BYPASS_TOKEN) {
+    try {
+      const base = new URL(deployUrl);
+      const envPath = '/api/env-check';
+      const withBypass = new URL(envPath, base);
+      withBypass.searchParams.set('x-vercel-set-bypass-cookie', 'true');
+      withBypass.searchParams.set('x-vercel-protection-bypass', process.env.VERCEL_BYPASS_TOKEN);
+
+      // First request sets the cookie
+      const r1 = await fetch(withBypass, { redirect: 'manual' });
+      // Extract Set-Cookie headers in a runtime-agnostic way
+      let cookieList = [];
+      if (typeof r1.headers.getSetCookie === 'function') {
+        cookieList = r1.headers.getSetCookie();
+      } else if (typeof r1.headers.raw === 'function') {
+        const raw = r1.headers.raw();
+        cookieList = raw['set-cookie'] || [];
+      } else {
+        const single = r1.headers.get('set-cookie');
+        if (single) cookieList = [single];
+      }
+      const cookieHeader = cookieList.map((c) => String(c).split(';')[0]).join('; ');
+
+      // Second request includes cookie to access the protected endpoint
+      const envUrl = new URL(envPath, base).toString();
+      const r2 = await fetch(envUrl, {
+        headers: {
+          ...(cookieHeader ? { Cookie: cookieHeader } : {}),
+          Accept: 'application/json',
+        },
+      });
+      const bodyText = await r2.text();
+      let parsed;
+      try { parsed = JSON.parse(bodyText); } catch { parsed = { raw: bodyText }; }
+      writeFileSync(
+        path.join(outDir, 'env-check.json'),
+        JSON.stringify({ url: envUrl, status: r2.status, data: parsed }, null, 2),
+        'utf8'
+      );
+      console.log(`[vercel-logs] Wrote ${path.join(outDir, 'env-check.json')}`);
+    } catch (e) {
+      const msg = (e && e.stack) ? e.stack : String(e);
+      writeFileSync(path.join(outDir, 'env-check-error.txt'), msg, 'utf8');
+      console.warn('[vercel-logs] env-check fetch failed; wrote env-check-error.txt');
+    }
+  }
+
   console.log('[vercel-logs] Done. Share vercel-logs/latest-inspect.json (or latest-inspect.txt) and latest-logs.txt (or latest-logs-error.txt). If present, also include latest-ready-* artifacts.');
 }
 
