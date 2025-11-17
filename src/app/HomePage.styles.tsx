@@ -42,16 +42,17 @@ export const CollageContainer = styled.main`
     padding: 1rem;
   }
   @media (max-width: 768px) {
-    /* Unified mobile layout: auto-fill consistent card width, constant height for orientation */
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-    grid-auto-rows: 150px;
+    /* Mobile portrait/landscape: enforce fixed card width to prevent stretch + overlap */
+    grid-template-columns: repeat(auto-fill, 120px);
+    grid-auto-rows: 150px; /* matches 120px * 1.25 (aspect-ratio 4/5) */
+    justify-content: center; /* center leftover space */
     padding: 0.5rem;
-    gap: 2px; /* reduced whitespace between cards */
+    gap: 2px;
   }
   @media (max-width: 480px) {
-    /* Same sizing even on very small phones to keep consistency */
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    grid-template-columns: repeat(auto-fill, 120px);
     grid-auto-rows: 150px;
+    justify-content: center;
     padding: 0.4rem;
     gap: 2px;
   }
