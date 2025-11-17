@@ -57,7 +57,8 @@ interface FooterProps {
 }
 
 const Footer: React.FC<FooterProps> = ({ onAddNewArtwork, artworks }) => {
-  const appArtworks = artworks ?? [];
+  // Stabilize reference to artworks to satisfy react-hooks/exhaustive-deps
+  const appArtworks = React.useMemo(() => artworks ?? [], [artworks]);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [dbCounts, setDbCounts] = useState<Record<string, number>>({});
   const [isLoggedIn, setIsLoggedIn] = useState(false);

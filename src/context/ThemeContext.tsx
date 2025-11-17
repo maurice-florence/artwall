@@ -1,3 +1,5 @@
+"use client";
+
 import React, { createContext, useState, ReactNode, useEffect } from 'react';
 import type { Theme } from '@/styled';
 import { blueprintTheme, themes, ThemeName } from '../themes';
