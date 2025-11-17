@@ -158,7 +158,7 @@ export default function HomeClient({ artworks: allArtworks }: { artworks: Artwor
             );
           })}
         </CollageContainer>
-        <Footer onAddNewArtwork={handleAdd} />
+  <Footer onAddNewArtwork={handleAdd} artworks={allArtworks} />
       </MainContent>
 
       {selectedItem && (

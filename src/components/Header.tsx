@@ -1,5 +1,4 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
-import { useArtworks } from '@/context/ArtworksContext';
 import styled from 'styled-components';
 import { FaPenNib, FaPaintBrush, FaMusic, FaEllipsisH, FaCube, FaGlobe, FaCertificate, FaStar, FaSearch } from 'react-icons/fa';
 import ThemeEditor from './ThemeEditor';
@@ -201,8 +200,7 @@ const Header: React.FC<HeaderProps> = ({
   const devRatingCount = typeof window !== 'undefined' ? (window as any).__dev_rating_count__ ?? null : null;
 
   // Calculate counts for each filter option using the artworks from context
-  const { artworks } = useArtworks();
-  const sourceArtworks: Artwork[] = useMemo(() => (artworksForCounts ?? artworks ?? []), [artworksForCounts, artworks]);
+  const sourceArtworks: Artwork[] = useMemo(() => (artworksForCounts ?? []), [artworksForCounts]);
 
   const evalCounts = useMemo(() => {
     const counts: Record<number, number> = {5:0,4:0,3:0,2:0,1:0};

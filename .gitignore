@@ -56,3 +56,5 @@ vercel-logs/
  
 # local reports
 git-cleanup-report.txt
+
+.env.local
