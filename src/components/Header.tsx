@@ -202,7 +202,7 @@ const Header: React.FC<HeaderProps> = ({
 
   // Calculate counts for each filter option using the artworks from context
   const { artworks } = useArtworks();
-  const sourceArtworks: Artwork[] = artworksForCounts ?? artworks ?? [];
+  const sourceArtworks: Artwork[] = useMemo(() => (artworksForCounts ?? artworks ?? []), [artworksForCounts, artworks]);
 
   const evalCounts = useMemo(() => {
     const counts: Record<number, number> = {5:0,4:0,3:0,2:0,1:0};
