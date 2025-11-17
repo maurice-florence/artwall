@@ -196,9 +196,9 @@ const Header: React.FC<HeaderProps> = ({
   const ratingRef = useRef<HTMLDivElement>(null);
   const { isMounted: ratingMounted, isClosing: ratingClosing, toggle: toggleRatingDropdown, close: closeRatingDropdown } = useDropdown(ratingRef);
 
-  // Dev-only counts badge
-  const devEvalCount = (window as any).__dev_eval_count__ ?? null;
-  const devRatingCount = (window as any).__dev_rating_count__ ?? null;
+  // Dev-only counts badge (guard for SSR)
+  const devEvalCount = typeof window !== 'undefined' ? (window as any).__dev_eval_count__ ?? null : null;
+  const devRatingCount = typeof window !== 'undefined' ? (window as any).__dev_rating_count__ ?? null : null;
 
   // Calculate counts for each filter option using the artworks from context
   const { artworks } = useArtworks();
