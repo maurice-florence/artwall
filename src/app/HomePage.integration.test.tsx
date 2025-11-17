@@ -1,16 +1,6 @@
 import { render, screen, fireEvent } from '@/__tests__/test-utils';
-import HomePage from '@/app/page';
-import Footer from '@/components/Footer';
-import Sidebar from '@/components/Sidebar';
-import Header from '@/components/Header';
-import ArtworkCard from '@/components/ArtworkCard';
-import AdminModal from '@/components/AdminModal';
-import NewEntryModal from '@/components/NewEntryModal';
-import { useArtworks } from '@/context/ArtworksContext';
 import React from 'react';
-import { vi } from 'vitest';
-
-vi.mock('@/context/ArtworksContext');
+import HomeClient from '@/app/HomeClient';
 
 const mockArtworks = [
   {
@@ -36,19 +26,16 @@ const mockArtworks = [
 ];
 
 describe('Artwall App Integration', () => {
-  beforeEach(() => {
-    (useArtworks as unknown as { mockReturnValue: Function }).mockReturnValue({ artworks: mockArtworks, isLoading: false, error: null, refetch: vi.fn() });
-  });
 
-  it('renders HomePage and shows visible artworks', () => {
-    render(<HomePage />);
+  it('renders HomeClient and shows visible artworks', () => {
+    render(<HomeClient artworks={mockArtworks as any} />);
     // Title may appear in multiple places (generated image overlay + card heading)
     expect(screen.getAllByText('Test Art').length).toBeGreaterThan(0);
     expect(screen.queryByText('Hidden Art')).not.toBeInTheDocument();
   });
 
   it('filters by medium', () => {
-    render(<HomePage />);
+    render(<HomeClient artworks={mockArtworks as any} />);
     // Click the medium icon button via its test id
     fireEvent.click(screen.getByTestId('header-medium-painting'));
     expect(screen.getAllByText('Test Art').length).toBeGreaterThan(0);
@@ -56,13 +43,13 @@ describe('Artwall App Integration', () => {
   });
 
   it('shows year marker for artwork year', () => {
-    render(<HomePage />);
+    render(<HomeClient artworks={mockArtworks as any} />);
     // Year markers are rendered as separate items; presence of the year is sufficient
     expect(screen.getByText('2022')).toBeInTheDocument();
   });
 
   it('searches by title', () => {
-    render(<HomePage />);
+    render(<HomeClient artworks={mockArtworks as any} />);
     // Use aria-label for robustness across locales
     fireEvent.change(screen.getByLabelText('Zoek in kunstwerken'), { target: { value: 'Test' } });
     expect(screen.getAllByText('Test Art').length).toBeGreaterThan(0);
@@ -77,7 +64,7 @@ describe('Artwall App Integration', () => {
   });
 
   it('renders Footer and Sidebar', () => {
-    render(<HomePage />);
+    render(<HomeClient artworks={mockArtworks as any} />);
     // Footer is present via landmark role
     expect(screen.getByRole('contentinfo')).toBeInTheDocument();
     // Sidebar has been removed from the layout

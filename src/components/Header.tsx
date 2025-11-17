@@ -7,6 +7,7 @@ import { MEDIUMS, MEDIUM_LABELS, SUBTYPE_LABELS } from '@/constants/medium';
 import { useDropdown } from '@/hooks/useDropdown';
 import { BaseIconButton, Dropdown } from './common';
 import useIsMobile from '@/hooks/useIsMobile';
+import type { Artwork } from '@/types';
 
 const HeaderWrapper = styled.header`
   background: ${({ theme }) => theme.body};
@@ -166,6 +167,8 @@ interface HeaderProps {
   setSelectedEvaluation: (n: number | 'all') => void;
   selectedRating: number | 'all';
   setSelectedRating: (n: number | 'all') => void;
+  // Optional pre-fetched artworks for computing counts (to avoid client fetching)
+  artworksForCounts?: Artwork[];
 }
 
 
@@ -182,6 +185,7 @@ const Header: React.FC<HeaderProps> = ({
   setSelectedEvaluation,
   selectedRating,
   setSelectedRating,
+  artworksForCounts,
 }) => {
   const isMobile = useIsMobile();
   // evaluation dropdown state
@@ -198,11 +202,12 @@ const Header: React.FC<HeaderProps> = ({
 
   // Calculate counts for each filter option using the artworks from context
   const { artworks } = useArtworks();
+  const sourceArtworks: Artwork[] = artworksForCounts ?? artworks ?? [];
 
   const evalCounts = useMemo(() => {
     const counts: Record<number, number> = {5:0,4:0,3:0,2:0,1:0};
-    if (!artworks || artworks.length === 0) return counts;
-    for (const a of artworks) {
+    if (!sourceArtworks || sourceArtworks.length === 0) return counts;
+    for (const a of sourceArtworks) {
       const normalizedEval = (a as any).evaluationNum;
       const rawEval = (a as any).evaluation;
       const evalVal = typeof normalizedEval === 'number' ? normalizedEval : (typeof rawEval === 'number' ? rawEval : (rawEval && rawEval !== '' ? Number(rawEval) : NaN));
@@ -213,12 +218,12 @@ const Header: React.FC<HeaderProps> = ({
       }
     }
     return counts;
-  }, [artworks]);
+  }, [sourceArtworks]);
 
   const ratingCounts = useMemo(() => {
     const counts: Record<number, number> = {5:0,4:0,3:0,2:0,1:0};
-    if (!artworks || artworks.length === 0) return counts;
-    for (const a of artworks) {
+    if (!sourceArtworks || sourceArtworks.length === 0) return counts;
+    for (const a of sourceArtworks) {
       const normalizedRating = (a as any).ratingNum;
       const rawRating = (a as any).rating;
       const ratingVal = typeof normalizedRating === 'number' ? normalizedRating : (typeof rawRating === 'number' ? rawRating : (rawRating && rawRating !== '' ? Number(rawRating) : NaN));
@@ -229,7 +234,7 @@ const Header: React.FC<HeaderProps> = ({
       }
     }
     return counts;
-  }, [artworks]);
+  }, [sourceArtworks]);
   return (
     <HeaderWrapper data-testid="header">
       <TitleRow data-testid="header-title-row">

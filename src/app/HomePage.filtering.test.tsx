@@ -9,16 +9,11 @@ const sampleArtworks: Artwork[] = [
   { id: 'a3', title: 'Three', year: 2022, month:1, day:1, description: 'third', medium: 'audio' as any, subtype: 'default' as any, language1: 'nl', translations: {}, recordCreationDate: Date.now(), evaluation: 2 as any, evaluationNum: 2, rating: '5', ratingNum: 5 },
 ];
 
-// Mock useArtworks before importing HomePage so module-level imports use mocked data
-vi.mock('@/context/ArtworksContext', () => ({
-  useArtworks: () => ({ artworks: sampleArtworks, isLoading: false, error: null, refetch: () => {} })
-}));
-
-import HomePage from './page';
+import HomeClient from './HomeClient';
 
 describe('HomePage filtering integration', () => {
   it('filters artworks by evaluation threshold', async () => {
-  render(<HomePage />);
+  render(<HomeClient artworks={sampleArtworks} />);
     // open header evaluation dropdown and select 4
     const evalBtn = await screen.findByTestId('header-filter-evaluation');
     fireEvent.click(evalBtn);
@@ -33,7 +28,7 @@ describe('HomePage filtering integration', () => {
   });
 
   it('filters artworks by rating threshold', async () => {
-  render(<HomePage />);
+  render(<HomeClient artworks={sampleArtworks} />);
     const ratingBtn = await screen.findByTestId('header-filter-rating');
     fireEvent.click(ratingBtn);
     const four = await screen.findByTitle('4 sterren of meer');
