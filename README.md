@@ -42,7 +42,6 @@ Troubleshooting:
 
 ---
 
-
 ## ✨ Features
 
 ### Core Functionality
@@ -521,33 +520,7 @@ python firebase-status-checker.py
 
 ---
 
-## Getting Started
-
-### **Install Dependencies**
-
-```bash
-npm install
-```
-
-### **Set Up Environment Variables**
-
-- Create `.env.local` and add Firebase credentials.
-
-### **Run the Development Server**
-
-```bash
-npm run dev
-```
-
-- Open [http://localhost:3000](http://localhost:3000) in your browser.
-
-### **Build for Production**
-
-```bash
-npm run build && npm start
-```
-
----
+<!-- Duplicate "Getting Started" section removed to satisfy markdownlint MD024 -->
 
 ## Testing
 

@@ -1,7 +1,7 @@
 // src/app/layout.tsx (Server Component)
 import React from 'react';
 import StyledComponentsRegistry from '../lib/registry';
-import ClientProviders from './ClientProviders';
+import ClientProviders from '@/app/ClientProviders';
 
 export default function RootLayout({
   children,

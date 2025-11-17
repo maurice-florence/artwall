@@ -2,7 +2,6 @@ import React, { useState, useEffect, useMemo } from 'react';
 import styled from 'styled-components';
 import { getAuth, onAuthStateChanged, User } from 'firebase/auth';
 import { ref, onValue } from 'firebase/database';
-import { useArtworks } from '@/context/ArtworksContext';
 import type { Artwork } from '@/types';
 // 👇 FIX: Import your Realtime Database instance, not the Firestore one.
 import { realtimeDb } from '@/firebase/client';
@@ -54,12 +53,11 @@ const DebugWrapper = styled.div`
 
 interface FooterProps {
   onAddNewArtwork?: () => void;
-  artworks?: Artwork[]; // optional server-provided artworks to avoid context
+  artworks?: Artwork[]; // server-provided artworks
 }
 
 const Footer: React.FC<FooterProps> = ({ onAddNewArtwork, artworks }) => {
-  const { artworks: ctxArtworks } = useArtworks();
-  const appArtworks = artworks ?? ctxArtworks;
+  const appArtworks = artworks ?? [];
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [dbCounts, setDbCounts] = useState<Record<string, number>>({});
   const [isLoggedIn, setIsLoggedIn] = useState(false);

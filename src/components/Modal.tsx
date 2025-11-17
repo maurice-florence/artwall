@@ -3,8 +3,7 @@
 // ...existing code...
 import React, { useEffect, useState, useRef, useLayoutEffect, useMemo } from 'react';
 import styled from 'styled-components';
-import { FaTimes, FaSoundcloud, FaShareAlt, FaTrash } from 'react-icons/fa';
-import ReactMarkdown from 'react-markdown';
+import { FaTimes } from 'react-icons/fa';
 import { formatDate } from '@/utils';
 import { Artwork } from '@/types';
 import { useRouter } from 'next/navigation';
@@ -143,24 +142,7 @@ const StyledHr = styled.hr`
   margin: 1.5rem 0;
 `;
 
-const ShareButton = styled.button`
-  position: absolute;
-  bottom: 1.5rem;
-  left: 1.5rem;
-  background: none;
-  border: none;
-  color: ${({ theme }) => theme.accent};
-  font-size: 1.5rem;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  z-index: 2;
-
-  &:hover {
-    color: ${({ theme }) => theme.accentText};
-  }
-`;
+// (ShareButton removed - unused)
 
 const LanguageSwitcher = styled.div`
   display: flex;

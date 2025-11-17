@@ -4,7 +4,6 @@ import React, { useState, useEffect, useMemo, useCallback, lazy, Suspense } from
 import { 
   PageLayout, MainContent, CollageContainer
 } from '@/app/HomePage.styles';
-import Modal from '@/components/Modal';
 import Footer from '@/components/Footer';
 import Header from '@/components/Header';
 import MobileNav from '@/components/MobileNav';
@@ -14,7 +13,57 @@ import toast from 'react-hot-toast';
 import { Artwork, TimelineItem } from '@/types';
 import dynamic from 'next/dynamic';
 
+function ModalFallback() {
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="Kunstwerkdetails laden"
+      style={{
+        position: 'fixed',
+        inset: 0,
+        background: 'rgba(61, 64, 91, 0.6)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 1001,
+        padding: '1rem',
+      }}
+    >
+      <div
+        style={{
+          background: 'rgba(255,255,255,0.9)',
+          color: '#333',
+          padding: '1rem 1.25rem',
+          borderRadius: 8,
+          boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 12,
+          fontSize: 14,
+        }}
+      >
+        <span
+          aria-hidden="true"
+          style={{
+            width: 18,
+            height: 18,
+            border: '3px solid #E07A5F',
+            borderTopColor: 'transparent',
+            borderRadius: '50%',
+            display: 'inline-block',
+            animation: 'modal-spin 0.9s linear infinite',
+          }}
+        />
+        <span>Laden…</span>
+        <style>{`@keyframes modal-spin { from { transform: rotate(0deg);} to { transform: rotate(360deg);} }`}</style>
+      </div>
+    </div>
+  );
+}
+
 const AdminModal = dynamic(() => import('@/components/AdminModal'), { ssr: false });
+const Modal = dynamic(() => import('@/components/Modal'), { ssr: false, loading: () => <ModalFallback /> });
 const NewEntryModal = dynamic(() => import('@/components/NewEntryModal'), { ssr: false });
 
 export interface ViewOptions {
