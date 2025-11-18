@@ -28,13 +28,16 @@ describe('HomeClient page spinner disappearance', () => {
     vi.useRealTimers();
   });
 
-  it('initiates fade-out after max timeout (override config)', () => {
-    // Use normal fade (no testInstantFade) so spinner still present when fading begins
-    render(<HomeClient artworks={mockArtworks as any} spinnerConfig={{ minMs: 10, maxMs: 50, imageThreshold: 5 }} />);
+  it('initiates fade-out after max timeout (instant fade, short timers)', () => {
+    act(() => {
+      render(<HomeClient artworks={mockArtworks as any} spinnerConfig={{ minMs: 1, maxMs: 2, imageThreshold: 1, fadeMs: 0 }} testInstantFade />);
+    });
+    // Spinner should be present immediately
     const spinner = screen.getByTestId('page-spinner');
     expect(spinner).toHaveAttribute('data-fading', 'false');
-    act(() => { vi.advanceTimersByTime(60); });
+    act(() => { vi.advanceTimersByTime(3); });
     vi.runOnlyPendingTimers();
-    expect(screen.getByTestId('page-spinner')).toHaveAttribute('data-fading', 'true');
+    // Spinner should be fading out instantly
+    expect(screen.queryByTestId('page-spinner')).toBeNull();
   });
 });

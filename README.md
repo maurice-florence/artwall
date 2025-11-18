@@ -65,15 +65,29 @@ Troubleshooting:
 - **Video**: Embedded video player support
 - **PDFs**: Document viewer integration
 
-### Developer Experience
 
-- **Vitest** for unit and integration testing
-- **Cypress** for end-to-end testing
-- **ESLint** for code quality
-- **TypeScript** path aliases (`@/*`) for clean imports
-- **Hot Module Replacement** for instant feedback during development
+### Spinner Configuration
 
----
+The page-level loading spinner in `HomeClient` can be tuned via the `spinnerConfig` prop:
+
+
+```tsx
+spinnerConfig={{
+  minMs: 800,         // Minimum spinner display time (ms)
+  maxMs: 3000,        // Maximum spinner display time (ms)
+  imageThreshold: 3,  // Number of images to wait for before hiding spinner
+  fadeMs: 400         // Fade-out duration (ms)
+}}
+```
+
+For tests, you can also use the `testInstantFade` prop to bypass fade delay:
+
+
+```tsx
+<HomeClient artworks={...} spinnerConfig={{ minMs: 20, imageThreshold: 1, fadeMs: 0 }} testInstantFade />
+```
+
+All config options are documented in `src/config/spinner.ts` and used by the `usePageSpinner` hook.
 
 ## 🏗️ Architecture
 

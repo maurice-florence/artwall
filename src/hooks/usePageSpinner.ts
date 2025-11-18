@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { DEFAULT_MIN_SPINNER_MS, DEFAULT_MAX_SPINNER_MS, DEFAULT_IMAGE_THRESHOLD, SpinnerConfig } from '@/config/spinner';
+import { DEFAULT_MIN_SPINNER_MS, DEFAULT_MAX_SPINNER_MS, DEFAULT_IMAGE_THRESHOLD, DEFAULT_FADE_MS, SpinnerConfig } from '@/config/spinner';
 
 interface UsePageSpinnerArgs {
   hasImages: boolean;
@@ -23,7 +23,7 @@ export function usePageSpinner({ hasImages, potentialImageCount, config, testIns
   const effectiveMin = config?.minMs ?? DEFAULT_MIN_SPINNER_MS;
   const effectiveMax = config?.maxMs ?? DEFAULT_MAX_SPINNER_MS;
   const effectiveThreshold = config?.imageThreshold ?? DEFAULT_IMAGE_THRESHOLD;
-  const fadeMs = testInstantFade ? 0 : 400;
+  const fadeMs = testInstantFade ? 0 : (config?.fadeMs ?? DEFAULT_FADE_MS);
 
   const requestHide = useCallback(() => {
     if (!spinnerVisible || spinnerFadingOut) return;
