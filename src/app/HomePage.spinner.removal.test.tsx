@@ -28,17 +28,19 @@ describe('HomeClient page spinner removal', () => {
   });
 
   it('removes spinner after image load + min elapsed with instant fade', () => {
-    render(<HomeClient artworks={mockArtworks as any} spinnerConfig={{ minMs: 20, maxMs: 1000, imageThreshold: 1 }} testInstantFade />);
+    let img;
+    act(() => {
+      render(<HomeClient artworks={mockArtworks as any} spinnerConfig={{ minMs: 20, maxMs: 1000, imageThreshold: 1, fadeMs: 0 }} testInstantFade />);
+    });
     expect(screen.getByTestId('page-spinner')).toBeInTheDocument();
 
-    // Advance past minMs
     act(() => { vi.advanceTimersByTime(25); });
 
-    // Simulate image load
-    const img = screen.getByRole('img');
-    act(() => { fireEvent.load(img); });
+    act(() => {
+      img = screen.getByRole('img');
+      fireEvent.load(img);
+    });
 
-    // Run timers (instant fade removal)
     act(() => { vi.runOnlyPendingTimers(); });
 
     expect(screen.queryByTestId('page-spinner')).not.toBeInTheDocument();

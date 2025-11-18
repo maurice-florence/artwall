@@ -1,22 +1,21 @@
 // next.config.ts
 import type { NextConfig } from 'next';
+// next.config.js (CommonJS, not TypeScript)
+const fs = require('fs');
+const path = require('path');
+const pkg = JSON.parse(fs.readFileSync(path.resolve(__dirname, 'package.json'), 'utf8'));
 
 /** @type {import('next').NextConfig} */
-const nextConfig: NextConfig = {
+const nextConfig = {
   reactStrictMode: true,
   eslint: {
-    // Only fail build on actual ESLint errors, not warnings
     ignoreDuringBuilds: false,
     dirs: ['src']
   },
   typescript: {
-    // Only fail on serious TypeScript errors during production builds
     ignoreBuildErrors: false
   },
   images: {
-    // Allow Firebase Storage in both URL styles:
-    // - firebasestorage.googleapis.com/v0/b/<bucket>/o/... (API style)
-    // - storage.googleapis.com/<bucket>/... (GS style)
     remotePatterns: [
       {
         protocol: 'https',
@@ -39,6 +38,10 @@ const nextConfig: NextConfig = {
     ],
     domains: ['firebasestorage.googleapis.com', 'storage.googleapis.com'],
   },
+  env: {
+    NEXT_PUBLIC_APP_VERSION: pkg.version,
+    NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA: process.env.VERCEL_GIT_COMMIT_SHA || '',
+  },
 };
 
-export default nextConfig;
+module.exports = nextConfig;

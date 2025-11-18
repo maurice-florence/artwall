@@ -1,12 +1,36 @@
+
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import styled from 'styled-components';
 import { FaPenNib, FaPaintBrush, FaMusic, FaEllipsisH, FaCube, FaGlobe, FaCertificate, FaStar, FaSearch } from 'react-icons/fa';
 import ThemeEditor from './ThemeEditor';
+import AppInfoModal from './AppInfoModal';
+import { FaInfoCircle } from 'react-icons/fa';
 import { MEDIUMS, MEDIUM_LABELS, SUBTYPE_LABELS } from '@/constants/medium';
 import { useDropdown } from '@/hooks/useDropdown';
 import { BaseIconButton, Dropdown } from './common';
 import useIsMobile from '@/hooks/useIsMobile';
 import type { Artwork } from '@/types';
+
+const appVersion = process.env.NEXT_PUBLIC_APP_VERSION || '0.1.0';
+const gitCommit = process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA || '';
+
+// Info button for app info modal
+const InfoButton = styled.button`
+  background: none;
+  border: none;
+  color: #0b8783;
+  font-size: 1.3rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border-radius: 4px;
+  padding: 0.3em 0.5em;
+  transition: background 0.2s;
+  &:hover {
+    background: rgba(11,135,131,0.08);
+  }
+`;
 
 const HeaderWrapper = styled.header`
   background: ${({ theme }) => theme.body};
@@ -152,6 +176,7 @@ const DropdownButton = styled.button<{ $active?: boolean }>`
   ${({ $active }) => $active ? `opacity: 1;` : `opacity: 0.85;`}
 `;
 
+// Removed duplicate interface HeaderProps
 interface HeaderProps {
   selectedMedium: string;
   setSelectedMedium: (med: string) => void;
@@ -161,15 +186,12 @@ interface HeaderProps {
   availableYears: string[];
   searchTerm: string;
   setSearchTerm: (term: string) => void;
-  // New: evaluation and rating filters (1-5 or 'all')
   selectedEvaluation: number | 'all';
   setSelectedEvaluation: (n: number | 'all') => void;
   selectedRating: number | 'all';
   setSelectedRating: (n: number | 'all') => void;
-  // Optional pre-fetched artworks for computing counts (to avoid client fetching)
   artworksForCounts?: Artwork[];
 }
-
 
 const Header: React.FC<HeaderProps> = ({
   selectedMedium,
@@ -186,6 +208,8 @@ const Header: React.FC<HeaderProps> = ({
   setSelectedRating,
   artworksForCounts,
 }) => {
+  
+  const [infoOpen, setInfoOpen] = useState(false);
   const isMobile = useIsMobile();
   // evaluation dropdown state
   const evalRef = useRef<HTMLDivElement>(null);
@@ -204,8 +228,8 @@ const Header: React.FC<HeaderProps> = ({
 
   const evalCounts = useMemo(() => {
     const counts: Record<number, number> = {5:0,4:0,3:0,2:0,1:0};
-    if (!sourceArtworks || sourceArtworks.length === 0) return counts;
-    for (const a of sourceArtworks) {
+    if (!artworksForCounts || artworksForCounts.length === 0) return counts;
+    for (const a of artworksForCounts) {
       const normalizedEval = (a as any).evaluationNum;
       const rawEval = (a as any).evaluation;
       const evalVal = typeof normalizedEval === 'number' ? normalizedEval : (typeof rawEval === 'number' ? rawEval : (rawEval && rawEval !== '' ? Number(rawEval) : NaN));
@@ -216,12 +240,12 @@ const Header: React.FC<HeaderProps> = ({
       }
     }
     return counts;
-  }, [sourceArtworks]);
+  }, [artworksForCounts]);
 
   const ratingCounts = useMemo(() => {
     const counts: Record<number, number> = {5:0,4:0,3:0,2:0,1:0};
-    if (!sourceArtworks || sourceArtworks.length === 0) return counts;
-    for (const a of sourceArtworks) {
+    if (!artworksForCounts || artworksForCounts.length === 0) return counts;
+    for (const a of artworksForCounts) {
       const normalizedRating = (a as any).ratingNum;
       const rawRating = (a as any).rating;
       const ratingVal = typeof normalizedRating === 'number' ? normalizedRating : (typeof rawRating === 'number' ? rawRating : (rawRating && rawRating !== '' ? Number(rawRating) : NaN));
@@ -232,7 +256,7 @@ const Header: React.FC<HeaderProps> = ({
       }
     }
     return counts;
-  }, [sourceArtworks]);
+  }, [artworksForCounts]);
   return (
     <HeaderWrapper data-testid="header">
       <TitleRow data-testid="header-title-row">
@@ -338,6 +362,10 @@ const Header: React.FC<HeaderProps> = ({
 
             {/* Note: eval/rating counts are intentionally not shown on the main header; options show numbers inside the dropdown */}
             <ThemeEditor />
+            <InfoButton title="App informatie" aria-label="App informatie" onClick={() => setInfoOpen(true)}>
+              <FaInfoCircle />
+            </InfoButton>
+            <AppInfoModal open={infoOpen} onClose={() => setInfoOpen(false)} version={appVersion} commit={gitCommit} />
           </RightSection>
       </ControlsRow>
     </HeaderWrapper>

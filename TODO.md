@@ -15,7 +15,7 @@ Date: 2025-11-18
 
 Date: 2025-11-17
 
-- [ ] Fix deployment
+- [x] Fix deployment
   - Verify Vercel build collects page data without errors (especially for /stats).
   - Ensure all client-only modules are marked with "use client" and no client APIs run in server contexts.
   - Build locally and confirm deployment turns green.
