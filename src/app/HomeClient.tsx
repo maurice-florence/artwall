@@ -67,30 +67,34 @@ function PageSpinner() {
     <div
       role="status"
       aria-live="polite"
-      aria-label="Voorbeelden laden"
+      aria-label="Laden..."
       style={{
         position: 'fixed',
         inset: 0,
-        background: 'rgba(255,255,255,0.8)',
+        background: 'rgba(255,255,255,0.85)',
         display: 'flex',
+        flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        zIndex: 1000,
-        pointerEvents: 'none',
+        zIndex: 1500,
+        backdropFilter: 'blur(2px)',
+        transition: 'opacity 0.4s ease',
       }}
     >
       <span
         aria-hidden="true"
         style={{
-          width: 22,
-          height: 22,
-          border: '3px solid #0b8783',
+          width: 30,
+          height: 30,
+          border: '4px solid #0b8783',
           borderTopColor: 'transparent',
           borderRadius: '50%',
           display: 'inline-block',
           animation: 'page-spin 0.9s linear infinite',
+          marginBottom: '0.75rem'
         }}
       />
+      <span style={{ fontSize: 14, color: '#0b8783', fontWeight: 600 }}>Voorbeelden laden...</span>
       <style>{`@keyframes page-spin { from { transform: rotate(0deg);} to { transform: rotate(360deg);} }`}</style>
     </div>
   );
@@ -134,17 +138,35 @@ export default function HomeClient({ artworks: allArtworks }: { artworks: Artwor
   // Page-level spinner: hide after first image previews load or after a short timeout
   const [pageSpinnerVisible, setPageSpinnerVisible] = useState(true);
   const [previewLoads, setPreviewLoads] = useState(0);
+  const [minElapsed, setMinElapsed] = useState(false);
+  const [hasImages, setHasImages] = useState(false);
+
+  // Delay image presence computation until timelineItems is defined below
+  const [initialImagePresence, setInitialImagePresence] = useState(false);
+
   useEffect(() => {
-    const t = setTimeout(() => setPageSpinnerVisible(false), 1200);
-    return () => clearTimeout(t);
+    const minTimer = setTimeout(() => setMinElapsed(true), 800); // minimum visibility
+    const maxTimer = setTimeout(() => setPageSpinnerVisible(false), 3000); // hard cutoff
+    return () => { clearTimeout(minTimer); clearTimeout(maxTimer); };
   }, []);
+
   const handleCardImageLoaded = useCallback(() => {
-    setPreviewLoads((n) => {
+    setPreviewLoads(n => {
       const next = n + 1;
-      if (next >= 2) setPageSpinnerVisible(false);
+      // Hide when at least one image loaded and min time passed
+      if (next >= 1 && minElapsed) {
+        setPageSpinnerVisible(false);
+      }
       return next;
     });
-  }, []);
+  }, [minElapsed]);
+
+  // If no images at all, just hide after minElapsed so user still sees flash
+  useEffect(() => {
+    if (!hasImages && minElapsed) {
+      setPageSpinnerVisible(false);
+    }
+  }, [hasImages, minElapsed]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -206,6 +228,18 @@ export default function HomeClient({ artworks: allArtworks }: { artworks: Artwor
     return itemsWithYearMarkers;
   }, [filtered]);
 
+  // Compute initial image presence after timelineItems is ready
+  useEffect(() => {
+    const presence = timelineItems.slice(0, 40).some(item => (
+      'medium' in item && (
+        (item as Artwork).coverImageUrl ||
+        (Array.isArray((item as Artwork).mediaUrls) && (item as Artwork).mediaUrls!.some(u => /\.(jpe?g|png|gif|webp)$/i.test(u)))
+      )
+    ));
+    setInitialImagePresence(presence);
+    setHasImages(presence);
+  }, [timelineItems]);
+
   const handleEdit = useCallback((artwork: Artwork) => {
     setArtworkToEdit(prev => {
       if (!prev || prev.id !== artwork.id) { return artwork; }
@@ -257,7 +291,7 @@ export default function HomeClient({ artworks: allArtworks }: { artworks: Artwor
             );
           })}
         </CollageContainer>
-        {pageSpinnerVisible && <PageSpinner />}
+  {pageSpinnerVisible && <PageSpinner />}
   <Footer onAddNewArtwork={handleAdd} artworks={allArtworks} />
       </MainContent>
 

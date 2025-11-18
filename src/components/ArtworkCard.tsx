@@ -202,6 +202,11 @@ const CardImage = styled.img<{ $fillAvailable?: boolean }>`
   position: absolute;
   top: 0;
   left: 0;
+  opacity: 0;
+  transition: opacity 0.35s ease;
+  &.loaded {
+    opacity: 1;
+  }
 `;
 
 const ImageSkeleton = styled.div`
@@ -211,6 +216,8 @@ const ImageSkeleton = styled.div`
   background: linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 37%, #e0e0e0 63%);
   background-size: 400% 100%;
   animation: shimmer 1.2s ease-in-out infinite;
+  transition: opacity 0.35s ease;
+  &.fade-out { opacity: 0; }
   @keyframes shimmer {
     0% { background-position: 100% 0; }
     100% { background-position: 0 0; }
@@ -471,7 +478,7 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin, onImageLoaded }: ArtworkCardP
             {/* Show image as proper img element if available */}
             {imageUrl ? (
               <>
-                {!imgLoaded && <ImageSkeleton aria-hidden="true" />}
+                <ImageSkeleton aria-hidden="true" className={!imgLoaded ? '' : 'fade-out'} />
                 <CardImage 
                   src={imageUrl} 
                   alt={artwork.title || 'Artwork'} 
@@ -481,6 +488,7 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin, onImageLoaded }: ArtworkCardP
                   sizes="(max-width: 480px) 90vw, (max-width: 768px) 45vw, 360px"
                   onLoad={() => { setImgLoaded(true); onImageLoaded?.(); }}
                   onError={() => { setImgLoaded(true); onImageLoaded?.(); }}
+                  className={imgLoaded ? 'loaded' : ''}
                 />
                 {imageOverlayBg && (
                   <ImageGradientOverlay $bg={imageOverlayBg} aria-hidden="true" />
