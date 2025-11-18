@@ -1,5 +1,18 @@
 # TO DO
 
+Date: 2025-11-18
+
+- [x] Expose fadeMs in config
+  - Added `fadeMs` to `SpinnerConfig` and `DEFAULT_FADE_MS` in `src/config/spinner.ts`. Updated `usePageSpinner` to use it.
+- [x] Silence test warnings
+  - Wrapped `render` calls in `act` in spinner tests for reliable assertions.
+- [x] Add documentation snippet
+  - Added a new section to `README.md` explaining the `spinnerConfig` prop and `testInstantFade` for `HomeClient`.
+- [x] Validate changes
+  - Ran `vitest` to confirm spinner tests pass and warnings are gone.
+- [x] Commit & push
+  - Committed and pushed all spinner polish improvements.
+
 Date: 2025-11-17
 
 - [ ] Fix deployment
@@ -7,13 +20,9 @@ Date: 2025-11-17
   - Ensure all client-only modules are marked with "use client" and no client APIs run in server contexts.
   - Build locally and confirm deployment turns green.
 
-- [ ] Add loading spinner to page to load image previews
-  - Show a global lightweight spinner/skeleton while initial image previews are loading.
-  - Hide spinner once the first meaningful content is visible.
-
-- [ ] Add loading spinner to cards
-  - Each ArtworkCard displays a placeholder/skeleton while its thumbnail/image is loading.
-  - No layout shift once the image appears.
+- [x] Add loading spinner to cards
+  - Each ArtworkCard now displays a placeholder/skeleton while its thumbnail/image is loading.
+  - No layout shift occurs once the image appears (implemented).
 
 - [ ] Add a version on the corner with each new adjustment and push
   - Render the app version/commit tag in a corner of the UI.

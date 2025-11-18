@@ -59,35 +59,49 @@ Troubleshooting:
 
 ### Media Support
 
-- **Images**: Upload and display artwork images
-- **Audio**: Waveform visualization using Wavesurfer.js
-- **Writing**: Markdown rendering with React Markdown
-- **Video**: Embedded video player support
-- **PDFs**: Document viewer integration
+---
 
+## Spinner Configuration
 
-### Spinner Configuration
-
-The page-level loading spinner in `HomeClient` can be tuned via the `spinnerConfig` prop:
-
+Artwall uses a configurable page spinner to indicate loading state for images and initial content. You can customize spinner behavior via the `spinnerConfig` prop on `HomeClient`:
 
 ```tsx
-spinnerConfig={{
+import { DEFAULT_SPINNER_CONFIG } from "src/config/spinner";
+
+<HomeClient spinnerConfig={{
+  minMs: 600,         // Minimum spinner display time (ms)
+  maxMs: 4000,        // Maximum spinner display time (ms)
+  imageThreshold: 2,  // Number of images to load before hiding spinner
+  fadeMs: 400,        // Fade-out duration (ms)
+}} />
+```
+
+For testing, you can use the `testInstantFade` prop to make the spinner fade out instantly and use short timers for reliable assertions:
+
+```tsx
+<HomeClient spinnerConfig={{
   minMs: 800,         // Minimum spinner display time (ms)
   maxMs: 3000,        // Maximum spinner display time (ms)
   imageThreshold: 3,  // Number of images to wait for before hiding spinner
   fadeMs: 400         // Fade-out duration (ms)
-}}
+}} />
 ```
 
 For tests, you can also use the `testInstantFade` prop to bypass fade delay:
-
 
 ```tsx
 <HomeClient artworks={...} spinnerConfig={{ minMs: 20, imageThreshold: 1, fadeMs: 0 }} testInstantFade />
 ```
 
-All config options are documented in `src/config/spinner.ts` and used by the `usePageSpinner` hook.
+See `src/config/spinner.ts` and `src/hooks/usePageSpinner.ts` for details.
+
+---
+
+- **Images**: Upload and display artwork images
+- **Audio**: Waveform visualization using Wavesurfer.js
+- **Writing**: Markdown rendering with React Markdown
+- **Video**: Embedded video player support
+- **PDFs**: Document viewer integration
 
 ## 🏗️ Architecture
 
