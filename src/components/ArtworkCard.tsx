@@ -204,6 +204,19 @@ const CardImage = styled.img<{ $fillAvailable?: boolean }>`
   left: 0;
 `;
 
+const ImageSkeleton = styled.div`
+  position: absolute;
+  inset: 0;
+  border-radius: 12px;
+  background: linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 37%, #e0e0e0 63%);
+  background-size: 400% 100%;
+  animation: shimmer 1.2s ease-in-out infinite;
+  @keyframes shimmer {
+    0% { background-position: 100% 0; }
+    100% { background-position: 0 0; }
+  }
+`;
+
 const ImageGradientOverlay = styled.div<{ $bg: string }>`
   position: absolute;
   top: 0;
@@ -265,6 +278,7 @@ interface ArtworkCardProps {
     artwork: Artwork;
     onSelect: () => void;
     isAdmin?: boolean;
+  onImageLoaded?: () => void;
 }
 
 const LanguageIndicator = styled.div`
@@ -305,7 +319,7 @@ const AudioTextOverlay = styled(TextOverlay)`
   font-family: sans-serif;
 `;
 
-const ArtworkCard = ({ artwork, onSelect, isAdmin }: ArtworkCardProps) => {
+const ArtworkCard = ({ artwork, onSelect, isAdmin, onImageLoaded }: ArtworkCardProps) => {
     const theme = useTheme();
 
     // Card sizing logic: only 'novels' and 'songs' get special sizing, all others use standard size
@@ -386,7 +400,8 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin }: ArtworkCardProps) => {
 
     // Hooks must be declared before any early returns
     // Slider state for all cards with images, only on card back
-    const [currentImage, setCurrentImage] = useState(0);
+  const [currentImage, setCurrentImage] = useState(0);
+  const [imgLoaded, setImgLoaded] = useState(false);
 
     const uniqueGradient = useMemo(() => {
       if ((isWriting || isAudio) && !hasImage) {
@@ -456,6 +471,7 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin }: ArtworkCardProps) => {
             {/* Show image as proper img element if available */}
             {imageUrl ? (
               <>
+                {!imgLoaded && <ImageSkeleton aria-hidden="true" />}
                 <CardImage 
                   src={imageUrl} 
                   alt={artwork.title || 'Artwork'} 
@@ -463,6 +479,8 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin }: ArtworkCardProps) => {
                   decoding="async"
                   srcSet={`${getImageUrl(images[0], 'thumbnail')} 200w, ${getImageUrl(images[0], 'card')} 480w, ${getImageUrl(images[0], 'full')} 1200w`}
                   sizes="(max-width: 480px) 90vw, (max-width: 768px) 45vw, 360px"
+                  onLoad={() => { setImgLoaded(true); onImageLoaded?.(); }}
+                  onError={() => { setImgLoaded(true); onImageLoaded?.(); }}
                 />
                 {imageOverlayBg && (
                   <ImageGradientOverlay $bg={imageOverlayBg} aria-hidden="true" />
