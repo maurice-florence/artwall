@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState, useEffect, useMemo, useCallback, lazy, Suspense } from 'react';
+import styled from 'styled-components';
+import { DEFAULT_MIN_SPINNER_MS, DEFAULT_MAX_SPINNER_MS, DEFAULT_IMAGE_THRESHOLD, SpinnerConfig } from '@/config/spinner';
 import { 
   PageLayout, MainContent, CollageContainer
 } from '@/app/HomePage.styles';
@@ -62,46 +64,44 @@ function ModalFallback() {
   );
 }
 
+const SpinnerOverlay = styled.div<{ $fading: boolean }>`
+  position: fixed;
+  inset: 0;
+  background: rgba(255,255,255,0.85);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 1500;
+  backdrop-filter: blur(2px);
+  transition: opacity 0.4s ease;
+  opacity: ${p => p.$fading ? 0 : 1};
+`;
+
+const SpinnerCircle = styled.span`
+  width: 30px;
+  height: 30px;
+  border: 4px solid #0b8783;
+  border-top-color: transparent;
+  border-radius: 50%;
+  display: inline-block;
+  animation: page-spin 0.9s linear infinite;
+  margin-bottom: 0.75rem;
+  @keyframes page-spin { from { transform: rotate(0deg);} to { transform: rotate(360deg);} }
+`;
+
+const SpinnerLabel = styled.span`
+  font-size: 14px;
+  color: #0b8783;
+  font-weight: 600;
+`;
+
 function PageSpinner({ fading }: { fading: boolean }) {
   return (
-    <div
-      role="status"
-      aria-live="polite"
-      aria-label="Laden..."
-      data-testid="page-spinner"
-      className={fading ? 'fade-out' : ''}
-      style={{
-        position: 'fixed',
-        inset: 0,
-        background: 'rgba(255,255,255,0.85)',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 1500,
-        backdropFilter: 'blur(2px)',
-        transition: 'opacity 0.4s ease',
-        opacity: fading ? 0 : 1,
-      }}
-    >
-      <span
-        aria-hidden="true"
-        style={{
-          width: 30,
-          height: 30,
-          border: '4px solid #0b8783',
-          borderTopColor: 'transparent',
-          borderRadius: '50%',
-          display: 'inline-block',
-          animation: 'page-spin 0.9s linear infinite',
-          marginBottom: '0.75rem'
-        }}
-      />
-      <span style={{ fontSize: 14, color: '#0b8783', fontWeight: 600 }}>Voorbeelden laden...</span>
-      <style>{`@keyframes page-spin { from { transform: rotate(0deg);} to { transform: rotate(360deg);} }
-      .fade-out { opacity: 0; }
-      `}</style>
-    </div>
+    <SpinnerOverlay role="status" aria-live="polite" aria-label="Laden..." data-testid="page-spinner" data-fading={fading ? 'true' : 'false'} $fading={fading}>
+      <SpinnerCircle aria-hidden="true" />
+      <SpinnerLabel>Voorbeelden laden...</SpinnerLabel>
+    </SpinnerOverlay>
   );
 }
 
@@ -117,7 +117,7 @@ export interface ViewOptions {
   theme: string;
 }
 
-export default function HomeClient({ artworks: allArtworks }: { artworks: Artwork[] }) {
+export default function HomeClient({ artworks: allArtworks, spinnerConfig }: { artworks: Artwork[]; spinnerConfig?: SpinnerConfig }) {
   const [selectedItem, setSelectedItem] = useState<Artwork | null>(null);
   const [editItem, setEditItem] = useState<Artwork | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -159,23 +159,26 @@ export default function HomeClient({ artworks: allArtworks }: { artworks: Artwor
     setTimeout(() => setPageSpinnerVisible(false), 400);
   }, [pageSpinnerVisible, pageSpinnerFadingOut]);
 
+  const effectiveMin = spinnerConfig?.minMs ?? DEFAULT_MIN_SPINNER_MS;
+  const effectiveMax = spinnerConfig?.maxMs ?? DEFAULT_MAX_SPINNER_MS;
+  const effectiveThreshold = spinnerConfig?.imageThreshold ?? DEFAULT_IMAGE_THRESHOLD;
+
   useEffect(() => {
-    const minTimer = setTimeout(() => setMinElapsed(true), 800); // minimum visibility
-    const maxTimer = setTimeout(() => requestHidePageSpinner(), 3000); // hard cutoff with fade
+    const minTimer = setTimeout(() => setMinElapsed(true), effectiveMin); // minimum visibility
+    const maxTimer = setTimeout(() => requestHidePageSpinner(), effectiveMax); // hard cutoff with fade
     return () => { clearTimeout(minTimer); clearTimeout(maxTimer); };
-  }, [requestHidePageSpinner]);
+  }, [requestHidePageSpinner, effectiveMin, effectiveMax]);
 
   const handleCardImageLoaded = useCallback(() => {
     setPreviewLoads(n => {
       const next = n + 1;
-      const required = potentialImageCount > 0 ? Math.min(3, potentialImageCount) : 0;
-      // Hide only after minimum elapsed AND enough images loaded (or all if fewer than threshold)
-      if (minElapsed && ((required === 0 && hasImages) ? next >= 1 : (next >= required || next >= potentialImageCount))) {
+      const threshold = potentialImageCount > 0 ? Math.min(effectiveThreshold, potentialImageCount) : 0;
+      if (minElapsed && ((threshold === 0 && hasImages) ? next >= 1 : (next >= threshold || next >= potentialImageCount))) {
         requestHidePageSpinner();
       }
       return next;
     });
-  }, [minElapsed, potentialImageCount, hasImages, requestHidePageSpinner]);
+  }, [minElapsed, potentialImageCount, hasImages, requestHidePageSpinner, effectiveThreshold]);
 
   // If no images at all, just hide after minElapsed so user still sees flash
   useEffect(() => {
