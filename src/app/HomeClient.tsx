@@ -62,6 +62,40 @@ function ModalFallback() {
   );
 }
 
+function PageSpinner() {
+  return (
+    <div
+      role="status"
+      aria-live="polite"
+      aria-label="Voorbeelden laden"
+      style={{
+        position: 'fixed',
+        inset: 0,
+        background: 'rgba(255,255,255,0.8)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 1000,
+        pointerEvents: 'none',
+      }}
+    >
+      <span
+        aria-hidden="true"
+        style={{
+          width: 22,
+          height: 22,
+          border: '3px solid #0b8783',
+          borderTopColor: 'transparent',
+          borderRadius: '50%',
+          display: 'inline-block',
+          animation: 'page-spin 0.9s linear infinite',
+        }}
+      />
+      <style>{`@keyframes page-spin { from { transform: rotate(0deg);} to { transform: rotate(360deg);} }`}</style>
+    </div>
+  );
+}
+
 const AdminModal = dynamic(() => import('@/components/AdminModal'), { ssr: false });
 const Modal = dynamic(() => import('@/components/Modal'), { ssr: false, loading: () => <ModalFallback /> });
 const NewEntryModal = dynamic(() => import('@/components/NewEntryModal'), { ssr: false });
@@ -96,6 +130,21 @@ export default function HomeClient({ artworks: allArtworks }: { artworks: Artwor
     animations: true,
     theme: 'default',
   });
+
+  // Page-level spinner: hide after first image previews load or after a short timeout
+  const [pageSpinnerVisible, setPageSpinnerVisible] = useState(true);
+  const [previewLoads, setPreviewLoads] = useState(0);
+  useEffect(() => {
+    const t = setTimeout(() => setPageSpinnerVisible(false), 1200);
+    return () => clearTimeout(t);
+  }, []);
+  const handleCardImageLoaded = useCallback(() => {
+    setPreviewLoads((n) => {
+      const next = n + 1;
+      if (next >= 2) setPageSpinnerVisible(false);
+      return next;
+    });
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -203,10 +252,12 @@ export default function HomeClient({ artworks: allArtworks }: { artworks: Artwor
                   if (isAdmin) handleEdit(art);
                 }}
                 isAdmin={isAdmin}
+                onImageLoaded={handleCardImageLoaded}
               />
             );
           })}
         </CollageContainer>
+        {pageSpinnerVisible && <PageSpinner />}
   <Footer onAddNewArtwork={handleAdd} artworks={allArtworks} />
       </MainContent>
 
