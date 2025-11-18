@@ -29,6 +29,7 @@ describe('HomeClient page spinner disappearance', () => {
   });
 
   it('initiates fade-out after max timeout (override config)', () => {
+    // Use normal fade (no testInstantFade) so spinner still present when fading begins
     render(<HomeClient artworks={mockArtworks as any} spinnerConfig={{ minMs: 10, maxMs: 50, imageThreshold: 5 }} />);
     const spinner = screen.getByTestId('page-spinner');
     expect(spinner).toHaveAttribute('data-fading', 'false');

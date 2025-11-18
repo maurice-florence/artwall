@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect, useMemo, useCallback, lazy, Suspense } from 'react';
 import styled from 'styled-components';
-import { DEFAULT_MIN_SPINNER_MS, DEFAULT_MAX_SPINNER_MS, DEFAULT_IMAGE_THRESHOLD, SpinnerConfig } from '@/config/spinner';
+import { SpinnerConfig } from '@/config/spinner';
+import usePageSpinner from '@/hooks/usePageSpinner';
 import { 
   PageLayout, MainContent, CollageContainer
 } from '@/app/HomePage.styles';
@@ -117,7 +118,7 @@ export interface ViewOptions {
   theme: string;
 }
 
-export default function HomeClient({ artworks: allArtworks, spinnerConfig }: { artworks: Artwork[]; spinnerConfig?: SpinnerConfig }) {
+export default function HomeClient({ artworks: allArtworks, spinnerConfig, testInstantFade }: { artworks: Artwork[]; spinnerConfig?: SpinnerConfig; testInstantFade?: boolean }) {
   const [selectedItem, setSelectedItem] = useState<Artwork | null>(null);
   const [editItem, setEditItem] = useState<Artwork | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -140,52 +141,20 @@ export default function HomeClient({ artworks: allArtworks, spinnerConfig }: { a
     theme: 'default',
   });
 
-  // Page-level spinner: hide after first image previews load or after a short timeout
-  const [pageSpinnerVisible, setPageSpinnerVisible] = useState(true);
-  const [pageSpinnerFadingOut, setPageSpinnerFadingOut] = useState(false);
-  const [previewLoads, setPreviewLoads] = useState(0);
-  const [minElapsed, setMinElapsed] = useState(false);
+  // Page-level spinner dependencies handled via custom hook
   const [hasImages, setHasImages] = useState(false);
   const [potentialImageCount, setPotentialImageCount] = useState(0);
 
   // Delay image presence computation until timelineItems is defined below
   const [initialImagePresence, setInitialImagePresence] = useState(false);
 
-  // Helper to perform a fade-out before final removal
-  const requestHidePageSpinner = useCallback(() => {
-    if (!pageSpinnerVisible || pageSpinnerFadingOut) return;
-    setPageSpinnerFadingOut(true);
-    // Remove after fade duration
-    setTimeout(() => setPageSpinnerVisible(false), 400);
-  }, [pageSpinnerVisible, pageSpinnerFadingOut]);
-
-  const effectiveMin = spinnerConfig?.minMs ?? DEFAULT_MIN_SPINNER_MS;
-  const effectiveMax = spinnerConfig?.maxMs ?? DEFAULT_MAX_SPINNER_MS;
-  const effectiveThreshold = spinnerConfig?.imageThreshold ?? DEFAULT_IMAGE_THRESHOLD;
-
-  useEffect(() => {
-    const minTimer = setTimeout(() => setMinElapsed(true), effectiveMin); // minimum visibility
-    const maxTimer = setTimeout(() => requestHidePageSpinner(), effectiveMax); // hard cutoff with fade
-    return () => { clearTimeout(minTimer); clearTimeout(maxTimer); };
-  }, [requestHidePageSpinner, effectiveMin, effectiveMax]);
-
-  const handleCardImageLoaded = useCallback(() => {
-    setPreviewLoads(n => {
-      const next = n + 1;
-      const threshold = potentialImageCount > 0 ? Math.min(effectiveThreshold, potentialImageCount) : 0;
-      if (minElapsed && ((threshold === 0 && hasImages) ? next >= 1 : (next >= threshold || next >= potentialImageCount))) {
-        requestHidePageSpinner();
-      }
-      return next;
-    });
-  }, [minElapsed, potentialImageCount, hasImages, requestHidePageSpinner, effectiveThreshold]);
-
-  // If no images at all, just hide after minElapsed so user still sees flash
-  useEffect(() => {
-    if (!hasImages && minElapsed) {
-      requestHidePageSpinner();
-    }
-  }, [hasImages, minElapsed, requestHidePageSpinner]);
+  // Spinner hook (encapsulates timers and image load threshold logic)
+  const { spinnerVisible: pageSpinnerVisible, spinnerFadingOut: pageSpinnerFadingOut, handleCardImageLoaded } = usePageSpinner({
+    hasImages,
+    potentialImageCount,
+    config: spinnerConfig,
+    testInstantFade,
+  });
 
   useEffect(() => {
     const handleScroll = () => {
