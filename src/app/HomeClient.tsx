@@ -62,12 +62,14 @@ function ModalFallback() {
   );
 }
 
-function PageSpinner() {
+function PageSpinner({ fading }: { fading: boolean }) {
   return (
     <div
       role="status"
       aria-live="polite"
       aria-label="Laden..."
+      data-testid="page-spinner"
+      className={fading ? 'fade-out' : ''}
       style={{
         position: 'fixed',
         inset: 0,
@@ -79,6 +81,7 @@ function PageSpinner() {
         zIndex: 1500,
         backdropFilter: 'blur(2px)',
         transition: 'opacity 0.4s ease',
+        opacity: fading ? 0 : 1,
       }}
     >
       <span
@@ -95,7 +98,9 @@ function PageSpinner() {
         }}
       />
       <span style={{ fontSize: 14, color: '#0b8783', fontWeight: 600 }}>Voorbeelden laden...</span>
-      <style>{`@keyframes page-spin { from { transform: rotate(0deg);} to { transform: rotate(360deg);} }`}</style>
+      <style>{`@keyframes page-spin { from { transform: rotate(0deg);} to { transform: rotate(360deg);} }
+      .fade-out { opacity: 0; }
+      `}</style>
     </div>
   );
 }
@@ -137,36 +142,47 @@ export default function HomeClient({ artworks: allArtworks }: { artworks: Artwor
 
   // Page-level spinner: hide after first image previews load or after a short timeout
   const [pageSpinnerVisible, setPageSpinnerVisible] = useState(true);
+  const [pageSpinnerFadingOut, setPageSpinnerFadingOut] = useState(false);
   const [previewLoads, setPreviewLoads] = useState(0);
   const [minElapsed, setMinElapsed] = useState(false);
   const [hasImages, setHasImages] = useState(false);
+  const [potentialImageCount, setPotentialImageCount] = useState(0);
 
   // Delay image presence computation until timelineItems is defined below
   const [initialImagePresence, setInitialImagePresence] = useState(false);
 
+  // Helper to perform a fade-out before final removal
+  const requestHidePageSpinner = useCallback(() => {
+    if (!pageSpinnerVisible || pageSpinnerFadingOut) return;
+    setPageSpinnerFadingOut(true);
+    // Remove after fade duration
+    setTimeout(() => setPageSpinnerVisible(false), 400);
+  }, [pageSpinnerVisible, pageSpinnerFadingOut]);
+
   useEffect(() => {
     const minTimer = setTimeout(() => setMinElapsed(true), 800); // minimum visibility
-    const maxTimer = setTimeout(() => setPageSpinnerVisible(false), 3000); // hard cutoff
+    const maxTimer = setTimeout(() => requestHidePageSpinner(), 3000); // hard cutoff with fade
     return () => { clearTimeout(minTimer); clearTimeout(maxTimer); };
-  }, []);
+  }, [requestHidePageSpinner]);
 
   const handleCardImageLoaded = useCallback(() => {
     setPreviewLoads(n => {
       const next = n + 1;
-      // Hide when at least one image loaded and min time passed
-      if (next >= 1 && minElapsed) {
-        setPageSpinnerVisible(false);
+      const required = potentialImageCount > 0 ? Math.min(3, potentialImageCount) : 0;
+      // Hide only after minimum elapsed AND enough images loaded (or all if fewer than threshold)
+      if (minElapsed && ((required === 0 && hasImages) ? next >= 1 : (next >= required || next >= potentialImageCount))) {
+        requestHidePageSpinner();
       }
       return next;
     });
-  }, [minElapsed]);
+  }, [minElapsed, potentialImageCount, hasImages, requestHidePageSpinner]);
 
   // If no images at all, just hide after minElapsed so user still sees flash
   useEffect(() => {
     if (!hasImages && minElapsed) {
-      setPageSpinnerVisible(false);
+      requestHidePageSpinner();
     }
-  }, [hasImages, minElapsed]);
+  }, [hasImages, minElapsed, requestHidePageSpinner]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -230,14 +246,16 @@ export default function HomeClient({ artworks: allArtworks }: { artworks: Artwor
 
   // Compute initial image presence after timelineItems is ready
   useEffect(() => {
-    const presence = timelineItems.slice(0, 40).some(item => (
+    const presenceItems = timelineItems.slice(0, 60).filter(item => (
       'medium' in item && (
         (item as Artwork).coverImageUrl ||
         (Array.isArray((item as Artwork).mediaUrls) && (item as Artwork).mediaUrls!.some(u => /\.(jpe?g|png|gif|webp)$/i.test(u)))
       )
     ));
+    const presence = presenceItems.length > 0;
     setInitialImagePresence(presence);
     setHasImages(presence);
+    setPotentialImageCount(presenceItems.length);
   }, [timelineItems]);
 
   const handleEdit = useCallback((artwork: Artwork) => {
@@ -291,7 +309,7 @@ export default function HomeClient({ artworks: allArtworks }: { artworks: Artwor
             );
           })}
         </CollageContainer>
-  {pageSpinnerVisible && <PageSpinner />}
+  {pageSpinnerVisible && <PageSpinner fading={pageSpinnerFadingOut} />}
   <Footer onAddNewArtwork={handleAdd} artworks={allArtworks} />
       </MainContent>
 
