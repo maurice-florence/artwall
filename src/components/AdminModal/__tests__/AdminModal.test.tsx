@@ -109,55 +109,55 @@ describe('AdminModal', () => {
         // Explicitly clear all required fields
         await userEvent.clear(screen.getByLabelText('Titel'));
         await userEvent.clear(screen.getByLabelText('Jaar'));
-        // Print raw errors-debug before submit
-        const errorsDebugBefore = screen.getByTestId('errors-debug');
-        // eslint-disable-next-line no-console
-        console.log('RAW errors-debug before submit:', errorsDebugBefore.textContent);
-        let debugBeforeParsed = {};
-        try {
-          debugBeforeParsed = JSON.parse(errorsDebugBefore.textContent || '{}');
-        } catch (e) {
-          // eslint-disable-next-line no-console
-          console.log('Could not parse errors-debug before submit:', e);
-        }
-        // eslint-disable-next-line no-console
-        console.log('Parsed errors-debug before submit:', debugBeforeParsed);
-        const submitButton = screen.getByRole('button', { name: /opslaan/i });
-        await userEvent.click(submitButton);
-        // Wait for state updates to propagate
-        await new Promise(res => setTimeout(res, 500));
-        // Print raw errors-debug after submit
-        const errorsDebugAfter = screen.getByTestId('errors-debug');
-        let errorsDebugAfterRaw = '';
-        let debugAfterParsed = {};
-        let formDataAfter = {};
-        let errorsAfter = {};
-        if (errorsDebugAfter) {
-          errorsDebugAfterRaw = errorsDebugAfter.textContent || '';
-          try {
-            debugAfterParsed = JSON.parse(errorsDebugAfterRaw || '{}');
-            formDataAfter = debugAfterParsed.formData || {};
-            errorsAfter = debugAfterParsed.errors || {};
-          } catch (e) {
+            // Print raw errors-debug before submit
+            const errorsDebugBefore = screen.getByTestId('errors-debug');
             // eslint-disable-next-line no-console
-            console.log('Could not parse errors-debug after submit:', e);
-          }
-        }
-        // eslint-disable-next-line no-console
-        console.log('RAW errors-debug after submit:', errorsDebugAfterRaw);
-        // eslint-disable-next-line no-console
-        console.log('Parsed errors-debug after submit:', debugAfterParsed);
-        // Print the full debug output to the terminal for inspection
-        // eslint-disable-next-line no-console
-        console.log('FULL DEBUG OUTPUT AFTER SUBMIT:', {
-          errorsDebugAfterRaw,
-          errorsDebugAfterParsed: debugAfterParsed,
-          formDataAfter,
-          errorsAfter,
-        });
-        // Write debug output to a file for inspection
-        const fs = require('fs');
-        fs.writeFileSync(
+            console.log('RAW errors-debug before submit:', errorsDebugBefore.textContent);
+            let debugBeforeParsed: Record<string, any> = {};
+            try {
+              debugBeforeParsed = JSON.parse(errorsDebugBefore.textContent || '{}');
+            } catch (e) {
+              // eslint-disable-next-line no-console
+              console.log('Could not parse errors-debug before submit:', e);
+            }
+            // eslint-disable-next-line no-console
+            console.log('Parsed errors-debug before submit:', debugBeforeParsed);
+            const submitButton = screen.getByRole('button', { name: /opslaan/i });
+            await userEvent.click(submitButton);
+            // Wait for state updates to propagate
+            await new Promise(res => setTimeout(res, 500));
+            // Print raw errors-debug after submit
+            const errorsDebugAfter = screen.getByTestId('errors-debug');
+            let errorsDebugAfterRaw: string = '';
+            let debugAfterParsed: Record<string, any> = {};
+            let formDataAfter: Record<string, any> = {};
+            let errorsAfter: Record<string, any> = {};
+            if (errorsDebugAfter) {
+              errorsDebugAfterRaw = errorsDebugAfter.textContent || '';
+              try {
+                debugAfterParsed = JSON.parse(errorsDebugAfterRaw || '{}');
+                formDataAfter = (debugAfterParsed && typeof debugAfterParsed.formData === 'object') ? debugAfterParsed.formData : {};
+                errorsAfter = (debugAfterParsed && typeof debugAfterParsed.errors === 'object') ? debugAfterParsed.errors : {};
+              } catch (e) {
+                // eslint-disable-next-line no-console
+                console.log('Could not parse errors-debug after submit:', e);
+              }
+            }
+            // eslint-disable-next-line no-console
+            console.log('RAW errors-debug after submit:', errorsDebugAfterRaw);
+            // eslint-disable-next-line no-console
+            console.log('Parsed errors-debug after submit:', debugAfterParsed);
+            // Print the full debug output to the terminal for inspection
+            // eslint-disable-next-line no-console
+            console.log('FULL DEBUG OUTPUT AFTER SUBMIT:', {
+              errorsDebugAfterRaw,
+              errorsDebugAfterParsed: debugAfterParsed,
+              formDataAfter,
+              errorsAfter,
+            });
+            // Write debug output to a file for inspection
+            const fs = require('fs');
+            fs.writeFileSync(
           'c:/Users/friem/OneDrive/Documenten/GitHub/artwall/debug-output.json',
           JSON.stringify({
             errorsDebugAfterRaw,
@@ -269,15 +269,31 @@ describe('AdminModal', () => {
     it('renders edit mode correctly', () => {
       renderWithTheme(<AdminModal {...mockProps} artworkToEdit={mockArtwork} />);
         // Write debug output to a file for inspection
-        const fs = require('fs');
-        fs.writeFileSync(
-          'c:/Users/friem/OneDrive/Documenten/GitHub/artwall/debug-output.json',
-          JSON.stringify({
-            errorsDebugAfterRaw: errorsDebugAfter.textContent,
-            errorsDebugAfterParsed: debugAfterParsed,
-            formDataAfter: debugAfterParsed.formData,
-            errorsAfter: debugAfterParsed.errors,
-          }, null, 2)
+            const errorsDebugAfter = document.getElementById('errors-debug');
+            let errorsDebugAfterRaw: string = '';
+            let debugAfterParsed: Record<string, any> = {};
+            let formDataAfter: Record<string, any> = {};
+            let errorsAfter: Record<string, any> = {};
+            if (errorsDebugAfter) {
+              errorsDebugAfterRaw = errorsDebugAfter.textContent || '';
+              try {
+                debugAfterParsed = JSON.parse(errorsDebugAfterRaw || '{}');
+                formDataAfter = (debugAfterParsed && typeof debugAfterParsed.formData === 'object') ? debugAfterParsed.formData : {};
+                errorsAfter = (debugAfterParsed && typeof debugAfterParsed.errors === 'object') ? debugAfterParsed.errors : {};
+              } catch (e) {
+                // eslint-disable-next-line no-console
+                console.log('Could not parse errors-debug after submit:', e);
+              }
+            }
+            const fs = require('fs');
+            fs.writeFileSync(
+              'c:/Users/friem/OneDrive/Documenten/GitHub/artwall/debug-output.json',
+              JSON.stringify({
+                errorsDebugAfterRaw,
+                errorsDebugAfterParsed: debugAfterParsed,
+                formDataAfter,
+                errorsAfter,
+              }, null, 2)
         );
         // Add more visible debug output in the DOM for manual inspection
         const debugDom = document.createElement('div');
@@ -285,7 +301,7 @@ describe('AdminModal', () => {
         debugDom.style.color = 'red';
         debugDom.style.fontSize = '12px';
         debugDom.innerText = JSON.stringify({
-          errorsDebugAfterRaw: errorsDebugAfter.textContent,
+            errorsDebugAfterRaw: errorsDebugAfter?.textContent || '',
           errorsDebugAfterParsed: debugAfterParsed,
           formDataAfter: debugAfterParsed.formData,
           errorsAfter: debugAfterParsed.errors,
