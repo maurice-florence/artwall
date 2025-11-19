@@ -375,8 +375,21 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin, onImageLoaded }: ArtworkCardP
     const cardText = hasDescription
       ? artwork.description.trim()
       : (artwork.content
-          ? removeTitleFromContent(stripHtml(artwork.content), artwork.title || '').trim()
+          ? removeDatePlaceFromContent(removeTitleFromContent(stripHtml(artwork.content), artwork.title || '').trim())
           : '');
+
+    // Remove date/place from content body (for migration)
+    function removeDatePlaceFromContent(content: string): string {
+      // Remove lines that look like dates (e.g. '12 maart 2024', '2024', 'maart 2024')
+      const dateRegex = /^(\d{1,2}\s+[a-zA-Z]+\s+\d{4}|[a-zA-Z]+\s+\d{4}|\d{4})$/;
+      // Remove lines that look like places (e.g. 'Amsterdam', 'Utrecht', 'Rotterdam', etc.)
+      // For now, remove lines that are just a single word with a capital letter (likely a place)
+      const placeRegex = /^[A-Z][a-zA-Z\- ]{2,}$/;
+      return content
+        .split(/\r?\n/)
+        .filter(line => !dateRegex.test(line.trim()) && !placeRegex.test(line.trim()))
+        .join('\n');
+    }
 
     // Calculate max lines based on card size (default: 8, novel: 16, song: 10)
     let maxLines = 8;
@@ -518,7 +531,9 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin, onImageLoaded }: ArtworkCardP
                   </LanguageIndicator>
                 )}
                 <CardFooter style={{ marginTop: '0.5rem', justifyContent: 'space-between', flexShrink: 0 }}>
+                  {/* Only show date/place from metadata fields */}
                   <span>{formattedDate}</span>
+                  {artwork.location1 && <span>{artwork.location1}</span>}
                   <CardCategory>
                     {getArtworkIcon(artwork)}
                   </CardCategory>
@@ -529,10 +544,12 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin, onImageLoaded }: ArtworkCardP
             <CardBack $medium={artwork.medium}>
               <CardBackTitle>{artwork.title}</CardBackTitle>
               <CardBackFooter style={{flexDirection: 'column' }}>
-                <span>{formattedDate}</span>
-                <CardCategory>
-                  {getArtworkIcon(artwork)}
-                </CardCategory>
+              {/* Only show date/place from metadata fields */}
+              <span>{formattedDate}</span>
+              {artwork.location1 && <span>{artwork.location1}</span>}
+              <CardCategory>
+                {getArtworkIcon(artwork)}
+              </CardCategory>
               </CardBackFooter>
             </CardBack>
         </CardInner>
