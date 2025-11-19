@@ -171,10 +171,16 @@ export const useAdminModal = (artworkToEdit?: Artwork | null) => {
     setErrors({});
     setMessage('');
 
+    // Debug: log when handleSubmit is called
+    // eslint-disable-next-line no-console
+    console.log('useAdminModal: handleSubmit called');
+
     try {
       // ✅ validateArtworkForm now returns ValidationErrors directly
       const validationErrors = validateArtworkForm(formData);
-      
+      // Debug: log validation errors
+      // eslint-disable-next-line no-console
+      console.log('useAdminModal: validation errors:', validationErrors);
       if (Object.keys(validationErrors).length > 0) {
         setErrors(validationErrors);
         clearLoading();
@@ -182,29 +188,38 @@ export const useAdminModal = (artworkToEdit?: Artwork | null) => {
       }
 
       // Submit to Firebase
+      // eslint-disable-next-line no-console
+      console.log('useAdminModal: submitting to Firebase');
       const result = artworkToEdit
         ? await updateArtwork(artworkToEdit.id, formData)
         : await createArtwork(formData);
+      // Debug: log result from Firebase operation
+      // eslint-disable-next-line no-console
+      console.log('useAdminModal: Firebase result:', result);
 
       if (result.success) {
         setMessage(artworkToEdit ? 'Kunstwerk bijgewerkt!' : 'Kunstwerk opgeslagen!');
-        
+        // eslint-disable-next-line no-console
+        console.log('useAdminModal: submission success');
         // Clear draft on successful submission (for new artwork)
         if (!artworkToEdit) {
           clearDraft();
         }
-        
         clearLoading();
         return true;
       } else {
         setErrors({ general: result.error || 'Er is een fout opgetreden' });
         setError(result.error || 'Er is een fout opgetreden');
+        // eslint-disable-next-line no-console
+        console.log('useAdminModal: submission error:', result.error);
         return false;
       }
     } catch (error) {
       const errorMessage = 'Er is een onverwachte fout opgetreden';
       setErrors({ general: errorMessage });
       setError(errorMessage);
+      // eslint-disable-next-line no-console
+      console.log('useAdminModal: unexpected error:', error);
       return false;
     } finally {
       setIsLoading(false);

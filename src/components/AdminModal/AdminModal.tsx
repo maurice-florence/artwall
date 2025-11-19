@@ -97,14 +97,25 @@ const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, artworkToEdit 
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    // Debug: log when onSubmit is called
+    // eslint-disable-next-line no-console
+    console.log('AdminModal: onSubmit called (TEST)', e);
+    // eslint-disable-next-line no-console
+    console.log('AdminModal: formData at submit', formData);
     const success = await handleSubmit();
+    // Debug: log result of handleSubmit
+    // eslint-disable-next-line no-console
+    console.log('AdminModal: handleSubmit result:', success);
     if (success) {
       handleClose();
     }
   };
 
+  // Debug: log when AdminModal is rendered
+  // eslint-disable-next-line no-console
+  console.log('AdminModal: rendered, isOpen:', isOpen);
   return (
-    <ModalBackdrop onClick={handleClose}>
+    <ModalBackdrop>
       <ModalContent
         ref={modalRef}
         onClick={(e) => e.stopPropagation()}
@@ -117,7 +128,14 @@ const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, artworkToEdit 
         </CloseButton>
         <div data-testid="adminmodal">
           <h2 id="adminmodal-title" data-testid="form-title">{artworkToEdit ? 'Kunstwerk Bewerken' : 'Nieuw Kunstwerk'}</h2>
-          <form onSubmit={onSubmit}>
+          <form
+            onSubmit={onSubmit}
+            role="form"
+            ref={el => {
+              // eslint-disable-next-line no-console
+              console.log('AdminModal: form ref set', el);
+            }}
+          >
             <FormWrapper>
               {showDraftRecovery && (
                 <DraftRecovery
@@ -194,7 +212,14 @@ const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, artworkToEdit 
               )}
               
               <ButtonGroup>
-                <Button type="submit" disabled={isLoading}>
+                <Button
+                  type="submit"
+                  disabled={isLoading}
+                  onClick={() => {
+                    // eslint-disable-next-line no-console
+                    console.log('AdminModal: submit button clicked');
+                  }}
+                >
                   {isLoading ? 'Bezig met opslaan...' : 'Opslaan'}
                 </Button>
                 <SecondaryButton type="button" onClick={handleClose}>
