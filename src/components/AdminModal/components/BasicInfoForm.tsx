@@ -58,7 +58,7 @@ export const BasicInfoForm: React.FC<FormComponentProps> = ({
         animate={shouldAnimateField?.('title')}
         inputProps={{ id: 'title', 'aria-label': 'Titel' }}
       />
-      {errors.title && <ErrorMessage>{errors.title}</ErrorMessage>}
+      {errors.title && <ErrorMessage data-testid="error-message">{errors.title}</ErrorMessage>}
       {formData.title && formData.title.length < 3 && !errors.title && (
         <ValidationMessage type="warning" message="Titel is erg kort, overweeg een beschrijvendere titel" />
       )}
@@ -78,7 +78,7 @@ export const BasicInfoForm: React.FC<FormComponentProps> = ({
             </option>
           ))}
         </Select>
-        {errors.medium && <ErrorMessage>{errors.medium}</ErrorMessage>}
+        {errors.medium && <ErrorMessage data-testid="error-message">{errors.medium}</ErrorMessage>}
       </FieldGroup>
 
       {shouldShowField?.('subtype') && (
@@ -98,7 +98,7 @@ export const BasicInfoForm: React.FC<FormComponentProps> = ({
               </option>
             ))}
           </Select>
-          {errors.subtype && <ErrorMessage>{errors.subtype}</ErrorMessage>}
+          {errors.subtype && <ErrorMessage data-testid="error-message">{errors.subtype}</ErrorMessage>}
         </FieldGroup>
       )}
 

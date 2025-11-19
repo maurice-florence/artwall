@@ -1,0 +1,815 @@
+},
+    child: FiberNode {
+      tag: 11,
+      key: null,
+      elementType: [Object],
+      type: [Object],
+      stateNode: null,
+      return: [Circular *2],
+      child: [FiberNode],
+      sibling: null,
+      index: 0,
+      ref: null,
+      refCleanup: null,
+      pendingProps: [Object],
+      memoizedProps: [Object],
+      updateQueue: null,
+      memoizedState: null,
+      dependencies: [Object],
+      mode: 1,
+      flags: 524289,
+      subtreeFlags: 67895319,
+      deletions: null,
+      lanes: 0,
+      childLanes: 0,
+      alternate: [FiberNode],
+      actualDuration: -0,
+      actualStartTime: 20044.8722,
+      selfBaseDuration: -0,
+      treeBaseDuration: -0,
+      _debugInfo: null,
+      _debugOwner: [FiberNode],
+      _debugStack: Error: react-stack-top-frame
+          at process.env.NODE_ENV.exports.jsxDEV (C:\Users\friem\OneDrive\Documenten\GitHub\artwall\node_modules\react\cjs\react-jsx-dev-runtime.development.js:344:13)
+          at AdminModal (C:\Users\friem\OneDrive\Documenten\GitHub\artwall\src\components\AdminModal\AdminModal.tsx:142:11)
+          at Object.react-stack-bottom-frame (C:\Users\friem\OneDrive\Documenten\GitHub\artwall\node_modules\react-dom\cjs\react-dom-client.development.js:23863:20)
+          at renderWithHooks (C:\Users\friem\OneDrive\Documenten\GitHub\artwall\node_modules\react-dom\cjs\react-dom-client.development.js:5529:22)
+          at updateFunctionComponent (C:\Users\friem\OneDrive\Documenten\GitHub\artwall\node_modules\react-dom\cjs\react-dom-client.development.js:8897:19)
+          at beginWork (C:\Users\friem\OneDrive\Documenten\GitHub\artwall\node_modules\react-dom\cjs\react-dom-client.development.js:10522:18)
+          at runWithFiberInDEV (C:\Users\friem\OneDrive\Documenten\GitHub\artwall\node_modules\react-dom\cjs\react-dom-client.development.js:1522:13)
+          at performUnitOfWork (C:\Users\friem\OneDrive\Documenten\GitHub\artwall\node_modules\react-dom\cjs\react-dom-client.development.js:15140:22)
+          at workLoopSync (C:\Users\friem\OneDrive\Documenten\GitHub\artwall\node_modules\react-dom\cjs\react-dom-client.development.js:14956:41)
+          at renderRootSync (C:\Users\friem\OneDrive\Documenten\GitHub\artwall\node_modules\react-dom\cjs\react-dom-client.development.js:14936:11),
+      _debugTask: null,
+      _debugNeedsRemount: false,
+      _debugHookTypes: [Array]
+    },
+    sibling: null,
+    index: 1,
+    ref: [Function: ref],
+    refCleanup: undefined,
+    pendingProps: {
+      onSubmit: [AsyncFunction: onSubmit],
+      role: 'form',
+      ref: [Function: ref],
+      children: [Object]
+    },
+    memoizedProps: {
+      onSubmit: [AsyncFunction: onSubmit],
+      role: 'form',
+      ref: [Function: ref],
+      children: [Object]
+    },
+    updateQueue: null,
+    memoizedState: null,
+    dependencies: null,
+    mode: 1,
+    flags: 4194820,
+    subtreeFlags: 67895319,
+    deletions: null,
+    lanes: 0,
+    childLanes: 0,
+    alternate: FiberNode {
+      tag: 5,
+      key: null,
+      elementType: 'form',
+      type: 'form',
+      stateNode: [Circular *1],
+      return: [FiberNode],
+      child: [FiberNode],
+      sibling: null,
+      index: 1,
+      ref: [Function: ref],
+      refCleanup: undefined,
+      pendingProps: [Object],
+      memoizedProps: [Object],
+      updateQueue: null,
+      memoizedState: null,
+      dependencies: null,
+      mode: 1,
+      flags: 4194820,
+      subtreeFlags: 68943895,
+      deletions: null,
+      lanes: 0,
+      childLanes: 0,
+      alternate: [Circular *2],
+      actualDuration: -0,
+      actualStartTime: 20202.4349,
+      selfBaseDuration: -0,
+      treeBaseDuration: -0,
+      _debugInfo: null,
+      _debugOwner: [FiberNode],
+      _debugStack: Error: react-stack-top-frame
+          at process.env.NODE_ENV.exports.jsxDEV (C:\Users\friem\OneDrive\Documenten\GitHub\artwall\node_modules\react\cjs\react-jsx-dev-runtime.development.js:344:13)
+          at AdminModal (C:\Users\friem\OneDrive\Documenten\GitHub\artwall\src\components\AdminModal\AdminModal.tsx:134:9)
+          at Object.react-stack-bottom-frame (C:\Users\friem\OneDrive\Documenten\GitHub\artwall\node_modules\react-dom\cjs\react-dom-client.development.js:23863:20)
+          at renderWithHooks (C:\Users\friem\OneDrive\Documenten\GitHub\artwall\node_modules\react-dom\cjs\react-dom-client.development.js:5529:22)
+          at updateFunctionComponent (C:\Users\friem\OneDrive\Documenten\GitHub\artwall\node_modules\react-dom\cjs\react-dom-client.development.js:8897:19)
+          at beginWork (C:\Users\friem\OneDrive\Documenten\GitHub\artwall\node_modules\react-dom\cjs\react-dom-client.development.js:10522:18)
+          at runWithFiberInDEV (C:\Users\friem\OneDrive\Documenten\GitHub\artwall\node_modules\react-dom\cjs\react-dom-client.development.js:1522:13)
+          at performUnitOfWork (C:\Users\friem\OneDrive\Documenten\GitHub\artwall\node_modules\react-dom\cjs\react-dom-client.development.js:15140:22)
+          at workLoopSync (C:\Users\friem\OneDrive\Documenten\GitHub\artwall\node_modules\react-dom\cjs\react-dom-client.development.js:14956:41)
+          at renderRootSync (C:\Users\friem\OneDrive\Documenten\GitHub\artwall\node_modules\react-dom\cjs\react-dom-client.development.js:14936:11),
+      _debugTask: null,
+      _debugNeedsRemount: false,
+      _debugHookTypes: null
+    },
+    actualDuration: -0,
+    actualStartTime: 20044.8727,
+    selfBaseDuration: -0,
+    treeBaseDuration: -0,
+    _debugInfo: null,
+    _debugOwner: FiberNode {
+      tag: 0,
+      key: null,
+      elementType: [Function: AdminModal],
+      type: [Function: AdminModal],
+      stateNode: null,
+      return: [FiberNode],
+      child: [FiberNode],
+      sibling: null,
+      index: 0,
+      ref: null,
+      refCleanup: null,
+      pendingProps: [Object],
+      memoizedProps: [Object],
+      updateQueue: [Object],
+      memoizedState: [Object],
+      dependencies: null,
+      mode: 1,
+      flags: 8388609,
+      subtreeFlags: 72090135,
+      deletions: null,
+      lanes: 32,
+      childLanes: 0,
+      alternate: [FiberNode],
+      actualDuration: -0,
+      actualStartTime: 20044.8763,
+      selfBaseDuration: -0,
+      treeBaseDuration: -0,
+      _debugInfo: null,
+      _debugOwner: null,
+      _debugStack: Error: react-stack-top-frame
+          at Proxy.process.env.NODE_ENV.exports.jsxDEV (C:\Users\friem\OneDrive\Documenten\GitHub\artwall\node_modules\react\cjs\react-jsx-dev-runtime.development.js:344:13)
+          at C:\Users\friem\OneDrive\Documenten\GitHub\artwall\src\components\AdminModal\__tests__\AdminModal.test.tsx:246:23
+          at file:///C:/Users/friem/OneDrive/Documenten/GitHub/artwall/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11
+          at file:///C:/Users/friem/OneDrive/Documenten/GitHub/artwall/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26
+          at file:///C:/Users/friem/OneDrive/Documenten/GitHub/artwall/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20
+          at new Promise (<anonymous>)
+          at runWithTimeout (file:///C:/Users/friem/OneDrive/Documenten/GitHub/artwall/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)
+          at runTest (file:///C:/Users/friem/OneDrive/Documenten/GitHub/artwall/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)
+          at runSuite (file:///C:/Users/friem/OneDrive/Documenten/GitHub/artwall/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)
+          at runSuite (file:///C:/Users/friem/OneDrive/Documenten/GitHub/artwall/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8),
+      _debugTask: null,
+      _debugNeedsRemount: false,
+      _debugHookTypes: [Array]
+    },
+    _debugStack: Error: react-stack-top-frame
+        at process.env.NODE_ENV.exports.jsxDEV (C:\Users\friem\OneDrive\Documenten\GitHub\artwall\node_modules\react\cjs\react-jsx-dev-runtime.development.js:344:13)
+        at AdminModal (C:\Users\friem\OneDrive\Documenten\GitHub\artwall\src\components\AdminModal\AdminModal.tsx:134:9)
+        at Object.react-stack-bottom-frame (C:\Users\friem\OneDrive\Documenten\GitHub\artwall\node_modules\react-dom\cjs\react-dom-client.development.js:23863:20)
+        at renderWithHooks (C:\Users\friem\OneDrive\Documenten\GitHub\artwall\node_modules\react-dom\cjs\react-dom-client.development.js:5529:22)
+        at updateFunctionComponent (C:\Users\friem\OneDrive\Documenten\GitHub\artwall\node_modules\react-dom\cjs\react-dom-client.development.js:8897:19)
+        at beginWork (C:\Users\friem\OneDrive\Documenten\GitHub\artwall\node_modules\react-dom\cjs\react-dom-client.development.js:10522:18)
+        at runWithFiberInDEV (C:\Users\friem\OneDrive\Documenten\GitHub\artwall\node_modules\react-dom\cjs\react-dom-client.development.js:1522:13)
+        at performUnitOfWork (C:\Users\friem\OneDrive\Documenten\GitHub\artwall\node_modules\react-dom\cjs\react-dom-client.development.js:15140:22)
+        at workLoopSync (C:\Users\friem\OneDrive\Documenten\GitHub\artwall\node_modules\react-dom\cjs\react-dom-client.development.js:14956:41)
+        at renderRootSync (C:\Users\friem\OneDrive\Documenten\GitHub\artwall\node_modules\react-dom\cjs\react-dom-client.development.js:14936:11),
+    _debugTask: null,
+    _debugNeedsRemount: false,
+    _debugHookTypes: null
+  },
+  '__reactProps$81bg2342itc': {
+    onSubmit: [AsyncFunction: onSubmit],
+    role: 'form',
+    ref: [Function: ref],
+    children: {
+      '$$typeof': Symbol(react.transitional.element),
+      type: [Object],
+      key: null,
+      props: [Object],
+      _owner: [FiberNode],
+      _store: {}
+    }
+  },
+  [Symbol(SameObject caches)]: [Object: null prototype] {
+    attributes: NamedNodeMap {},
+    childNodes: NodeList {}
+  }
+}
+
+stderr | src/components/AdminModal/__tests__/AdminModal.test.tsx > Edit Mode > handles form submission correctly                                                                                        
+The component styled.span with the id of "sc-iKQjwU" has been created dynamically.                  
+You may see this warning because you've called styled inside another component.                     
+To resolve this only create new StyledComponents outside of any render method and function component.                                                                                                   
+See https://styled-components.com/docs/basics#define-styled-components-outside-of-the-render-method for more info.
+
+The component styled.div with the id of "sc-gdLJfJ" has been created dynamically.
+You may see this warning because you've called styled inside another component.
+To resolve this only create new StyledComponents outside of any render method and function component.
+See https://styled-components.com/docs/basics#define-styled-components-outside-of-the-render-method for more info.
+
+The component styled.span with the id of "sc-kcCgcS" has been created dynamically.
+You may see this warning because you've called styled inside another component.
+To resolve this only create new StyledComponents outside of any render method and function component.
+See https://styled-components.com/docs/basics#define-styled-components-outside-of-the-render-method for more info.
+
+The component styled.div with the id of "sc-hvxFLH" has been created dynamically.
+You may see this warning because you've called styled inside another component.
+To resolve this only create new StyledComponents outside of any render method and function component.
+See https://styled-components.com/docs/basics#define-styled-components-outside-of-the-render-method for more info.
+
+The component styled.span with the id of "sc-kQZJJU" has been created dynamically.
+You may see this warning because you've called styled inside another component.
+To resolve this only create new StyledComponents outside of any render method and function component.
+See https://styled-components.com/docs/basics#define-styled-components-outside-of-the-render-method for more info.
+
+The component styled.div with the id of "sc-ijVjsJ" has been created dynamically.
+You may see this warning because you've called styled inside another component.
+To resolve this only create new StyledComponents outside of any render method and function component.
+See https://styled-components.com/docs/basics#define-styled-components-outside-of-the-render-method for more info.
+
+The component styled.span with the id of "sc-kyzvol" has been created dynamically.
+You may see this warning because you've called styled inside another component.
+To resolve this only create new StyledComponents outside of any render method and function component.
+See https://styled-components.com/docs/basics#define-styled-components-outside-of-the-render-method for more info.
+
+The component styled.div with the id of "sc-jznXcA" has been created dynamically.
+You may see this warning because you've called styled inside another component.
+To resolve this only create new StyledComponents outside of any render method and function component.
+See https://styled-components.com/docs/basics#define-styled-components-outside-of-the-render-method for more info.
+
+The component styled.span with the id of "sc-APIvn" has been created dynamically.
+You may see this warning because you've called styled inside another component.
+To resolve this only create new StyledComponents outside of any render method and function component.
+See https://styled-components.com/docs/basics#define-styled-components-outside-of-the-render-method for more info.
+
+The component styled.div with the id of "sc-kQZTIy" has been created dynamically.
+You may see this warning because you've called styled inside another component.
+To resolve this only create new StyledComponents outside of any render method and function component.
+See https://styled-components.com/docs/basics#define-styled-components-outside-of-the-render-method for more info.
+
+The component styled.span with the id of "sc-bRmyyx" has been created dynamically.
+You may see this warning because you've called styled inside another component.
+To resolve this only create new StyledComponents outside of any render method and function component.
+See https://styled-components.com/docs/basics#define-styled-components-outside-of-the-render-method for more info.
+
+The component styled.div with the id of "sc-SbamM" has been created dynamically.
+You may see this warning because you've called styled inside another component.
+To resolve this only create new StyledComponents outside of any render method and function component.
+See https://styled-components.com/docs/basics#define-styled-components-outside-of-the-render-method for more info.
+
+The component styled.span with the id of "sc-diYvev" has been created dynamically.
+You may see this warning because you've called styled inside another component.
+To resolve this only create new StyledComponents outside of any render method and function component.
+See https://styled-components.com/docs/basics#define-styled-components-outside-of-the-render-method for more info.
+
+The component styled.div with the id of "sc-cjMWSK" has been created dynamically.
+You may see this warning because you've called styled inside another component.
+To resolve this only create new StyledComponents outside of any render method and function component.
+See https://styled-components.com/docs/basics#define-styled-components-outside-of-the-render-method for more info.
+
+The component styled.span with the id of "sc-dXvYLx" has been created dynamically.
+You may see this warning because you've called styled inside another component.
+To resolve this only create new StyledComponents outside of any render method and function component.
+See https://styled-components.com/docs/basics#define-styled-components-outside-of-the-render-method for more info.
+
+The component styled.div with the id of "sc-cYkAzM" has been created dynamically.
+You may see this warning because you've called styled inside another component.
+To resolve this only create new StyledComponents outside of any render method and function component.
+See https://styled-components.com/docs/basics#define-styled-components-outside-of-the-render-method for more info.
+
+The component styled.span with the id of "sc-jRawCK" has been created dynamically.
+You may see this warning because you've called styled inside another component.
+To resolve this only create new StyledComponents outside of any render method and function component.
+See https://styled-components.com/docs/basics#define-styled-components-outside-of-the-render-method for more info.
+
+The component styled.div with the id of "sc-eoSYoD" has been created dynamically.
+You may see this warning because you've called styled inside another component.
+To resolve this only create new StyledComponents outside of any render method and function component.
+See https://styled-components.com/docs/basics#define-styled-components-outside-of-the-render-method for more info.
+
+The component styled.span with the id of "sc-eGKYRA" has been created dynamically.
+You may see this warning because you've called styled inside another component.
+To resolve this only create new StyledComponents outside of any render method and function component.
+See https://styled-components.com/docs/basics#define-styled-components-outside-of-the-render-method for more info.
+
+The component styled.div with the id of "sc-ktZkcp" has been created dynamically.
+You may see this warning because you've called styled inside another component.
+To resolve this only create new StyledComponents outside of any render method and function component.
+See https://styled-components.com/docs/basics#define-styled-components-outside-of-the-render-method for more info.
+
+The component styled.span with the id of "sc-defSxe" has been created dynamically.
+You may see this warning because you've called styled inside another component.
+To resolve this only create new StyledComponents outside of any render method and function component.
+See https://styled-components.com/docs/basics#define-styled-components-outside-of-the-render-method for more info.
+
+The component styled.div with the id of "sc-iRudHT" has been created dynamically.
+You may see this warning because you've called styled inside another component.
+To resolve this only create new StyledComponents outside of any render method and function component.
+See https://styled-components.com/docs/basics#define-styled-components-outside-of-the-render-method for more info.
+
+The component styled.span with the id of "sc-jjmekQ" has been created dynamically.
+You may see this warning because you've called styled inside another component.
+To resolve this only create new StyledComponents outside of any render method and function component.
+See https://styled-components.com/docs/basics#define-styled-components-outside-of-the-render-method for more info.
+
+The component styled.div with the id of "sc-dHeFWJ" has been created dynamically.
+You may see this warning because you've called styled inside another component.
+To resolve this only create new StyledComponents outside of any render method and function component.
+See https://styled-components.com/docs/basics#define-styled-components-outside-of-the-render-method for more info.
+
+The component styled.span with the id of "sc-dpWZZW" has been created dynamically.
+You may see this warning because you've called styled inside another component.
+To resolve this only create new StyledComponents outside of any render method and function component.
+See https://styled-components.com/docs/basics#define-styled-components-outside-of-the-render-method for more info.
+
+The component styled.div with the id of "sc-jdllkL" has been created dynamically.
+You may see this warning because you've called styled inside another component.
+To resolve this only create new StyledComponents outside of any render method and function component.
+See https://styled-components.com/docs/basics#define-styled-components-outside-of-the-render-method for more info.
+
+The component styled.span with the id of "sc-cXwLEn" has been created dynamically.
+You may see this warning because you've called styled inside another component.
+To resolve this only create new StyledComponents outside of any render method and function component.
+See https://styled-components.com/docs/basics#define-styled-components-outside-of-the-render-method for more info.
+
+The component styled.div with the id of "sc-bYlnsC" has been created dynamically.
+You may see this warning because you've called styled inside another component.
+To resolve this only create new StyledComponents outside of any render method and function component.
+See https://styled-components.com/docs/basics#define-styled-components-outside-of-the-render-method for more info.
+
+The component styled.span with the id of "sc-jcCXrZ" has been created dynamically.
+You may see this warning because you've called styled inside another component.
+To resolve this only create new StyledComponents outside of any render method and function component.
+See https://styled-components.com/docs/basics#define-styled-components-outside-of-the-render-method for more info.
+
+The component styled.div with the id of "sc-idrzgo" has been created dynamically.
+You may see this warning because you've called styled inside another component.
+To resolve this only create new StyledComponents outside of any render method and function component.
+See https://styled-components.com/docs/basics#define-styled-components-outside-of-the-render-method for more info.
+
+
+stdout | src/components/AdminModal/__tests__/AdminModal.test.tsx > Edit Mode > handles form submission correctly                                                                                        
+AdminModal: errors prop before render: {}                                                           
+AdminModal: rendered, isOpen: true                                                                  
+AdminModal: form ref set null                                                                       
+AdminModal: form ref set <ref *1> HTMLFormElement {                                                 
+  '__reactFiber$81bg2342itc': <ref *2> FiberNode {                                                  
+    tag: 5,
+    key: null,
+    elementType: 'form',
+    type: 'form',
+    stateNode: [Circular *1],
+    return: FiberNode {
+      tag: 5,
+      key: null,
+      elementType: 'div',
+      type: 'div',
+      stateNode: [HTMLDivElement],
+      return: [FiberNode],
+      child: [FiberNode],
+      sibling: null,
+      index: 1,
+      ref: null,
+      refCleanup: null,
+      pendingProps: [Object],
+      memoizedProps: [Object],
+      updateQueue: null,
+      memoizedState: null,
+      dependencies: null,
+      mode: 1,
+      flags: 4,
+      subtreeFlags: 73138711,
+      deletions: null,
+      lanes: 0,
+      childLanes: 0,
+      alternate: [FiberNode],
+      actualDuration: -0,
+      actualStartTime: 20308.6492,
+      selfBaseDuration: -0,
+      treeBaseDuration: -0,
+      _debugInfo: null,
+      _debugOwner: [FiberNode],
+      _debugStack: Error: react-stack-top-frame
+          at process.env.NODE_ENV.exports.jsxDEV (C:\Users\friem\OneDrive\Documenten\GitHub\artwall\node_modules\react\cjs\react-jsx-dev-runtime.development.js:344:13)
+          at AdminModal (C:\Users\friem\OneDrive\Documenten\GitHub\artwall\src\components\AdminModal\AdminModal.tsx:132:7)
+          at Object.react-stack-bottom-frame (C:\Users\friem\OneDrive\Documenten\GitHub\artwall\node_modules\react-dom\cjs\react-dom-client.development.js:23863:20)
+          at renderWithHooks (C:\Users\friem\OneDrive\Documenten\GitHub\artwall\node_modules\react-dom\cjs\react-dom-client.development.js:5529:22)
+          at updateFunctionComponent (C:\Users\friem\OneDrive\Documenten\GitHub\artwall\node_modules\react-dom\cjs\react-dom-client.development.js:8897:19)
+          at beginWork (C:\Users\friem\OneDrive\Documenten\GitHub\artwall\node_modules\react-dom\cjs\react-dom-client.development.js:10522:18)
+          at runWithFiberInDEV (C:\Users\friem\OneDrive\Documenten\GitHub\artwall\node_modules\react-dom\cjs\react-dom-client.development.js:1522:13)
+          at performUnitOfWork (C:\Users\friem\OneDrive\Documenten\GitHub\artwall\node_modules\react-dom\cjs\react-dom-client.development.js:15140:22)
+          at workLoopSync (C:\Users\friem\OneDrive\Documenten\GitHub\artwall\node_modules\react-dom\cjs\react-dom-client.development.js:14956:41)
+          at renderRootSync (C:\Users\friem\OneDrive\Documenten\GitHub\artwall\node_modules\react-dom\cjs\react-dom-client.development.js:14936:11),
+      _debugTask: null,
+      _debugNeedsRemount: false,
+      _debugHookTypes: null
+    },
+    child: FiberNode {
+      tag: 11,
+      key: null,
+      elementType: [Object],
+      type: [Object],
+      stateNode: null,
+      return: [Circular *2],
+      child: [FiberNode],
+      sibling: null,
+      index: 0,
+      ref: null,
+      refCleanup: null,
+      pendingProps: [Object],
+      memoizedProps: [Object],
+      updateQueue: null,
+      memoizedState: null,
+      dependencies: [Object],
+      mode: 1,
+      flags: 524289,
+      subtreeFlags: 68943895,
+      deletions: null,
+      lanes: 0,
+      childLanes: 0,
+      alternate: [FiberNode],
+      actualDuration: -0,
+      actualStartTime: 20308.6486,
+      selfBaseDuration: -0,
+      treeBaseDuration: -0,
+      _debugInfo: null,
+      _debugOwner: [FiberNode],
+      _debugStack: Error: react-stack-top-frame
+          at process.env.NODE_ENV.exports.jsxDEV (C:\Users\friem\OneDrive\Documenten\GitHub\artwall\node_modules\react\cjs\react-jsx-dev-runtime.development.js:344:13)
+          at AdminModal (C:\Users\friem\OneDrive\Documenten\GitHub\artwall\src\components\AdminModal\AdminModal.tsx:142:11)
+          at Object.react-stack-bottom-frame (C:\Users\friem\OneDrive\Documenten\GitHub\artwall\node_modules\react-dom\cjs\react-dom-client.development.js:23863:20)
+          at renderWithHooks (C:\Users\friem\OneDrive\Documenten\GitHub\artwall\node_modules\react-dom\cjs\react-dom-client.development.js:5529:22)
+          at updateFunctionComponent (C:\Users\friem\OneDrive\Documenten\GitHub\artwall\node_modules\react-dom\cjs\react-dom-client.development.js:8897:19)
+          at beginWork (C:\Users\friem\OneDrive\Documenten\GitHub\artwall\node_modules\react-dom\cjs\react-dom-client.development.js:10522:18)
+          at runWithFiberInDEV (C:\Users\friem\OneDrive\Documenten\GitHub\artwall\node_modules\react-dom\cjs\react-dom-client.development.js:1522:13)
+          at performUnitOfWork (C:\Users\friem\OneDrive\Documenten\GitHub\artwall\node_modules\react-dom\cjs\react-dom-client.development.js:15140:22)
+          at workLoopSync (C:\Users\friem\OneDrive\Documenten\GitHub\artwall\node_modules\react-dom\cjs\react-dom-client.development.js:14956:41)
+          at renderRootSync (C:\Users\friem\OneDrive\Documenten\GitHub\artwall\node_modules\react-dom\cjs\react-dom-client.development.js:14936:11),
+      _debugTask: null,
+      _debugNeedsRemount: false,
+      _debugHookTypes: [Array]
+    },
+    sibling: null,
+    index: 1,
+    ref: [Function: ref],
+    refCleanup: undefined,
+    pendingProps: {
+      onSubmit: [AsyncFunction: onSubmit],
+      role: 'form',
+      ref: [Function: ref],
+      children: [Object]
+    },
+    memoizedProps: {
+      onSubmit: [AsyncFunction: onSubmit],
+      role: 'form',
+      ref: [Function: ref],
+      children: [Object]
+    },
+    updateQueue: null,
+    memoizedState: null,
+    dependencies: null,
+    mode: 1,
+    flags: 4194820,
+    subtreeFlags: 68943895,
+    deletions: null,
+    lanes: 0,
+    childLanes: 0,
+    alternate: FiberNode {
+      tag: 5,
+      key: null,
+      elementType: 'form',
+      type: 'form',
+      stateNode: [Circular *1],
+      return: [FiberNode],
+      child: [FiberNode],
+      sibling: null,
+      index: 1,
+      ref: [Function: ref],
+      refCleanup: undefined,
+      pendingProps: [Object],
+      memoizedProps: [Object],
+      updateQueue: null,
+      memoizedState: null,
+      dependencies: null,
+      mode: 1,
+      flags: 4194820,
+      subtreeFlags: 68943895,
+      deletions: null,
+      lanes: 0,
+      childLanes: 0,
+      alternate: [Circular *2],
+      actualDuration: -0,
+      actualStartTime: 20202.4349,
+      selfBaseDuration: -0,
+      treeBaseDuration: -0,
+      _debugInfo: null,
+      _debugOwner: [FiberNode],
+      _debugStack: Error: react-stack-top-frame
+          at process.env.NODE_ENV.exports.jsxDEV (C:\Users\friem\OneDrive\Documenten\GitHub\artwall\node_modules\react\cjs\react-jsx-dev-runtime.development.js:344:13)
+          at AdminModal (C:\Users\friem\OneDrive\Documenten\GitHub\artwall\src\components\AdminModal\AdminModal.tsx:134:9)
+          at Object.react-stack-bottom-frame (C:\Users\friem\OneDrive\Documenten\GitHub\artwall\node_modules\react-dom\cjs\react-dom-client.development.js:23863:20)
+          at renderWithHooks (C:\Users\friem\OneDrive\Documenten\GitHub\artwall\node_modules\react-dom\cjs\react-dom-client.development.js:5529:22)
+          at updateFunctionComponent (C:\Users\friem\OneDrive\Documenten\GitHub\artwall\node_modules\react-dom\cjs\react-dom-client.development.js:8897:19)
+          at beginWork (C:\Users\friem\OneDrive\Documenten\GitHub\artwall\node_modules\react-dom\cjs\react-dom-client.development.js:10522:18)
+          at runWithFiberInDEV (C:\Users\friem\OneDrive\Documenten\GitHub\artwall\node_modules\react-dom\cjs\react-dom-client.development.js:1522:13)
+          at performUnitOfWork (C:\Users\friem\OneDrive\Documenten\GitHub\artwall\node_modules\react-dom\cjs\react-dom-client.development.js:15140:22)
+          at workLoopSync (C:\Users\friem\OneDrive\Documenten\GitHub\artwall\node_modules\react-dom\cjs\react-dom-client.development.js:14956:41)
+          at renderRootSync (C:\Users\friem\OneDrive\Documenten\GitHub\artwall\node_modules\react-dom\cjs\react-dom-client.development.js:14936:11),
+      _debugTask: null,
+      _debugNeedsRemount: false,
+      _debugHookTypes: null
+    },
+    actualDuration: -0,
+    actualStartTime: 20308.6488,
+    selfBaseDuration: -0,
+    treeBaseDuration: -0,
+    _debugInfo: null,
+    _debugOwner: FiberNode {
+      tag: 0,
+      key: null,
+      elementType: [Function: AdminModal],
+      type: [Function: AdminModal],
+      stateNode: null,
+      return: [FiberNode],
+      child: [FiberNode],
+      sibling: null,
+      index: 0,
+      ref: null,
+      refCleanup: null,
+      pendingProps: [Object],
+      memoizedProps: [Object],
+      updateQueue: [Object],
+      memoizedState: [Object],
+      dependencies: null,
+      mode: 1,
+      flags: 8388609,
+      subtreeFlags: 73138711,
+      deletions: null,
+      lanes: 0,
+      childLanes: 0,
+      alternate: [FiberNode],
+      actualDuration: -0,
+      actualStartTime: 20308.6506,
+      selfBaseDuration: -0,
+      treeBaseDuration: -0,
+      _debugInfo: null,
+      _debugOwner: null,
+      _debugStack: Error: react-stack-top-frame
+          at Proxy.process.env.NODE_ENV.exports.jsxDEV (C:\Users\friem\OneDrive\Documenten\GitHub\artwall\node_modules\react\cjs\react-jsx-dev-runtime.development.js:344:13)
+          at C:\Users\friem\OneDrive\Documenten\GitHub\artwall\src\components\AdminModal\__tests__\AdminModal.test.tsx:246:23
+          at file:///C:/Users/friem/OneDrive/Documenten/GitHub/artwall/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11
+          at file:///C:/Users/friem/OneDrive/Documenten/GitHub/artwall/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26
+          at file:///C:/Users/friem/OneDrive/Documenten/GitHub/artwall/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20
+          at new Promise (<anonymous>)
+          at runWithTimeout (file:///C:/Users/friem/OneDrive/Documenten/GitHub/artwall/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)
+          at runTest (file:///C:/Users/friem/OneDrive/Documenten/GitHub/artwall/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)
+          at runSuite (file:///C:/Users/friem/OneDrive/Documenten/GitHub/artwall/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)
+          at runSuite (file:///C:/Users/friem/OneDrive/Documenten/GitHub/artwall/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8),
+      _debugTask: null,
+      _debugNeedsRemount: false,
+      _debugHookTypes: [Array]
+    },
+    _debugStack: Error: react-stack-top-frame
+        at process.env.NODE_ENV.exports.jsxDEV (C:\Users\friem\OneDrive\Documenten\GitHub\artwall\node_modules\react\cjs\react-jsx-dev-runtime.development.js:344:13)
+        at AdminModal (C:\Users\friem\OneDrive\Documenten\GitHub\artwall\src\components\AdminModal\AdminModal.tsx:134:9)
+        at Object.react-stack-bottom-frame (C:\Users\friem\OneDrive\Documenten\GitHub\artwall\node_modules\react-dom\cjs\react-dom-client.development.js:23863:20)
+        at renderWithHooks (C:\Users\friem\OneDrive\Documenten\GitHub\artwall\node_modules\react-dom\cjs\react-dom-client.development.js:5529:22)
+        at updateFunctionComponent (C:\Users\friem\OneDrive\Documenten\GitHub\artwall\node_modules\react-dom\cjs\react-dom-client.development.js:8897:19)
+        at beginWork (C:\Users\friem\OneDrive\Documenten\GitHub\artwall\node_modules\react-dom\cjs\react-dom-client.development.js:10522:18)
+        at runWithFiberInDEV (C:\Users\friem\OneDrive\Documenten\GitHub\artwall\node_modules\react-dom\cjs\react-dom-client.development.js:1522:13)
+        at performUnitOfWork (C:\Users\friem\OneDrive\Documenten\GitHub\artwall\node_modules\react-dom\cjs\react-dom-client.development.js:15140:22)
+        at workLoopSync (C:\Users\friem\OneDrive\Documenten\GitHub\artwall\node_modules\react-dom\cjs\react-dom-client.development.js:14956:41)
+        at renderRootSync (C:\Users\friem\OneDrive\Documenten\GitHub\artwall\node_modules\react-dom\cjs\react-dom-client.development.js:14936:11),
+    _debugTask: null,
+    _debugNeedsRemount: false,
+    _debugHookTypes: null
+  },
+  '__reactProps$81bg2342itc': {
+    onSubmit: [AsyncFunction: onSubmit],
+    role: 'form',
+    ref: [Function: ref],
+    children: {
+      '$$typeof': Symbol(react.transitional.element),
+      type: [Object],
+      key: null,
+      props: [Object],
+      _owner: [FiberNode],
+      _store: {}
+    }
+  },
+  [Symbol(SameObject caches)]: [Object: null prototype] {
+    attributes: NamedNodeMap {},
+    childNodes: NodeList {}
+  }
+}
+
+stderr | src/components/AdminModal/__tests__/AdminModal.test.tsx > Edit Mode > handles form submission correctly                                                                                        
+The component styled.span with the id of "sc-hzXQXD" has been created dynamically.                  
+You may see this warning because you've called styled inside another component.                     
+To resolve this only create new StyledComponents outside of any render method and function component.                                                                                                   
+See https://styled-components.com/docs/basics#define-styled-components-outside-of-the-render-method for more info.
+
+The component styled.div with the id of "sc-gAMsLS" has been created dynamically.
+You may see this warning because you've called styled inside another component.
+To resolve this only create new StyledComponents outside of any render method and function component.
+See https://styled-components.com/docs/basics#define-styled-components-outside-of-the-render-method for more info.
+
+The component styled.span with the id of "sc-cpItmt" has been created dynamically.
+You may see this warning because you've called styled inside another component.
+To resolve this only create new StyledComponents outside of any render method and function component.
+See https://styled-components.com/docs/basics#define-styled-components-outside-of-the-render-method for more info.
+
+The component styled.div with the id of "sc-bqwVaI" has been created dynamically.
+You may see this warning because you've called styled inside another component.
+To resolve this only create new StyledComponents outside of any render method and function component.
+See https://styled-components.com/docs/basics#define-styled-components-outside-of-the-render-method for more info.
+
+The component styled.span with the id of "sc-hLOYAv" has been created dynamically.
+You may see this warning because you've called styled inside another component.
+To resolve this only create new StyledComponents outside of any render method and function component.
+See https://styled-components.com/docs/basics#define-styled-components-outside-of-the-render-method for more info.
+
+The component styled.div with the id of "sc-gMDAoK" has been created dynamically.
+You may see this warning because you've called styled inside another component.
+To resolve this only create new StyledComponents outside of any render method and function component.
+See https://styled-components.com/docs/basics#define-styled-components-outside-of-the-render-method for more info.
+
+The component styled.span with the id of "sc-ffynvI" has been created dynamically.
+You may see this warning because you've called styled inside another component.
+To resolve this only create new StyledComponents outside of any render method and function component.
+See https://styled-components.com/docs/basics#define-styled-components-outside-of-the-render-method for more info.
+
+The component styled.div with the id of "sc-cytNex" has been created dynamically.
+You may see this warning because you've called styled inside another component.
+To resolve this only create new StyledComponents outside of any render method and function component.
+See https://styled-components.com/docs/basics#define-styled-components-outside-of-the-render-method for more info.
+
+The component styled.span with the id of "sc-gxkkbG" has been created dynamically.
+You may see this warning because you've called styled inside another component.
+To resolve this only create new StyledComponents outside of any render method and function component.
+See https://styled-components.com/docs/basics#define-styled-components-outside-of-the-render-method for more info.
+
+The component styled.div with the id of "sc-dQfJKv" has been created dynamically.
+You may see this warning because you've called styled inside another component.
+To resolve this only create new StyledComponents outside of any render method and function component.
+See https://styled-components.com/docs/basics#define-styled-components-outside-of-the-render-method for more info.
+
+The component styled.span with the id of "sc-jHZsOY" has been created dynamically.
+You may see this warning because you've called styled inside another component.
+To resolve this only create new StyledComponents outside of any render method and function component.
+See https://styled-components.com/docs/basics#define-styled-components-outside-of-the-render-method for more info.
+
+The component styled.div with the id of "sc-haUSxN" has been created dynamically.
+You may see this warning because you've called styled inside another component.
+To resolve this only create new StyledComponents outside of any render method and function component.
+See https://styled-components.com/docs/basics#define-styled-components-outside-of-the-render-method for more info.
+
+The component styled.span with the id of "sc-kZLpuW" has been created dynamically.
+You may see this warning because you've called styled inside another component.
+To resolve this only create new StyledComponents outside of any render method and function component.
+See https://styled-components.com/docs/basics#define-styled-components-outside-of-the-render-method for more info.
+
+The component styled.div with the id of "sc-isGPdL" has been created dynamically.
+You may see this warning because you've called styled inside another component.
+To resolve this only create new StyledComponents outside of any render method and function component.
+See https://styled-components.com/docs/basics#define-styled-components-outside-of-the-render-method for more info.
+
+The component styled.span with the id of "sc-jTQArQ" has been created dynamically.
+You may see this warning because you've called styled inside another component.
+To resolve this only create new StyledComponents outside of any render method and function component.
+See https://styled-components.com/docs/basics#define-styled-components-outside-of-the-render-method for more info.
+
+The component styled.div with the id of "sc-hmMaaF" has been created dynamically.
+You may see this warning because you've called styled inside another component.
+To resolve this only create new StyledComponents outside of any render method and function component.
+See https://styled-components.com/docs/basics#define-styled-components-outside-of-the-render-method for more info.
+
+The component styled.span with the id of "sc-jBqlWh" has been created dynamically.
+You may see this warning because you've called styled inside another component.
+To resolve this only create new StyledComponents outside of any render method and function component.
+See https://styled-components.com/docs/basics#define-styled-components-outside-of-the-render-method for more info.
+
+The component styled.div with the id of "sc-iCeNKw" has been created dynamically.
+You may see this warning because you've called styled inside another component.
+To resolve this only create new StyledComponents outside of any render method and function component.
+See https://styled-components.com/docs/basics#define-styled-components-outside-of-the-render-method for more info.
+
+The component styled.span with the id of "sc-kTciCf" has been created dynamically.
+You may see this warning because you've called styled inside another component.
+To resolve this only create new StyledComponents outside of any render method and function component.
+See https://styled-components.com/docs/basics#define-styled-components-outside-of-the-render-method for more info.
+
+The component styled.div with the id of "sc-jTQKqu" has been created dynamically.
+You may see this warning because you've called styled inside another component.
+To resolve this only create new StyledComponents outside of any render method and function component.
+See https://styled-components.com/docs/basics#define-styled-components-outside-of-the-render-method for more info.
+
+The component styled.span with the id of "sc-cOvHQB" has been created dynamically.
+You may see this warning because you've called styled inside another component.
+To resolve this only create new StyledComponents outside of any render method and function component.
+See https://styled-components.com/docs/basics#define-styled-components-outside-of-the-render-method for more info.
+
+The component styled.div with the id of "sc-bPkjEQ" has been created dynamically.
+You may see this warning because you've called styled inside another component.
+To resolve this only create new StyledComponents outside of any render method and function component.
+See https://styled-components.com/docs/basics#define-styled-components-outside-of-the-render-method for more info.
+
+The component styled.span with the id of "sc-eghEwz" has been created dynamically.
+You may see this warning because you've called styled inside another component.
+To resolve this only create new StyledComponents outside of any render method and function component.
+See https://styled-components.com/docs/basics#define-styled-components-outside-of-the-render-method for more info.
+
+The component styled.div with the id of "sc-dgWgkO" has been created dynamically.
+You may see this warning because you've called styled inside another component.
+To resolve this only create new StyledComponents outside of any render method and function component.
+See https://styled-components.com/docs/basics#define-styled-components-outside-of-the-render-method for more info.
+
+The component styled.span with the id of "sc-damPtt" has been created dynamically.
+You may see this warning because you've called styled inside another component.
+To resolve this only create new StyledComponents outside of any render method and function component.
+See https://styled-components.com/docs/basics#define-styled-components-outside-of-the-render-method for more info.
+
+The component styled.div with the id of "sc-cbbrhI" has been created dynamically.
+You may see this warning because you've called styled inside another component.
+To resolve this only create new StyledComponents outside of any render method and function component.
+See https://styled-components.com/docs/basics#define-styled-components-outside-of-the-render-method for more info.
+
+The component styled.span with the id of "sc-iurVC" has been created dynamically.
+You may see this warning because you've called styled inside another component.
+To resolve this only create new StyledComponents outside of any render method and function component.
+See https://styled-components.com/docs/basics#define-styled-components-outside-of-the-render-method for more info.
+
+The component styled.div with the id of "sc-fVIDgr" has been created dynamically.
+You may see this warning because you've called styled inside another component.
+To resolve this only create new StyledComponents outside of any render method and function component.
+See https://styled-components.com/docs/basics#define-styled-components-outside-of-the-render-method for more info.
+
+The component styled.span with the id of "sc-gnA-DJo" has been created dynamically.
+You may see this warning because you've called styled inside another component.
+To resolve this only create new StyledComponents outside of any render method and function component.
+See https://styled-components.com/docs/basics#define-styled-components-outside-of-the-render-method for more info.
+
+The component styled.div with the id of "sc-Ltfvh" has been created dynamically.
+You may see this warning because you've called styled inside another component.
+To resolve this only create new StyledComponents outside of any render method and function component.
+See https://styled-components.com/docs/basics#define-styled-components-outside-of-the-render-method for more info.
+
+
+stdout | src/components/AdminModal/__tests__/AdminModal.test.tsx > Edit Mode > handles form submission correctly                                                                                        
+AdminModal: form ref set null                                                                       
+                                                                                                    
+ ❯ src/components/AdminModal/__tests__/AdminModal.test.tsx (6 tests | 2 failed) 16738ms
+   ❯ AdminModal (4)
+     ❯ Error States (2)
+       × shows validation error when required fields are missing 2128ms
+       × shows submission error when Firebase fails 5060ms
+     ✓ Modal Behavior (2)
+       ✓ renders modal when open 168ms
+       ✓ does not render when closed 4ms
+   ✓ Edit Mode (2)
+     ✓ renders edit mode correctly 290ms
+     ✓ handles form submission correctly  9086ms
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/components/AdminModal/__tests__/AdminModal.test.tsx > AdminModal > Error States > shows validation error when required fields are missing
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ src/components/AdminModal/__tests__/AdminModal.test.tsx:160:25
+    158|           // eslint-disable-next-line no-console
+    159|           console.log('Error message not found by testid.');
+    160|           expect(false).toBe(true);
+       |                         ^
+    161|         }
+    162|       });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/components/AdminModal/__tests__/AdminModal.test.tsx > AdminModal > Error States > shows submission error when Firebase fails
+Error: Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ src/components/AdminModal/__tests__/AdminModal.test.tsx:164:7
+    162|       });
+    163|
+    164|       it('shows submission error when Firebase fails', async () => {
+       |       ^
+    165|         // Mock pushMock to simulate failure
+    166|         globalThis.pushMock = vi.fn(() => Promise.reject(new Error('Firebase error')));    
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 4 passed (6)
+   Start at  21:09:18
+   Duration  20.53s (transform 497ms, setup 383ms, collect 1.53s, tests 16.74s, environment 1.12s, prepare 238ms)
+
+PS C:\Users\friem\OneDrive\Documenten\GitHub\artwall> 

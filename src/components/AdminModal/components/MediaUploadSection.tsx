@@ -104,7 +104,7 @@ export const MediaUploadSection: React.FC<FormComponentProps> = ({
           animate={shouldAnimateField?.('mediaUrls')}
         />
       )}
-      {errors && errors.media && <ErrorMessage>{errors.media}</ErrorMessage>}
+      {errors && errors.media && <ErrorMessage data-testid="error-message">{errors.media}</ErrorMessage>}
     </div>
   );
 };

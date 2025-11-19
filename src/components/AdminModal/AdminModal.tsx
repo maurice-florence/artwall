@@ -50,6 +50,9 @@ const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, artworkToEdit 
     getFieldPriority,
     getNextSuggestedField
   } = useAdminModal(artworkToEdit);
+  // Debug: log errors before rendering
+  // eslint-disable-next-line no-console
+  console.log('AdminModal: errors prop before render:', errors);
 
   const [showDraftRecovery, setShowDraftRecovery] = React.useState(false);
   const modalRef = useRef<HTMLDivElement>(null);
@@ -115,123 +118,118 @@ const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, artworkToEdit 
   // eslint-disable-next-line no-console
   console.log('AdminModal: rendered, isOpen:', isOpen);
   return (
-    <ModalBackdrop>
-      <ModalContent
-        ref={modalRef}
-        onClick={(e) => e.stopPropagation()}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="adminmodal-title"
-      >
-        <CloseButton onClick={handleClose} aria-label="Sluiten">
-          ×
-        </CloseButton>
-        <div data-testid="adminmodal">
-          <h2 id="adminmodal-title" data-testid="form-title">{artworkToEdit ? 'Kunstwerk Bewerken' : 'Nieuw Kunstwerk'}</h2>
-          <form
-            onSubmit={onSubmit}
-            role="form"
-            ref={el => {
-              // eslint-disable-next-line no-console
-              console.log('AdminModal: form ref set', el);
-            }}
-          >
-            <FormWrapper>
-              {showDraftRecovery && (
-                <DraftRecovery
-                  onLoadDraft={handleLoadDraft}
-                  onClearDraft={handleClearDraft}
-                  onDismiss={handleDismissDraft}
-                />
-              )}
-              
-              <SmartFormIndicator
-                smartState={smartState}
-                nextSuggestedField={getNextSuggestedField()}
-                totalFields={smartState.visibleFields.length}
-                completedFields={smartState.visibleFields.filter(field => {
-                  const value = formData[field];
-                  return value && (typeof value !== 'string' || value.trim() !== '');
-                }).length}
+  <ModalBackdrop>
+    <ModalContent
+      ref={modalRef}
+      onClick={(e) => e.stopPropagation()}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="adminmodal-title"
+    >
+      <CloseButton onClick={handleClose} aria-label="Sluiten">
+        ×
+      </CloseButton>
+      <div data-testid="adminmodal">
+        <h2 id="adminmodal-title" data-testid="form-title">{artworkToEdit ? 'Kunstwerk Bewerken' : 'Nieuw Kunstwerk'}</h2>
+        <form
+          onSubmit={onSubmit}
+          role="form"
+          ref={el => {
+            // eslint-disable-next-line no-console
+            console.log('AdminModal: form ref set', el);
+          }}
+        >
+          <FormWrapper>
+            {/* Debug: show errors and formData in DOM for validation */}
+            <pre data-testid="errors-debug" style={{ color: 'red', fontSize: '10px' }}>{JSON.stringify({ errors, formData }, null, 2)}</pre>
+            {showDraftRecovery && (
+              <DraftRecovery
+                onLoadDraft={handleLoadDraft}
+                onClearDraft={handleClearDraft}
+                onDismiss={handleDismissDraft}
               />
-              
-              <BasicInfoForm 
-                formData={formData}
-                errors={errors}
-                updateField={updateField}
-                isFieldLoading={isFieldLoading}
-                shouldShowField={shouldShowField}
-                isFieldRequired={isFieldRequired}
-                shouldAnimateField={shouldAnimateField}
-                getContextualHelpText={getContextualHelpText}
-                getSmartSuggestions={getSmartSuggestions}
-              />
-              
-              <CategorySpecificFields
-                formData={formData}
-                errors={errors}
-                updateField={updateField}
-                isFieldLoading={isFieldLoading}
-                shouldShowField={shouldShowField}
-                isFieldRequired={isFieldRequired}
-                shouldAnimateField={shouldAnimateField}
-                getContextualHelpText={getContextualHelpText}
-                getSmartSuggestions={getSmartSuggestions}
-              />
-              
-              <MediaUploadSection
-                formData={formData}
-                errors={errors}
-                updateField={updateField}
-                isFieldLoading={isFieldLoading}
-                shouldShowField={shouldShowField}
-                isFieldRequired={isFieldRequired}
-                shouldAnimateField={shouldAnimateField}
-                getContextualHelpText={getContextualHelpText}
-                getSmartSuggestions={getSmartSuggestions}
-              />
-              
-              <MetadataSection
-                formData={formData}
-                errors={errors}
-                updateField={updateField}
-                isFieldLoading={isFieldLoading}
-                shouldShowField={shouldShowField}
-                isFieldRequired={isFieldRequired}
-                shouldAnimateField={shouldAnimateField}
-                getContextualHelpText={getContextualHelpText}
-                getSmartSuggestions={getSmartSuggestions}
-              />
-              
-              {errors.general && (
-                <ErrorMessage>{errors.general}</ErrorMessage>
-              )}
-              
-              {message && (
-                <SuccessMessage>{message}</SuccessMessage>
-              )}
-              
-              <ButtonGroup>
-                <Button
-                  type="submit"
-                  disabled={isLoading}
-                  onClick={() => {
-                    // eslint-disable-next-line no-console
-                    console.log('AdminModal: submit button clicked');
-                  }}
-                >
-                  {isLoading ? 'Bezig met opslaan...' : 'Opslaan'}
-                </Button>
-                <SecondaryButton type="button" onClick={handleClose}>
-                  Annuleren
-                </SecondaryButton>
-              </ButtonGroup>
-            </FormWrapper>
-          </form>
-        </div>
-      </ModalContent>
-    </ModalBackdrop>
+            )}
+            <SmartFormIndicator
+              smartState={smartState}
+              nextSuggestedField={getNextSuggestedField()}
+              totalFields={smartState.visibleFields.length}
+              completedFields={smartState.visibleFields.filter(field => {
+                const value = formData[field];
+                return value && (typeof value !== 'string' || value.trim() !== '');
+              }).length}
+            />
+            <BasicInfoForm 
+              formData={formData}
+              errors={errors}
+              updateField={updateField}
+              isFieldLoading={isFieldLoading}
+              shouldShowField={shouldShowField}
+              isFieldRequired={isFieldRequired}
+              shouldAnimateField={shouldAnimateField}
+              getContextualHelpText={getContextualHelpText}
+              getSmartSuggestions={getSmartSuggestions}
+            />
+            <CategorySpecificFields
+              formData={formData}
+              errors={errors}
+              updateField={updateField}
+              isFieldLoading={isFieldLoading}
+              shouldShowField={shouldShowField}
+              isFieldRequired={isFieldRequired}
+              shouldAnimateField={shouldAnimateField}
+              getContextualHelpText={getContextualHelpText}
+              getSmartSuggestions={getSmartSuggestions}
+            />
+            <MediaUploadSection
+              formData={formData}
+              errors={errors}
+              updateField={updateField}
+              isFieldLoading={isFieldLoading}
+              shouldShowField={shouldShowField}
+              isFieldRequired={isFieldRequired}
+              shouldAnimateField={shouldAnimateField}
+              getContextualHelpText={getContextualHelpText}
+              getSmartSuggestions={getSmartSuggestions}
+            />
+            <MetadataSection
+              formData={formData}
+              errors={errors}
+              updateField={updateField}
+              isFieldLoading={isFieldLoading}
+              shouldShowField={shouldShowField}
+              isFieldRequired={isFieldRequired}
+              shouldAnimateField={shouldAnimateField}
+              getContextualHelpText={getContextualHelpText}
+              getSmartSuggestions={getSmartSuggestions}
+            />
+            {/* Debug: print errors.general before rendering */}
+            {errors.general && (
+              <ErrorMessage data-testid="error-message">{errors.general}</ErrorMessage>
+            )}
+            {message && (
+              <SuccessMessage>{message}</SuccessMessage>
+            )}
+            <ButtonGroup>
+              <Button
+                type="submit"
+                disabled={isLoading}
+                onClick={() => {
+                  // eslint-disable-next-line no-console
+                  console.log('AdminModal: submit button clicked');
+                }}
+              >
+                {isLoading ? 'Bezig met opslaan...' : 'Opslaan'}
+              </Button>
+              <SecondaryButton type="button" onClick={handleClose}>
+                Annuleren
+              </SecondaryButton>
+            </ButtonGroup>
+          </FormWrapper>
+        </form>
+      </div>
+    </ModalContent>
+  </ModalBackdrop>
   );
-};
+}
 
 export default AdminModal;

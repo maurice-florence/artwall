@@ -28,11 +28,11 @@ export interface SmartFormFieldProps {
   loading?: boolean;
 }
 
-const FieldContainer = styled.div`
+export const FieldContainer = styled.div`
   margin-bottom: 16px;
 `;
 
-const StyledLabel = styled.label`
+export const StyledLabel = styled.label`
   font-weight: 600;
   margin-bottom: 0.5rem;
   display: block;

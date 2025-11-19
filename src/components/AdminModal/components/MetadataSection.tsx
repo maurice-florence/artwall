@@ -71,7 +71,6 @@ export const MetadataSection: React.FC<FormComponentProps> = ({
       {shouldShowField?.('language2') && (
         <SmartFormField
           label="Secundaire Taal"
-          field="language2"
           value={formData.language2 || ''}
           formData={formData}
           onChange={updateField}
@@ -267,6 +266,8 @@ export const MetadataSection: React.FC<FormComponentProps> = ({
           <Label htmlFor="isHidden">Verborgen (niet zichtbaar op de website)</Label>
         </CheckboxGroup>
       )}
+
+      {/* Error message rendering removed; handled in AdminModal.tsx */}
     </>
   );
 };

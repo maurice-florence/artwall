@@ -9,7 +9,7 @@ interface ValidationMessageProps {
   field?: string;
 }
 
-const MessageContainer = styled.div<{ type: 'error' | 'warning' | 'success' }>`
+export const MessageContainer = styled.div<{ type: 'error' | 'warning' | 'success' }>`
   display: flex;
   align-items: center;
   gap: 8px;
@@ -44,7 +44,7 @@ const MessageContainer = styled.div<{ type: 'error' | 'warning' | 'success' }>`
   }}
 `;
 
-const Icon = styled.span<{ type: 'error' | 'warning' | 'success' }>`
+export const Icon = styled.span<{ type: 'error' | 'warning' | 'success' }>`
   font-size: 16px;
   
   ${({ type }) => {

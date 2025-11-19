@@ -135,16 +135,21 @@ export const useAdminModal = (artworkToEdit?: Artwork | null) => {
 
   const updateField = (field: keyof ArtworkFormData, value: any) => {
     setFormData(prev => {
-      const newData = { ...prev, [field]: value };
-      
-      
+      let newValue = value;
+      // Special handling for year field: set to undefined if empty or invalid
+      if (field === 'year') {
+        if (newValue === '' || newValue === null || isNaN(Number(newValue))) {
+          newValue = undefined;
+        } else {
+          newValue = Number(newValue);
+        }
+      }
+      const newData = { ...prev, [field]: newValue };
       // Apply field dependencies
       const dependencies = applyFieldDependencies(newData, field);
       Object.assign(newData, dependencies);
-      
       return newData;
     });
-    
     // Clear error when field is updated
     if (errors[field]) {
       setErrors(prev => ({
@@ -173,16 +178,29 @@ export const useAdminModal = (artworkToEdit?: Artwork | null) => {
 
     // Debug: log when handleSubmit is called
     // eslint-disable-next-line no-console
-    console.log('useAdminModal: handleSubmit called');
+    console.log('useAdminModal: handleSubmit called, formData:', formData);
 
     try {
-      // ✅ validateArtworkForm now returns ValidationErrors directly
+      // Add debug log before validation
+      // eslint-disable-next-line no-console
+      console.log('useAdminModal: calling validateArtworkForm with:', formData);
       const validationErrors = validateArtworkForm(formData);
       // Debug: log validation errors
       // eslint-disable-next-line no-console
-      console.log('useAdminModal: validation errors:', validationErrors);
+      console.log('useAdminModal: validation errors returned:', validationErrors);
       if (Object.keys(validationErrors).length > 0) {
-        setErrors(validationErrors);
+        // Concatenate all field error messages into errors.general
+        const allMessages = Object.values(validationErrors).filter(Boolean).join(' | ');
+        const generalError = allMessages || 'Er zijn verplichte velden niet ingevuld';
+        setErrors({ ...validationErrors, general: generalError });
+        // Debug: log errors after setting
+        // eslint-disable-next-line no-console
+        console.log('useAdminModal: setErrors called with:', { ...validationErrors, general: generalError });
+        // Print errors state after setErrors (async)
+        setTimeout(() => {
+          // eslint-disable-next-line no-console
+          console.log('useAdminModal: errors state after setErrors (timeout):', errors);
+        }, 500);
         clearLoading();
         return false;
       }

@@ -42,7 +42,7 @@ export const MediumSpecificFields: React.FC<FormComponentProps> = ({
             required={isFieldRequired?.('lyrics')}
             animate={shouldAnimateField?.('lyrics')}
           />
-          {errors.lyrics && <ErrorMessage>{errors.lyrics}</ErrorMessage>}
+          {errors.lyrics && <ErrorMessage data-testid="error-message">{errors.lyrics}</ErrorMessage>}
           {formData.lyrics && formData.lyrics.length < 10 && !errors.lyrics && (
             <ValidationMessage type="warning" message="Songtekst is erg kort, overweeg meer tekst toe te voegen" />
           )}
@@ -66,7 +66,7 @@ export const MediumSpecificFields: React.FC<FormComponentProps> = ({
             required={isFieldRequired?.('chords')}
             animate={shouldAnimateField?.('chords')}
           />
-          {errors.chords && <ErrorMessage>{errors.chords}</ErrorMessage>}
+          {errors.chords && <ErrorMessage data-testid="error-message">{errors.chords}</ErrorMessage>}
         </>
       )}
 
@@ -86,7 +86,7 @@ export const MediumSpecificFields: React.FC<FormComponentProps> = ({
             required={isFieldRequired?.('soundcloudEmbedUrl')}
             animate={shouldAnimateField?.('soundcloudEmbedUrl')}
           />
-          {errors.soundcloudEmbedUrl && <ErrorMessage>{errors.soundcloudEmbedUrl}</ErrorMessage>}
+          {errors.soundcloudEmbedUrl && <ErrorMessage data-testid="error-message">{errors.soundcloudEmbedUrl}</ErrorMessage>}
         </>
       )}
 
@@ -106,7 +106,7 @@ export const MediumSpecificFields: React.FC<FormComponentProps> = ({
             required={isFieldRequired?.('soundcloudTrackUrl')}
             animate={shouldAnimateField?.('soundcloudTrackUrl')}
           />
-          {errors.soundcloudTrackUrl && <ErrorMessage>{errors.soundcloudTrackUrl}</ErrorMessage>}
+          {errors.soundcloudTrackUrl && <ErrorMessage data-testid="error-message">{errors.soundcloudTrackUrl}</ErrorMessage>}
         </>
       )}
     </>
@@ -136,7 +136,7 @@ export const MediumSpecificFields: React.FC<FormComponentProps> = ({
             animate={shouldAnimateField?.('mediaType')}
             suggestions={getSmartSuggestions?.('mediaType')}
           />
-          {errors.mediaType && <ErrorMessage>{errors.mediaType}</ErrorMessage>}
+          {errors.mediaType && <ErrorMessage data-testid="error-message">{errors.mediaType}</ErrorMessage>}
         </>
       )}
 
@@ -156,7 +156,7 @@ export const MediumSpecificFields: React.FC<FormComponentProps> = ({
             required={isFieldRequired?.('mediaUrl')}
             animate={shouldAnimateField?.('mediaUrl')}
           />
-          {errors.mediaUrl && <ErrorMessage>{errors.mediaUrl}</ErrorMessage>}
+          {errors.mediaUrl && <ErrorMessage data-testid="error-message">{errors.mediaUrl}</ErrorMessage>}
         </>
       )}
 
@@ -175,7 +175,7 @@ export const MediumSpecificFields: React.FC<FormComponentProps> = ({
             required={isFieldRequired?.('mediaUrls')}
             animate={shouldAnimateField?.('mediaUrls')}
           />
-          {errors.mediaUrls && <ErrorMessage>{errors.mediaUrls}</ErrorMessage>}
+          {errors.mediaUrls && <ErrorMessage data-testid="error-message">{errors.mediaUrls}</ErrorMessage>}
         </>
       )}
     </>
