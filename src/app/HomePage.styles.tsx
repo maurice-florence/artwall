@@ -22,35 +22,29 @@ export const MainContent = styled.div`
 
 export const CollageContainer = styled.main`
   display: grid;
-  padding: 1.5rem;
+  width: 100vw;
+  max-width: 100vw;
+  margin: 0;
+  padding: 0;
   gap: ${({ theme }) => theme.gridGap ? `${theme.gridGap}px` : '4px'};
-  
-  /* De kern van de nieuwe layout */
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  grid-auto-rows: 225px;
-  
-  /* Deze regel vertelt de grid om gaten op te vullen! */
+  grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+  grid-auto-rows: minmax(140px, 1fr);
   grid-auto-flow: dense;
 
-  @media (min-width: 1920px) {
-    grid-template-columns: repeat(5, 1fr);
-  }
   @media (max-width: 1024px) {
     grid-template-columns: repeat(3, 1fr);
-    grid-auto-rows: 210px;
-    padding: 1rem;
+    grid-auto-rows: minmax(120px, 1fr);
+    gap: 8px;
   }
   @media (max-width: 768px) {
-    /* Ensure at least three cards per row on portrait mobile */
     grid-template-columns: repeat(3, 1fr);
-    grid-auto-rows: 180px;
-    padding: 0.75rem;
+    grid-auto-rows: minmax(100px, 1fr);
+    gap: 6px;
   }
   @media (max-width: 480px) {
-    /* Keep three columns even on very small devices as requested */
     grid-template-columns: repeat(3, 1fr);
-    grid-auto-rows: 160px;
-    padding: 0.5rem;
+    grid-auto-rows: minmax(80px, 1fr);
+    gap: 4px;
   }
 `;
 
