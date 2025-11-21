@@ -139,6 +139,10 @@ const Footer: React.FC<FooterProps> = ({ onAddNewArtwork }) => {
         {process.env.NODE_ENV === 'development' && (
           <DebugInfo dbCounts={dbCounts} appCounts={appCounts} />
         )}
+        <div style={{marginTop: '2.5rem', fontSize: '0.95em', color: '#888'}}>
+          App created by Johannes using Next.js.<br />
+          <span style={{fontWeight: 500}}>Version:</span> {process.env.NEXT_PUBLIC_APP_VERSION || 'dev'}
+        </div>
       </FooterWrapper>
     </>
   );
