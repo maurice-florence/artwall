@@ -1,6 +1,4 @@
-const VersionTag = styled.div.attrs({
-  'data-testid': 'version-tag'
-})`
+const VersionTag = styled.div`
   position: fixed;
   bottom: 12px;
   right: 16px;
@@ -142,7 +140,7 @@ const Footer: React.FC<FooterProps> = ({ onAddNewArtwork }) => {
           <DebugInfo dbCounts={dbCounts} appCounts={appCounts} />
         )}
       </FooterWrapper>
-      <VersionTag>
+      <VersionTag data-testid="version-tag">
         v{appVersion}{gitCommit ? ` (${gitCommit.slice(0,7)})` : ' (no commit)'}
       </VersionTag>
     </>
