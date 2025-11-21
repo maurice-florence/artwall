@@ -1,3 +1,18 @@
+const VersionTag = styled.div`
+  position: fixed;
+  bottom: 12px;
+  right: 16px;
+  background: #eee;
+  color: #333;
+  font-size: 0.75rem;
+  border-radius: 6px;
+  padding: 0.4em 0.8em;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  opacity: 0.85;
+  z-index: 2000;
+`;
+const appVersion = process.env.NEXT_PUBLIC_APP_VERSION || '0.1.0';
+const gitCommit = process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA || '';
 import React, { useState, useEffect, useMemo } from 'react';
 import styled from 'styled-components';
 import { getAuth, onAuthStateChanged, User } from 'firebase/auth';
@@ -109,20 +124,25 @@ const Footer: React.FC<FooterProps> = ({ onAddNewArtwork }) => {
   }, []); // Empty dependency array means this runs only once on mount.
 
   return (
-    <FooterWrapper>
-      {isLoggedIn && onAddNewArtwork && (
-        <AddArtworkButton onClick={onAddNewArtwork}>
-          + Nieuw kunstwerk toevoegen
-        </AddArtworkButton>
-      )}
+    <>
+      <FooterWrapper>
+        {isLoggedIn && onAddNewArtwork && (
+          <AddArtworkButton onClick={onAddNewArtwork}>
+            + Nieuw kunstwerk toevoegen
+          </AddArtworkButton>
+        )}
 
-      {formattedDate && <LastUpdatedText>Laatst bijgewerkt: {formattedDate}</LastUpdatedText>}
+        {formattedDate && <LastUpdatedText>Laatst bijgewerkt: {formattedDate}</LastUpdatedText>}
 
-      {/* Conditionally render debug info only in development environment */}
-      {process.env.NODE_ENV === 'development' && (
-        <DebugInfo dbCounts={dbCounts} appCounts={appCounts} />
-      )}
-    </FooterWrapper>
+        {/* Conditionally render debug info only in development environment */}
+        {process.env.NODE_ENV === 'development' && (
+          <DebugInfo dbCounts={dbCounts} appCounts={appCounts} />
+        )}
+      </FooterWrapper>
+      <VersionTag>
+        v{appVersion}{gitCommit ? ` (${gitCommit.slice(0,7)})` : ''}
+      </VersionTag>
+    </>
   );
 };
 
