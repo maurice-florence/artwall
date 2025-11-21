@@ -1,4 +1,6 @@
-const VersionTag = styled.div`
+const VersionTag = styled.div.attrs({
+  'data-testid': 'version-tag'
+})`
   position: fixed;
   bottom: 12px;
   right: 16px;
@@ -8,10 +10,11 @@ const VersionTag = styled.div`
   border-radius: 6px;
   padding: 0.4em 0.8em;
   box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-  opacity: 0.85;
+  opacity: 0.95;
   z-index: 2000;
+  border: 2px solid #0b8783;
 `;
-const appVersion = process.env.NEXT_PUBLIC_APP_VERSION || '0.1.0';
+const appVersion = process.env.NEXT_PUBLIC_APP_VERSION || 'dev';
 const gitCommit = process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA || '';
 import React, { useState, useEffect, useMemo } from 'react';
 import styled from 'styled-components';
@@ -140,7 +143,7 @@ const Footer: React.FC<FooterProps> = ({ onAddNewArtwork }) => {
         )}
       </FooterWrapper>
       <VersionTag>
-        v{appVersion}{gitCommit ? ` (${gitCommit.slice(0,7)})` : ''}
+        v{appVersion}{gitCommit ? ` (${gitCommit.slice(0,7)})` : ' (no commit)'}
       </VersionTag>
     </>
   );
