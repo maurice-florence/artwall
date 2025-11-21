@@ -140,9 +140,6 @@ const Footer: React.FC<FooterProps> = ({ onAddNewArtwork }) => {
           <DebugInfo dbCounts={dbCounts} appCounts={appCounts} />
         )}
       </FooterWrapper>
-      <VersionTag data-testid="version-tag">
-        v{appVersion}{gitCommit ? ` (${gitCommit.slice(0,7)})` : ' (no commit)'}
-      </VersionTag>
     </>
   );
 };
