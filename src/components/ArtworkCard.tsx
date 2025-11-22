@@ -37,23 +37,18 @@ const CardContainer = styled.div<{ $medium: ArtworkMedium; $subtype?: string; $b
   border-radius: 10px;
   ${props => getGridSpan(props.$subtype || 'default', props.$medium)}
 
-  font-size: 0.75rem;
 
+  font-size: 0.75rem;
   position: relative;
 
   @media (max-width: 768px) {
     grid-column: span 1;
     grid-row: span 1;
     min-width: 0;
-<<<<<<< HEAD
     max-width: 100vw;
     min-height: 60px;
     font-size: 0.65rem;
     aspect-ratio: 4 / 5; /* keep consistent sizing across orientation */
-=======
-    min-height: 80px;
-    font-size: 0.7rem;
->>>>>>> fix/grid-reorder-by-size
   }
 `;
 
@@ -380,24 +375,13 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin, onImageLoaded }: ArtworkCardP
       return content;
     };
 
+    // Only show description or cleaned content (without embedded date/place)
     const cardText = hasDescription
       ? artwork.description.trim()
       : (artwork.content
-          ? removeDatePlaceFromContent(removeTitleFromContent(stripHtml(artwork.content), artwork.title || '').trim())
+          ? removeTitleFromContent(stripHtml(artwork.content), artwork.title || '').trim()
           : '');
-
-    // Remove date/place from content body (for migration)
-    function removeDatePlaceFromContent(content: string): string {
-      // Remove lines that look like dates (e.g. '12 maart 2024', '2024', 'maart 2024')
-      const dateRegex = /^(\d{1,2}\s+[a-zA-Z]+\s+\d{4}|[a-zA-Z]+\s+\d{4}|\d{4})$/;
-      // Remove lines that look like places (e.g. 'Amsterdam', 'Utrecht', 'Rotterdam', etc.)
-      // For now, remove lines that are just a single word with a capital letter (likely a place)
-      const placeRegex = /^[A-Z][a-zA-Z\- ]{2,}$/;
-      return content
-        .split(/\r?\n/)
-        .filter(line => !dateRegex.test(line.trim()) && !placeRegex.test(line.trim()))
-        .join('\n');
-    }
+    // Date/place are now only shown from metadata below, not from cardText.
 
     // Calculate max lines based on card size (default: 8, novel: 16, song: 10)
     let maxLines = 8;
@@ -511,16 +495,11 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin, onImageLoaded }: ArtworkCardP
                   alt={artwork.title || 'Artwork'} 
                   loading="lazy"
                   decoding="async"
-<<<<<<< HEAD
-                  srcSet={`${getImageUrl(images[0], 'thumbnail')} 200w, ${getImageUrl(images[0], 'card')} 480w, ${getImageUrl(images[0], 'full')} 1200w`}
-                  sizes="(max-width: 480px) 90vw, (max-width: 768px) 45vw, 360px"
+                  srcSet={`${getImageUrl(images[0], 'thumbnail')} 100w, ${getImageUrl(images[0], 'card')} 480w, ${getImageUrl(images[0], 'full')} 1200w`}
+                  sizes="(max-width: 480px) 90vw, (max-width: 768px) 45vw, 120px"
                   onLoad={() => { setImgLoaded(true); onImageLoaded?.(); }}
                   onError={() => { setImgLoaded(true); onImageLoaded?.(); }}
                   className={imgLoaded ? 'loaded' : ''}
-=======
-                  srcSet={`${getImageUrl(images[0], 'thumbnail')} 100w, ${getImageUrl(images[0], 'card')} 480w, ${getImageUrl(images[0], 'full')} 1200w`}
-                  sizes="(max-width: 480px) 90vw, (max-width: 768px) 45vw, 120px"
->>>>>>> fix/grid-reorder-by-size
                 />
                 {imageOverlayBg && (
                   <ImageGradientOverlay $bg={imageOverlayBg} aria-hidden="true" />
@@ -581,6 +560,62 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin, onImageLoaded }: ArtworkCardP
     // availableLanguages already declared above
 };
 
+                  srcSet={`${getImageUrl(images[0], 'thumbnail')} 100w, ${getImageUrl(images[0], 'card')} 480w, ${getImageUrl(images[0], 'full')} 1200w`}
+                  sizes="(max-width: 480px) 90vw, (max-width: 768px) 45vw, 120px"
+                  onLoad={() => { setImgLoaded(true); onImageLoaded?.(); }}
+                  onError={() => { setImgLoaded(true); onImageLoaded?.(); }}
+                  className={imgLoaded ? 'loaded' : ''}
+                />
+                {imageOverlayBg && (
+                  <ImageGradientOverlay $bg={imageOverlayBg} aria-hidden="true" />
+                )}
+              </>
+            ) : (isWriting || isAudio) && !hasImage ? (
+              isWriting ? (
+                showPreview ? (
+                  <TextOverlay style={{ color: useDarkText ? theme.text : theme.cardText }}>{textPreview}</TextOverlay>
+                ) : (
+                  <TextOverlay $subtle>{textPreview}</TextOverlay>
+                )
+              ) : (
+                <TextOverlay $subtle>{textPreview}</TextOverlay>
+              )
+            ) : (
+              <>
+                <div style={{ flex: 1, minHeight: 0, minWidth: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 4 }}>
+                  <GeneratedImage title={artwork.title || ''} medium={artwork.medium} />
+                </div>
+                {availableLanguages.length > 1 && (
+                  <LanguageIndicator data-testid={`artwork-languages-${artwork.id}`}> 
+                    {availableLanguages.filter((lang: string) => lang && lang.trim() !== '').map((lang: string, idx: number) => (
+                      <LanguageTag key={getLangKey(lang, idx)}>{lang.toUpperCase()}</LanguageTag>
+                    ))}
+                  </LanguageIndicator>
+                )}
+                <CardFooter style={{ marginTop: '0.5rem', justifyContent: 'space-between', flexShrink: 0 }}>
+                  <span>{formattedDate}</span>
+                  {artwork.location1 && <span>{artwork.location1}</span>}
+                  <CardCategory>
+                    {getArtworkIcon(artwork)}
+                  </CardCategory>
+                </CardFooter>
+              </>
+            )}
+          </CardFront>
+          <CardBack $medium={artwork.medium}>
+            <CardBackTitle>{artwork.title}</CardBackTitle>
+            <CardBackFooter style={{flexDirection: 'column' }}>
+              <span>{formattedDate}</span>
+              {artwork.location1 && <span>{artwork.location1}</span>}
+              <CardCategory>
+                {getArtworkIcon(artwork)}
+              </CardCategory>
+            </CardBackFooter>
+          </CardBack>
+        </CardInner>
+      </CardContainer>
+    );
+}
 const DeleteButton = styled.button`
   background: #e74c3c;
   color: #fff;

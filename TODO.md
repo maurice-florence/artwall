@@ -29,7 +29,7 @@ Date: 2025-11-17
   - Auto-source from package.json version or VERCEL_GIT_COMMIT_SHA.
   - Update on every deploy.
 
-- [ ] Remove date and place from content card, and add that from metadata instead
+- [x] Remove date and place from content card, and add that from metadata instead
   - Remove date/place text embedded in the content body.
   - Display date/place sourced from explicit metadata fields only.
 
