@@ -52,11 +52,20 @@ export default function HomePage() {
     // Add missing state for selectedItem (artwork selected for modal)
     const [selectedItem, setSelectedItem] = useState<Artwork | null>(null);
 
-        // Wait for at least 2 seconds
+        // Wait for at least 2 seconds, but skip if no artworks
         useEffect(() => {
+            if (allArtworks.length === 0) {
+                setMinWaitDone(true);
+                return;
+            }
             const timer = setTimeout(() => setMinWaitDone(true), 2000);
             return () => clearTimeout(timer);
-        }, []);
+        }, [allArtworks.length]);
+        // Debug logging for spinner state
+        useEffect(() => {
+            // eslint-disable-next-line no-console
+            console.debug('[Spinner debug]', { isLoading, imagesLoaded, minWaitDone, allArtworksLength: allArtworks.length });
+        }, [isLoading, imagesLoaded, minWaitDone, allArtworks.length]);
 
         // Wait for all images to load, or set imagesLoaded true if no artworks
         useEffect(() => {
