@@ -560,44 +560,7 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin, onImageLoaded }: ArtworkCardP
     // availableLanguages already declared above
 };
 
-                  srcSet={`${getImageUrl(images[0], 'thumbnail')} 100w, ${getImageUrl(images[0], 'card')} 480w, ${getImageUrl(images[0], 'full')} 1200w`}
-                  sizes="(max-width: 480px) 90vw, (max-width: 768px) 45vw, 120px"
-                  onLoad={() => { setImgLoaded(true); onImageLoaded?.(); }}
-                  onError={() => { setImgLoaded(true); onImageLoaded?.(); }}
-                  className={imgLoaded ? 'loaded' : ''}
-                />
-                {imageOverlayBg && (
-                  <ImageGradientOverlay $bg={imageOverlayBg} aria-hidden="true" />
-                )}
-              </>
-            ) : (isWriting || isAudio) && !hasImage ? (
-              isWriting ? (
-                showPreview ? (
-                  <TextOverlay style={{ color: useDarkText ? theme.text : theme.cardText }}>{textPreview}</TextOverlay>
-                ) : (
-                  <TextOverlay $subtle>{textPreview}</TextOverlay>
-                )
-              ) : (
-                <TextOverlay $subtle>{textPreview}</TextOverlay>
-              )
-            ) : (
-              <>
-                <div style={{ flex: 1, minHeight: 0, minWidth: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 4 }}>
-                  <GeneratedImage title={artwork.title || ''} medium={artwork.medium} />
-                </div>
-                {availableLanguages.length > 1 && (
-                  <LanguageIndicator data-testid={`artwork-languages-${artwork.id}`}> 
-                    {availableLanguages.filter((lang: string) => lang && lang.trim() !== '').map((lang: string, idx: number) => (
-                      <LanguageTag key={getLangKey(lang, idx)}>{lang.toUpperCase()}</LanguageTag>
-                    ))}
-                  </LanguageIndicator>
-                )}
-                <CardFooter style={{ marginTop: '0.5rem', justifyContent: 'space-between', flexShrink: 0 }}>
-                  <span>{formattedDate}</span>
-                  {artwork.location1 && <span>{artwork.location1}</span>}
-                  <CardCategory>
-                    {getArtworkIcon(artwork)}
-                  </CardCategory>
+                {/* ...existing code for CardImage and overlays... */}
                 </CardFooter>
               </>
             )}

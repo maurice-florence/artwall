@@ -254,12 +254,8 @@ const Header: React.FC<HeaderProps> = ({
       }
     }
     return counts;
-<<<<<<< HEAD
   }, [artworksForCounts]);
-=======
-  }, [artworks]);
   const [infoOpen, setInfoOpen] = useState(false);
->>>>>>> fix/grid-reorder-by-size
   return (
     <HeaderWrapper data-testid="header">
       <TitleRow data-testid="header-title-row">

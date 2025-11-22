@@ -515,18 +515,6 @@ function getMediaType(url: string): 'image' | 'video' | 'audio' | 'pdf' | 'unkno
     document.body
   );
 };
-                        if (type === 'image') {
-                          const fullSizeUrl = getResizedImageUrl(currentUrl, 'full');
-                          const originalUrl = getResizedImageUrl(currentUrl, 'original');
-                          return (
-                            <ResponsiveImage 
-                              src={fullSizeUrl} 
-                              alt={`Media ${currentMediaIndex + 1}`} 
-                              data-testid={`modal-media-image-${currentMediaIndex}`} 
-                              onClick={() => window.open(originalUrl, '_blank')} 
-                            />
-                          );
-                        }
 
 // Styled components for layout
 const MediaTextContainer = styled.div`

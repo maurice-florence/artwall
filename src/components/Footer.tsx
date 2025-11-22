@@ -138,11 +138,7 @@ const Footer: React.FC<FooterProps> = ({ onAddNewArtwork, artworks }) => {
     const unsubscribeAuth = onAuthStateChanged(auth, (user: User | null) => {
       setIsLoggedIn(!!user); // Set to true if user exists, false otherwise.
     });
-    import styled from 'styled-components';
-    import { getAuth, onAuthStateChanged, User } from 'firebase/auth';
-    import { ref, onValue } from 'firebase/database';
-    import type { Artwork } from '@/types';
-    import { realtimeDb } from '@/firebase/client';
+    // ...existing code...
 
     // SECTION: Styled Components
     const FooterWrapper = styled.footer`
