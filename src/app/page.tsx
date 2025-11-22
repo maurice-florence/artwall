@@ -1,3 +1,4 @@
+"use client";
 // --- Client-side HomePage with grid reordering, filters, and modal logic ---
 import React, { useState, useEffect, useMemo, Suspense } from 'react';
 import PageLayout, { MainContent, CollageContainer, NoResultsMessage } from '@/app/HomePage.styles';
