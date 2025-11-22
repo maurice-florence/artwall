@@ -1,19 +1,20 @@
-const VersionTag = styled.div`
-  display: flex;
-  align-items: center;
-  background: #eee;
-  color: #333;
-  font-size: 0.75rem;
-  border-radius: 6px;
-  padding: 0.4em 0.8em;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-  opacity: 0.95;
-  border: 2px solid #0b8783;
-  margin-left: 0.5rem;
-  cursor: pointer;
-`;
+import InfoModal from './InfoModal';
+import { FaInfoCircle } from 'react-icons/fa';
 const appVersion = process.env.NEXT_PUBLIC_APP_VERSION || 'dev';
 const gitCommit = process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA || '';
+const InfoButton = styled.button`
+  background: none;
+  border: none;
+  color: #0b8783;
+  font-size: 1.25rem;
+  margin-left: 0.5rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  opacity: 0.85;
+  transition: color 0.2s, opacity 0.2s;
+  &:hover { color: #0b8783; opacity: 1; }
+`;
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { useArtworks } from '@/context/ArtworksContext';
 import styled from 'styled-components';
@@ -244,6 +245,7 @@ const Header: React.FC<HeaderProps> = ({
     }
     return counts;
   }, [artworks]);
+  const [showInfo, setShowInfo] = useState(false);
   return (
     <HeaderWrapper data-testid="header">
       <TitleRow data-testid="header-title-row">
@@ -349,9 +351,10 @@ const Header: React.FC<HeaderProps> = ({
 
             {/* Note: eval/rating counts are intentionally not shown on the main header; options show numbers inside the dropdown */}
             <ThemeEditor />
-            <VersionTag data-testid="version-tag" title="Build info">
-              v{appVersion}{gitCommit ? ` (${gitCommit.slice(0,7)})` : ' (no commit)'}
-            </VersionTag>
+            <InfoButton aria-label="Show app info" title="App info" onClick={() => setShowInfo(true)} data-testid="info-button">
+              <FaInfoCircle />
+            </InfoButton>
+            <InfoModal isOpen={showInfo} onClose={() => setShowInfo(false)} version={appVersion} commit={gitCommit} />
           </RightSection>
       </ControlsRow>
     </HeaderWrapper>

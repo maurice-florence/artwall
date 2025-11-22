@@ -41,28 +41,45 @@ export interface ViewOptions {
 
 export default function HomePage() {
     const { artworks: allArtworks, isLoading } = useArtworks();
-    const [selectedItem, setSelectedItem] = useState<Artwork | null>(null);
-    const [editItem, setEditItem] = useState<Artwork | null>(null);
-    const [isAdmin, setIsAdmin] = useState(false);
-    // const [isSidebarOpen, setSidebarOpen] = useState(false); // Sidebar removed
-    const [showNewEntryModal, setShowNewEntryModal] = useState(false);
-    const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
-    const [artworkToEdit, setArtworkToEdit] = useState<Artwork | null>(null);
-    const [visibleCount, setVisibleCount] = useState(100);
+    const [imagesLoaded, setImagesLoaded] = useState(false);
+    const [minWaitDone, setMinWaitDone] = useState(false);
 
-    // Local state for medium and year filtering
-    const [selectedMedium, setSelectedMedium] = useState<string>('all');
-    const [selectedYear, setSelectedYear] = useState<string>('all');
-    const [searchTerm, setSearchTerm] = useState<string>('');
-    const [selectedEvaluation, setSelectedEvaluation] = useState<number | 'all'>('all');
-    const [selectedRating, setSelectedRating] = useState<number | 'all'>('all');
-    const [viewOptions, setViewOptions] = useState<ViewOptions>({
-        spacing: 'comfortabel',
-        layout: 'alternerend',
-        details: 'volledig',
-        animations: true,
-        theme: 'default',
-    });
+    // Add missing state for evaluation and rating filters
+    const [selectedEvaluation, setSelectedEvaluation] = useState<'all' | number>('all');
+    const [selectedRating, setSelectedRating] = useState<'all' | number>('all');
+
+    // Add missing state for selectedItem (artwork selected for modal)
+    const [selectedItem, setSelectedItem] = useState<Artwork | null>(null);
+
+        // Wait for at least 2 seconds
+        useEffect(() => {
+            const timer = setTimeout(() => setMinWaitDone(true), 2000);
+            return () => clearTimeout(timer);
+        }, []);
+
+        // Wait for all images to load
+        useEffect(() => {
+            if (!isLoading && allArtworks.length > 0) {
+                const imageUrls = allArtworks
+                    .map(a => a.imageUrl)
+                    .filter(Boolean);
+                if (imageUrls.length === 0) {
+                    setImagesLoaded(true);
+                    return;
+                }
+                let loadedCount = 0;
+                imageUrls.forEach(url => {
+                    const img = new window.Image();
+                    img.onload = img.onerror = () => {
+                        loadedCount++;
+                        if (loadedCount === imageUrls.length) {
+                            setImagesLoaded(true);
+                        }
+                    };
+                    img.src = url;
+                });
+            }
+        }, [isLoading, allArtworks]);
 
     useEffect(() => {
         const handleScroll = () => {
@@ -70,7 +87,6 @@ export default function HomePage() {
                 setVisibleCount(prevCount => prevCount + 100);
             }
         };
-    
         window.addEventListener('scroll', handleScroll);
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
@@ -209,11 +225,88 @@ export default function HomePage() {
         return (item as Artwork).medium !== undefined;
     }
 
-    if (isLoading || allArtworks.length === 0) {
-        return (
-            <PageLayout />
-        );
-    }
+    const GlobalSpinner = require('@/components/GlobalSpinner').default;
+
+    const showSpinner = isLoading || !imagesLoaded || !minWaitDone;
+
+    return (
+        <PageLayout>
+            {showSpinner && <GlobalSpinner />}
+            {!showSpinner && (
+              allArtworks.length === 0 ? (
+                <MainContent>
+                  <NoResultsMessage>Geen kunstwerken gevonden.</NoResultsMessage>
+                </MainContent>
+              ) : (
+                <MainContent>
+                  <MobileNav artworks={allArtworks} />
+                  <Header 
+                    selectedMedium={selectedMedium}
+                    setSelectedMedium={setSelectedMedium}
+                    selectedYear={selectedYear}
+                    setSelectedYear={setSelectedYear}
+                    availableMediums={availableMediums}
+                    availableYears={availableYears}
+                    searchTerm={searchTerm}
+                    setSearchTerm={setSearchTerm}
+                    selectedEvaluation={selectedEvaluation}
+                    setSelectedEvaluation={setSelectedEvaluation}
+                    selectedRating={selectedRating}
+                    setSelectedRating={setSelectedRating}
+                  />
+                  <CollageContainer>
+                      {timelineItems.slice(0, visibleCount).map((item: TimelineItem) => {
+                          if ('type' in item && item.type === 'year-marker') {
+                              return <YearMarkerCard key={item.id} year={item.year} />;
+                          }
+                          if (isArtwork(item)) {
+                              return <ArtworkCard key={item.id} artwork={item as Artwork} onSelect={() => {
+                                  setSelectedItem(item as Artwork);
+                                  if (isAdmin) handleEdit(item as Artwork);
+                              }} isAdmin={isAdmin} />;
+                          }
+                          return null;
+                      })}
+                  </CollageContainer>
+                  <Footer onAddNewArtwork={handleAdd} />
+                </MainContent>
+              )
+            )}
+            {selectedItem && (
+                <Modal
+                    item={selectedItem as Artwork}
+                    onClose={() => setSelectedItem(null)}
+                    isAdmin={isAdmin}
+                    onEdit={(item: Artwork) => {
+                        setEditItem(item);
+                        setShowNewEntryModal(true);
+                        setSelectedItem(null);
+                    }}
+                    isOpen={!!selectedItem}
+                />
+            )}
+            <ErrorBoundary>
+              <Suspense fallback={<div>Loading admin panel...</div>}>
+                {isAdminModalOpen && (
+                  <AdminModal 
+                      isOpen={isAdminModalOpen}
+                      onClose={() => setIsAdminModalOpen(false)}
+                      artworkToEdit={artworkToEdit}
+                  />
+                )}
+              </Suspense>
+            </ErrorBoundary>
+            <NewEntryModal
+                isOpen={showNewEntryModal}
+                onClose={() => {
+                    setShowNewEntryModal(false);
+                    setEditItem(null);
+                }}
+                onSave={handleSaveNewEntry}
+                editItem={editItem}
+            />
+        </PageLayout>
+    );
 
     return (
         <PageLayout>

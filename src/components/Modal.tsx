@@ -430,12 +430,13 @@ function getMediaType(url: string): 'image' | 'video' | 'audio' | 'pdf' | 'unkno
                         if (type === 'image') {
                           // Use full size for modal, open original in new tab
                           const fullSizeUrl = getResizedImageUrl(currentUrl, 'full');
+                          const originalUrl = getResizedImageUrl(currentUrl, 'original');
                           return (
                             <ResponsiveImage 
                               src={fullSizeUrl} 
                               alt={`Media ${currentMediaIndex + 1}`} 
                               data-testid={`modal-media-image-${currentMediaIndex}`} 
-                              onClick={() => window.open(currentUrl, '_blank')} 
+                              onClick={() => window.open(originalUrl, '_blank')} 
                             />
                           );
                         }
