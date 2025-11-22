@@ -30,17 +30,17 @@ export interface ViewOptions {
 }
 
 export default function HomePage() {
-            // Filters and admin state
-            const [selectedMedium, setSelectedMedium] = useState<string>('all');
-            const [selectedYear, setSelectedYear] = useState<string>('all');
-            const [searchTerm, setSearchTerm] = useState<string>('');
-            const [isAdmin, setIsAdmin] = useState<boolean>(false); // Set to true for admin features
-            const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
-            const [artworkToEdit, setArtworkToEdit] = useState<Artwork | null>(null);
-            const [showNewEntryModal, setShowNewEntryModal] = useState(false);
-            const [editItem, setEditItem] = useState<Artwork | null>(null);
-        // State for controlling how many artworks are visible (for infinite scroll)
-        const [visibleCount, setVisibleCount] = useState(100);
+    // Filters and admin state
+    const [selectedMedium, setSelectedMedium] = useState<string>('all');
+    const [selectedYear, setSelectedYear] = useState<string>('all');
+    const [searchTerm, setSearchTerm] = useState<string>('');
+    const [isAdmin, setIsAdmin] = useState<boolean>(false); // Set to true for admin features
+    const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
+    const [artworkToEdit, setArtworkToEdit] = useState<Artwork | null>(null);
+    const [showNewEntryModal, setShowNewEntryModal] = useState(false);
+    const [editItem, setEditItem] = useState<Artwork | null>(null);
+    // State for controlling how many artworks are visible (for infinite scroll)
+    const [visibleCount, setVisibleCount] = useState(100);
     // Fetch artworks from Firebase Realtime Database
     const [allArtworks, setAllArtworks] = useState<Artwork[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -69,7 +69,6 @@ export default function HomePage() {
         onValue(dbRef, handleValue);
         return () => off(dbRef, 'value', handleValue);
     }, []);
-	const isLoading = false;
 	const [imagesLoaded, setImagesLoaded] = useState(false);
 	const [minWaitDone, setMinWaitDone] = useState(false);
 
