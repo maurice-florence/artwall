@@ -208,7 +208,7 @@ const Header: React.FC<HeaderProps> = ({
   artworksForCounts,
 }) => {
   
-  const [infoOpen, setInfoOpen] = useState(false);
+  // ...existing code...
   const isMobile = useIsMobile();
   // evaluation dropdown state
   const evalRef = useRef<HTMLDivElement>(null);
@@ -225,20 +225,7 @@ const Header: React.FC<HeaderProps> = ({
   // Calculate counts for each filter option using the artworks from context
   const sourceArtworks: Artwork[] = useMemo(() => (artworksForCounts ?? []), [artworksForCounts]);
 
-    const counts: Record<number, number> = {5:0,4:0,3:0,2:0,1:0};
-    if (!artworksForCounts || artworksForCounts.length === 0) return counts;
-    for (const a of artworksForCounts) {
-      const normalizedEval = (a as any).evaluationNum;
-      const rawEval = (a as any).evaluation;
-      const evalVal = typeof normalizedEval === 'number' ? normalizedEval : (typeof rawEval === 'number' ? rawEval : (rawEval && rawEval !== '' ? Number(rawEval) : NaN));
-      if (!isNaN(evalVal)) {
-        for (const n of [1,2,3,4,5]) {
-          if (evalVal >= n) counts[n] = (counts[n] || 0) + 1;
-        }
-      }
-    }
-    return counts;
-  }, [artworksForCounts]);
+  // ...existing code for evaluation counts useMemo...
 
   const ratingCounts = useMemo(() => {
     const counts: Record<number, number> = {5:0,4:0,3:0,2:0,1:0};
@@ -255,7 +242,7 @@ const Header: React.FC<HeaderProps> = ({
     }
     return counts;
   }, [artworksForCounts]);
-  const [infoOpen, setInfoOpen] = useState(false);
+  // ...existing code...
   return (
     <HeaderWrapper data-testid="header">
       <TitleRow data-testid="header-title-row">
