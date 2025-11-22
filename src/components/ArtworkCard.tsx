@@ -559,7 +559,6 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin, onImageLoaded }: ArtworkCardP
 
     // availableLanguages already declared above
 };
-}
 const DeleteButton = styled.button`
   background: #e74c3c;
   color: #fff;
