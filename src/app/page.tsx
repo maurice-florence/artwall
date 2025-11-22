@@ -58,34 +58,38 @@ export default function HomePage() {
             return () => clearTimeout(timer);
         }, []);
 
-        // Wait for all images to load
+        // Wait for all images to load, or set imagesLoaded true if no artworks
         useEffect(() => {
-        if (!isLoading && allArtworks.length > 0) {
-            // Use coverImageUrl for image loading
-            const imageUrls = allArtworks
-                .map(a => {
-                    if (Array.isArray(a.coverImageUrl)) {
-                        return a.coverImageUrl[0];
-                    }
-                    return a.coverImageUrl;
-                })
-                .filter(Boolean);
-            if (imageUrls.length === 0) {
-                setImagesLoaded(true);
-                return;
+            if (!isLoading) {
+                if (allArtworks.length === 0) {
+                    setImagesLoaded(true);
+                    return;
+                }
+                // Use coverImageUrl for image loading
+                const imageUrls = allArtworks
+                    .map(a => {
+                        if (Array.isArray(a.coverImageUrl)) {
+                            return a.coverImageUrl[0];
+                        }
+                        return a.coverImageUrl;
+                    })
+                    .filter(Boolean);
+                if (imageUrls.length === 0) {
+                    setImagesLoaded(true);
+                    return;
+                }
+                let loadedCount = 0;
+                imageUrls.forEach(url => {
+                    const img = new window.Image();
+                    img.onload = img.onerror = () => {
+                        loadedCount++;
+                        if (loadedCount === imageUrls.length) {
+                            setImagesLoaded(true);
+                        }
+                    };
+                    img.src = url as string;
+                });
             }
-            let loadedCount = 0;
-            imageUrls.forEach(url => {
-                const img = new window.Image();
-                img.onload = img.onerror = () => {
-                    loadedCount++;
-                    if (loadedCount === imageUrls.length) {
-                        setImagesLoaded(true);
-                    }
-                };
-                img.src = url as string;
-            });
-        }
         }, [isLoading, allArtworks]);
 
     useEffect(() => {
