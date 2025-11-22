@@ -142,22 +142,43 @@ export default function HomePage() {
         return dateB - dateA;
     });
 
-    const timelineItems: TimelineItem[] = (() => {
-        const itemsWithYearMarkers: TimelineItem[] = [];
-        let lastYear: number | null = null;
-        sorted.forEach((artwork: Artwork) => {
-            if (artwork.year !== lastYear) {
+        // --- Improved: Reorder artworks for each year so large cards come first (minimize grid gaps) ---
+        const cardSizes = {
+            default: { gridColumn: 1, gridRow: 1 },
+            novel: { gridColumn: 2, gridRow: 1 },
+            prose: { gridColumn: 4, gridRow: 4 }
+        };
+        function getCardArea(subtype: string) {
+            const size = cardSizes[subtype] || cardSizes.default;
+            return size.gridColumn * size.gridRow;
+        }
+        const timelineItems: TimelineItem[] = (() => {
+            const itemsWithYearMarkers: TimelineItem[] = [];
+            let lastYear: number | null = null;
+            // Group by year
+            const byYear: { [year: number]: Artwork[] } = {};
+            sorted.forEach((artwork: Artwork) => {
+                if (!byYear[artwork.year]) byYear[artwork.year] = [];
+                byYear[artwork.year].push(artwork);
+            });
+            // For each year, insert marker, then artworks sorted by area (largest first)
+            Object.keys(byYear).sort((a, b) => Number(b) - Number(a)).forEach(yearStr => {
+                const year = Number(yearStr);
                 itemsWithYearMarkers.push({
-                    id: `year-${artwork.year}`,
+                    id: `year-${year}`,
                     type: 'year-marker',
-                    year: artwork.year
+                    year
                 });
-                lastYear = artwork.year;
-            }
-            itemsWithYearMarkers.push(artwork);
-        });
-        return itemsWithYearMarkers;
-    })();
+                const group = byYear[year];
+                group.sort((a, b) => {
+                    const areaA = getCardArea((a.subtype || 'default').toLowerCase());
+                    const areaB = getCardArea((b.subtype || 'default').toLowerCase());
+                    return areaB - areaA;
+                });
+                group.forEach(artwork => itemsWithYearMarkers.push(artwork));
+            });
+            return itemsWithYearMarkers;
+        })();
 
     const handleSaveNewEntry = async (entry: any) => {
         if (entry && entry._delete && entry.id && entry.medium) {
