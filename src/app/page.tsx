@@ -28,6 +28,8 @@ export interface ViewOptions {
 }
 
 export default function HomePage() {
+        // State for controlling how many artworks are visible (for infinite scroll)
+        const [visibleCount, setVisibleCount] = useState(100);
 	// TODO: Replace with actual artworks data source
 	const allArtworks: Artwork[] = [];
 	const isLoading = false;
