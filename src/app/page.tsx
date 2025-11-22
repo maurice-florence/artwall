@@ -39,8 +39,8 @@ export default function HomePage() {
             const [editItem, setEditItem] = useState<Artwork | null>(null);
         // State for controlling how many artworks are visible (for infinite scroll)
         const [visibleCount, setVisibleCount] = useState(100);
-	// TODO: Replace with actual artworks data source
-	const allArtworks: Artwork[] = [];
+    // TODO: Replace with actual artworks data source
+    const allArtworks: Artwork[] = React.useMemo(() => [], []);
 	const isLoading = false;
 	const [imagesLoaded, setImagesLoaded] = useState(false);
 	const [minWaitDone, setMinWaitDone] = useState(false);
