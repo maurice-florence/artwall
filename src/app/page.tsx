@@ -383,6 +383,6 @@ export default function HomePage() {
                 editItem={editItem}
             />
         </PageLayout>
+
     );
->>>>>>> fix/grid-reorder-by-size
 }
