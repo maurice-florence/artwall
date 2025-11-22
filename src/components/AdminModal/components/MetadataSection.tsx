@@ -71,6 +71,7 @@ export const MetadataSection: React.FC<FormComponentProps> = ({
       {shouldShowField?.('language2') && (
         <SmartFormField
           label="Secundaire Taal"
+          field="language2"
           value={formData.language2 || ''}
           formData={formData}
           onChange={updateField}

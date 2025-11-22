@@ -1,6 +1,6 @@
 "use client";
 // --- Client-side HomePage with grid reordering, filters, and modal logic ---
-import React, { useState, useEffect, useMemo, Suspense } from 'react';
+import React, { useState, useEffect, useMemo, Suspense, useCallback } from 'react';
 import { PageLayout, MainContent, CollageContainer, NoResultsMessage } from '@/app/HomePage.styles';
 import MobileNav from '@/components/MobileNav';
 import Header from '@/components/Header';
@@ -28,6 +28,15 @@ export interface ViewOptions {
 }
 
 export default function HomePage() {
+            // Filters and admin state
+            const [selectedMedium, setSelectedMedium] = useState<string>('all');
+            const [selectedYear, setSelectedYear] = useState<string>('all');
+            const [searchTerm, setSearchTerm] = useState<string>('');
+            const [isAdmin, setIsAdmin] = useState<boolean>(false); // Set to true for admin features
+            const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
+            const [artworkToEdit, setArtworkToEdit] = useState<Artwork | null>(null);
+            const [showNewEntryModal, setShowNewEntryModal] = useState(false);
+            const [editItem, setEditItem] = useState<Artwork | null>(null);
         // State for controlling how many artworks are visible (for infinite scroll)
         const [visibleCount, setVisibleCount] = useState(100);
 	// TODO: Replace with actual artworks data source
@@ -141,11 +150,19 @@ export default function HomePage() {
     });
 
         // --- Improved: Reorder artworks for each year so large cards come first (minimize grid gaps) ---
-        const cardSizes = {
+        const cardSizes: { [key: string]: { gridColumn: number; gridRow: number } } = {
             default: { gridColumn: 1, gridRow: 1 },
             novel: { gridColumn: 2, gridRow: 1 },
             prose: { gridColumn: 4, gridRow: 4 }
         };
+            // Firebase imports (mocked for now, replace with real ones if needed)
+            // import { remove, ref, push, update } from 'firebase/database';
+            // import { realtimeDb } from '@/src/firebase';
+            const remove = (...args: any[]) => Promise.resolve();
+            const ref = (...args: any[]) => ({});
+            const push = (...args: any[]) => ({ key: 'mock-key' });
+            const update = (...args: any[]) => Promise.resolve();
+            const realtimeDb = {};
         function getCardArea(subtype: string) {
             const size = cardSizes[subtype] || cardSizes.default;
             return size.gridColumn * size.gridRow;

@@ -13,6 +13,8 @@ const appVersion = process.env.NEXT_PUBLIC_APP_VERSION || '0.1.0';
 const gitCommit = process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA || '';
 
 
+
+
 // Info button for app info modal
 const InfoButton = styled.button`
   background: none;
@@ -209,6 +211,9 @@ const Header: React.FC<HeaderProps> = ({
 }) => {
   
   // ...existing code...
+  const [infoOpen, setInfoOpen] = useState(false);
+  const initialEvalCounts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+  const [evalCounts, setEvalCounts] = useState<{[key:number]:number}>(initialEvalCounts);
   const isMobile = useIsMobile();
   // evaluation dropdown state
   const evalRef = useRef<HTMLDivElement>(null);
