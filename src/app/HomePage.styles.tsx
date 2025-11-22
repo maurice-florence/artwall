@@ -59,33 +59,6 @@ export const CollageContainer = styled.main`
     gap: 2px;
   }
 `;
-
-<<<<<<< HEAD
-  @media (min-width: 1920px) {
-    grid-template-columns: repeat(5, 1fr);
-  }
-  @media (max-width: 1024px) {
-    /* Desktop-to-tablet: tighten slightly but keep card size */
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    grid-auto-rows: 210px;
-    padding: 1rem;
-  }
-  @media (max-width: 768px) {
-    /* Mobile portrait/landscape: enforce fixed card width to prevent stretch + overlap */
-    grid-template-columns: repeat(auto-fill, 120px);
-    grid-auto-rows: 150px; /* matches 120px * 1.25 (aspect-ratio 4/5) */
-    justify-content: center; /* center leftover space */
-    padding: 0.5rem;
-    gap: 2px;
-  }
-  @media (max-width: 480px) {
-    grid-template-columns: repeat(auto-fill, 120px);
-    grid-auto-rows: 150px;
-    justify-content: center;
-    padding: 0.4rem;
-    gap: 2px;
-  }
-=======
 export const YearSeparatorCard = styled.div`
   width: 100%;
   aspect-ratio: 3/4;
@@ -94,6 +67,7 @@ export const YearSeparatorCard = styled.div`
   justify-content: center;
   background: transparent;
   color: #888;
+
   font-size: 1.3em;
   font-weight: bold;
   border-radius: 10px;
@@ -101,7 +75,6 @@ export const YearSeparatorCard = styled.div`
   box-shadow: none;
   pointer-events: none;
   user-select: none;
->>>>>>> fix/grid-reorder-by-size
 `;
 
 // --- Hulp-componenten ---

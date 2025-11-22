@@ -1,6 +1,7 @@
 import { render, screen, fireEvent } from '@/__tests__/test-utils';
 import React from 'react';
 import HomeClient from '@/app/HomeClient';
+import HomePage from '@/app/page';
 
 const mockArtworks = [
   {

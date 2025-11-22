@@ -402,9 +402,6 @@ function getMediaType(url: string): 'image' | 'video' | 'audio' | 'pdf' | 'unkno
                         const type = getMediaType(currentUrl);
                         if (type === 'image') {
                           const fullSizeUrl = getResizedImageUrl(currentUrl, 'full');
-<<<<<<< HEAD
-                          return <ResponsiveImage src={fullSizeUrl} alt={`Media ${currentMediaIndex + 1}`} data-testid={`modal-media-image-${currentMediaIndex}`} onClick={() => window.open(currentUrl, '_blank')} />;
-=======
                           const originalUrl = getResizedImageUrl(currentUrl, 'original');
                           return (
                             <ResponsiveImage 
@@ -414,11 +411,13 @@ function getMediaType(url: string): 'image' | 'video' | 'audio' | 'pdf' | 'unkno
                               onClick={() => window.open(originalUrl, '_blank')} 
                             />
                           );
->>>>>>> fix/grid-reorder-by-size
+                        } else if (type === 'video') {
+                          return <video src={currentUrl} controls style={{ width: '100%', maxHeight: '70vh', borderRadius: 4, background: '#222' }} data-testid={`modal-media-video-${currentMediaIndex}`} />;
+                        } else if (type === 'audio') {
+                          return <audio src={currentUrl} controls style={{ width: '100%', borderRadius: 4, background: '#222' }} data-testid={`modal-media-audio-${currentMediaIndex}`} />;
+                        } else if (type === 'pdf') {
+                          return <iframe src={currentUrl} style={{ width: '100%', height: '70vh', border: '1px solid #ddd', borderRadius: 4 }} title={`PDF ${currentMediaIndex + 1}`} data-testid={`modal-media-pdf-${currentMediaIndex}`} />;
                         }
-                        if (type === 'video') return <video src={currentUrl} controls style={{ width: '100%', maxHeight: '70vh', borderRadius: 4, background: '#222' }} data-testid={`modal-media-video-${currentMediaIndex}`} />;
-                        if (type === 'audio') return <audio src={currentUrl} controls style={{ width: '100%', borderRadius: 4, background: '#222' }} data-testid={`modal-media-audio-${currentMediaIndex}`} />;
-                        if (type === 'pdf') return <iframe src={currentUrl} style={{ width: '100%', height: '70vh', border: '1px solid #ddd', borderRadius: 4 }} title={`PDF ${currentMediaIndex + 1}`} data-testid={`modal-media-pdf-${currentMediaIndex}`} />;
                         return <div style={{ width: '100%', minHeight: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#888', fontSize: 16 }}><span>Onbekend mediabestand</span></div>;
                       })()}
                       {allMedia.length > 1 && (
@@ -516,6 +515,18 @@ function getMediaType(url: string): 'image' | 'video' | 'audio' | 'pdf' | 'unkno
     document.body
   );
 };
+                        if (type === 'image') {
+                          const fullSizeUrl = getResizedImageUrl(currentUrl, 'full');
+                          const originalUrl = getResizedImageUrl(currentUrl, 'original');
+                          return (
+                            <ResponsiveImage 
+                              src={fullSizeUrl} 
+                              alt={`Media ${currentMediaIndex + 1}`} 
+                              data-testid={`modal-media-image-${currentMediaIndex}`} 
+                              onClick={() => window.open(originalUrl, '_blank')} 
+                            />
+                          );
+                        }
 
 // Styled components for layout
 const MediaTextContainer = styled.div`

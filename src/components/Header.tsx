@@ -1,33 +1,8 @@
-<<<<<<< HEAD
-
-=======
-import AppInfoModal from './AppInfoModal';
-import { FaInfoCircle } from 'react-icons/fa';
-const appVersion = process.env.NEXT_PUBLIC_APP_VERSION || '0.1.0';
-const gitCommit = process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA || '';
-const InfoButton = styled.button`
-  background: none;
-  border: none;
-  color: #0b8783;
-  font-size: 1.3rem;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  border-radius: 4px;
-  padding: 0.3em 0.5em;
-  transition: background 0.2s;
-  &:hover {
-    background: rgba(11,135,131,0.08);
-  }
-`;
->>>>>>> fix/grid-reorder-by-size
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import styled from 'styled-components';
-import { FaPenNib, FaPaintBrush, FaMusic, FaEllipsisH, FaCube, FaGlobe, FaCertificate, FaStar, FaSearch } from 'react-icons/fa';
+import { FaPenNib, FaPaintBrush, FaMusic, FaEllipsisH, FaCube, FaGlobe, FaCertificate, FaStar, FaSearch, FaInfoCircle } from 'react-icons/fa';
 import ThemeEditor from './ThemeEditor';
 import AppInfoModal from './AppInfoModal';
-import { FaInfoCircle } from 'react-icons/fa';
 import { MEDIUMS, MEDIUM_LABELS, SUBTYPE_LABELS } from '@/constants/medium';
 import { useDropdown } from '@/hooks/useDropdown';
 import { BaseIconButton, Dropdown } from './common';
@@ -36,6 +11,7 @@ import type { Artwork } from '@/types';
 
 const appVersion = process.env.NEXT_PUBLIC_APP_VERSION || '0.1.0';
 const gitCommit = process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA || '';
+
 
 // Info button for app info modal
 const InfoButton = styled.button`
@@ -249,7 +225,6 @@ const Header: React.FC<HeaderProps> = ({
   // Calculate counts for each filter option using the artworks from context
   const sourceArtworks: Artwork[] = useMemo(() => (artworksForCounts ?? []), [artworksForCounts]);
 
-  const evalCounts = useMemo(() => {
     const counts: Record<number, number> = {5:0,4:0,3:0,2:0,1:0};
     if (!artworksForCounts || artworksForCounts.length === 0) return counts;
     for (const a of artworksForCounts) {
@@ -390,7 +365,6 @@ const Header: React.FC<HeaderProps> = ({
 
             {/* Note: eval/rating counts are intentionally not shown on the main header; options show numbers inside the dropdown */}
             <ThemeEditor />
-<<<<<<< HEAD
             <InfoButton title="App informatie" aria-label="App informatie" onClick={() => setInfoOpen(true)}>
               <FaInfoCircle />
             </InfoButton>

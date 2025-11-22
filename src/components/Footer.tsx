@@ -1,29 +1,13 @@
-const VersionTag = styled.div`
-  position: fixed;
-  bottom: 12px;
-  right: 16px;
-  background: #eee;
-  color: #333;
-  font-size: 0.75rem;
-  border-radius: 6px;
-  padding: 0.4em 0.8em;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-  opacity: 0.95;
-  z-index: 2000;
-  border: 2px solid #0b8783;
-`;
-const appVersion = process.env.NEXT_PUBLIC_APP_VERSION || 'dev';
-const gitCommit = process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA || '';
-import React, { useState, useEffect, useMemo } from 'react';
+
+import * as React from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import styled from 'styled-components';
 import { getAuth, onAuthStateChanged, User } from 'firebase/auth';
 import { ref, onValue } from 'firebase/database';
 import type { Artwork } from '@/types';
-// 👇 FIX: Import your Realtime Database instance, not the Firestore one.
 import { realtimeDb } from '@/firebase/client';
 
-// SECTION: Styled Components (no changes needed here)
-
+// SECTION: Styled Components
 const FooterWrapper = styled.footer`
   text-align: center;
   padding: 3rem 2rem 2rem;
@@ -49,6 +33,21 @@ const LastUpdatedText = styled.p`
   color: #999;
 `;
 
+const VersionTag = styled.div`
+  position: fixed;
+  bottom: 12px;
+  right: 16px;
+  background: #eee;
+  color: #333;
+  font-size: 0.75rem;
+  border-radius: 6px;
+  padding: 0.4em 0.8em;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  opacity: 0.95;
+  z-index: 2000;
+  border: 2px solid #0b8783;
+`;
+
 const DebugWrapper = styled.div`
   margin-top: 16px;
   font-size: 0.9rem;
@@ -65,29 +64,33 @@ const DebugWrapper = styled.div`
   }
 `;
 
-// !SECTION
-
 interface FooterProps {
   onAddNewArtwork?: () => void;
   artworks?: Artwork[]; // server-provided artworks
 }
 
-const VersionTag = styled.div`
-  position: fixed;
-  bottom: 12px;
-  right: 16px;
-  background: #eee;
-  color: #333;
-  font-size: 0.75rem;
-  border-radius: 6px;
-  padding: 0.4em 0.8em;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-  opacity: 0.85;
-  z-index: 2000;
-`;
-
-const appVersion = process.env.NEXT_PUBLIC_APP_VERSION || '0.1.0';
+const appVersion = process.env.NEXT_PUBLIC_APP_VERSION || 'dev';
 const gitCommit = process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA || '';
+
+// DebugInfo component
+const DebugInfo: React.FC<{
+  dbCounts: Record<string, number>;
+  appCounts: Record<string, number>;
+}> = ({ dbCounts, appCounts }) => {
+  const allKeys = Array.from(new Set([...Object.keys(dbCounts), ...Object.keys(appCounts)]));
+  return (
+    <DebugWrapper>
+      <strong>Database vs. App (per categorie):</strong>
+      <ul>
+        {allKeys.map((key) => (
+          <li key={key}>
+            <span style={{ fontWeight: 500 }}>{key}:</span> DB: {dbCounts[key] ?? 0}, App: {appCounts[key] ?? 0}
+          </li>
+        ))}
+      </ul>
+    </DebugWrapper>
+  );
+};
 
 const Footer: React.FC<FooterProps> = ({ onAddNewArtwork, artworks }) => {
   // Stabilize reference to artworks to satisfy react-hooks/exhaustive-deps
@@ -135,13 +138,71 @@ const Footer: React.FC<FooterProps> = ({ onAddNewArtwork, artworks }) => {
     const unsubscribeAuth = onAuthStateChanged(auth, (user: User | null) => {
       setIsLoggedIn(!!user); // Set to true if user exists, false otherwise.
     });
+    import styled from 'styled-components';
+    import { getAuth, onAuthStateChanged, User } from 'firebase/auth';
+    import { ref, onValue } from 'firebase/database';
+    import type { Artwork } from '@/types';
+    import { realtimeDb } from '@/firebase/client';
 
+    // SECTION: Styled Components
+    const FooterWrapper = styled.footer`
+      text-align: center;
+      padding: 3rem 2rem 2rem;
+      margin-top: 4rem;
+      border-top: 1px solid #dddddd;
+      background-color: ${({ theme }) => theme.cardBg};
+      color: ${({ theme }) => theme.cardText};
+    `;
     // 3. Return a cleanup function to unsubscribe from both listeners.
+    const AddArtworkButton = styled.button`
+      background: ${({ theme }) => theme.accent};
+      color: ${({ theme }) => theme.accentText};
+      border: none;
+      border-radius: 6px;
+      padding: 0.75rem 1.5rem;
+      font-size: 1rem;
+      cursor: pointer;
+      margin-bottom: 1rem;
+    `;
     return () => {
+    const LastUpdatedText = styled.p`
+      font-size: 0.8rem;
+      color: #999;
+    `;
       unsubscribeDb();
+    const VersionTag = styled.div`
+      position: fixed;
+      bottom: 12px;
+      right: 16px;
+      background: #eee;
+      color: #333;
+      font-size: 0.75rem;
+      border-radius: 6px;
+      padding: 0.4em 0.8em;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      opacity: 0.95;
+      z-index: 2000;
+      border: 2px solid #0b8783;
+    `;
       unsubscribeAuth();
+    const DebugWrapper = styled.div`
+      margin-top: 16px;
+      font-size: 0.9rem;
+      color: #888;
+      ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+      a {
+        color: #E07A5F;
+        font-weight: bold;
+        margin: 0 8px;
+      }
+    `;
     };
   }, []); // Empty dependency array means this runs only once on mount.
+
 
   return (
     <>
@@ -158,53 +219,12 @@ const Footer: React.FC<FooterProps> = ({ onAddNewArtwork, artworks }) => {
         {process.env.NODE_ENV === 'development' && (
           <DebugInfo dbCounts={dbCounts} appCounts={appCounts} />
         )}
-<<<<<<< HEAD
       </FooterWrapper>
       <VersionTag>
         v{appVersion}{gitCommit ? ` (${gitCommit.slice(0,7)})` : ''}
       </VersionTag>
-=======
-        <div style={{marginTop: '2.5rem', fontSize: '0.95em', color: '#888'}}>
-          App created by Johannes using Next.js.<br />
-          <span style={{fontWeight: 500}}>Version:</span> {process.env.NEXT_PUBLIC_APP_VERSION || 'dev'}
-        </div>
-      </FooterWrapper>
->>>>>>> fix/grid-reorder-by-size
     </>
   );
-};
-
-// ✅ IMPROVEMENT: Extracted the debug UI into its own clean component.
-const DebugInfo: React.FC<{
-  dbCounts: Record<string, number>;
-  appCounts: Record<string, number>;
-}> = ({ dbCounts, appCounts }) => {
-  const allKeys = Array.from(new Set([...Object.keys(dbCounts), ...Object.keys(appCounts)]));
-
-  return (
-    <DebugWrapper>
-      <strong>Database vs. App (per categorie):</strong>
-      return (
-        <>
-          <FooterWrapper>
-            {isLoggedIn && onAddNewArtwork && (
-              <AddArtworkButton onClick={onAddNewArtwork}>
-                + Nieuw kunstwerk toevoegen
-              </AddArtworkButton>
-            )}
-
-            {formattedDate && <LastUpdatedText>Laatst bijgewerkt: {formattedDate}</LastUpdatedText>}
-
-            {/* Conditionally render debug info only in development environment */}
-            {process.env.NODE_ENV === 'development' && (
-              <DebugInfo dbCounts={dbCounts} appCounts={appCounts} />
-            )}
-          </FooterWrapper>
-          <VersionTag>
-            v{appVersion}{gitCommit ? ` (${gitCommit.slice(0,7)})` : ''}
-          </VersionTag>
-        </>
-      );
 };
 
 export default Footer;
