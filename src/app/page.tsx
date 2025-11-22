@@ -28,7 +28,9 @@ export interface ViewOptions {
 }
 
 export default function HomePage() {
-    const { artworks: allArtworks, isLoading } = useArtworks();
+    // TODO: Replace with actual artworks data source
+    const allArtworks: Artwork[] = [];
+    const isLoading = false;
     const [imagesLoaded, setImagesLoaded] = useState(false);
     const [minWaitDone, setMinWaitDone] = useState(false);
 
