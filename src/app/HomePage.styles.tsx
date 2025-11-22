@@ -5,12 +5,15 @@ import styled, { keyframes } from 'styled-components';
 export const PageLayout = styled.div`
   display: flex;
   background-color: ${({ theme }) => theme.body};
+  overflow-x: hidden;
 `;
 
 export const MainContent = styled.div`
   flex-grow: 1;
     width: 100%;
-    padding: 0 180px;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 12px;
   transition: none;
   @media (max-width: 1024px) {
     padding: 0 24px;
@@ -22,14 +25,13 @@ export const MainContent = styled.div`
 
 export const CollageContainer = styled.main`
   display: grid;
-  padding: 1.5rem;
-  gap: ${({ theme }) => theme.gridGap ? `${theme.gridGap}px` : '4px'};
-  
-  /* De kern van de nieuwe layout */
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  grid-auto-rows: 225px;
-  
-  /* Deze regel vertelt de grid om gaten op te vullen! */
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0;
+  gap: 4px;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  grid-auto-rows: 1fr;
   grid-auto-flow: dense;
 
   @media (min-width: 1920px) {
@@ -56,6 +58,50 @@ export const CollageContainer = styled.main`
     padding: 0.4rem;
     gap: 2px;
   }
+`;
+
+<<<<<<< HEAD
+  @media (min-width: 1920px) {
+    grid-template-columns: repeat(5, 1fr);
+  }
+  @media (max-width: 1024px) {
+    /* Desktop-to-tablet: tighten slightly but keep card size */
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    grid-auto-rows: 210px;
+    padding: 1rem;
+  }
+  @media (max-width: 768px) {
+    /* Mobile portrait/landscape: enforce fixed card width to prevent stretch + overlap */
+    grid-template-columns: repeat(auto-fill, 120px);
+    grid-auto-rows: 150px; /* matches 120px * 1.25 (aspect-ratio 4/5) */
+    justify-content: center; /* center leftover space */
+    padding: 0.5rem;
+    gap: 2px;
+  }
+  @media (max-width: 480px) {
+    grid-template-columns: repeat(auto-fill, 120px);
+    grid-auto-rows: 150px;
+    justify-content: center;
+    padding: 0.4rem;
+    gap: 2px;
+  }
+=======
+export const YearSeparatorCard = styled.div`
+  width: 100%;
+  aspect-ratio: 3/4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  color: #888;
+  font-size: 1.3em;
+  font-weight: bold;
+  border-radius: 10px;
+  border: none;
+  box-shadow: none;
+  pointer-events: none;
+  user-select: none;
+>>>>>>> fix/grid-reorder-by-size
 `;
 
 // --- Hulp-componenten ---

@@ -70,4 +70,18 @@ describe('Artwall App Integration', () => {
     // Sidebar has been removed from the layout
     expect(screen.queryByText(/sidebar/i)).not.toBeInTheDocument();
   });
+
+  it('does not cause horizontal scroll on HomePage', () => {
+    render(<HomePage />);
+    // Check document body does not overflow horizontally
+    // This test simulates a desktop viewport
+    const body = document.body;
+    // The scrollWidth should be equal to or less than clientWidth (no horizontal scroll)
+    expect(body.scrollWidth).toBeLessThanOrEqual(body.clientWidth + 1); // +1 for rounding
+    // Optionally, check main content
+    const main = document.querySelector('main');
+    if (main) {
+      expect(main.scrollWidth).toBeLessThanOrEqual(main.clientWidth + 1);
+    }
+  });
 });

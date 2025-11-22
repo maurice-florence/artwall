@@ -402,7 +402,19 @@ function getMediaType(url: string): 'image' | 'video' | 'audio' | 'pdf' | 'unkno
                         const type = getMediaType(currentUrl);
                         if (type === 'image') {
                           const fullSizeUrl = getResizedImageUrl(currentUrl, 'full');
+<<<<<<< HEAD
                           return <ResponsiveImage src={fullSizeUrl} alt={`Media ${currentMediaIndex + 1}`} data-testid={`modal-media-image-${currentMediaIndex}`} onClick={() => window.open(currentUrl, '_blank')} />;
+=======
+                          const originalUrl = getResizedImageUrl(currentUrl, 'original');
+                          return (
+                            <ResponsiveImage 
+                              src={fullSizeUrl} 
+                              alt={`Media ${currentMediaIndex + 1}`} 
+                              data-testid={`modal-media-image-${currentMediaIndex}`} 
+                              onClick={() => window.open(originalUrl, '_blank')} 
+                            />
+                          );
+>>>>>>> fix/grid-reorder-by-size
                         }
                         if (type === 'video') return <video src={currentUrl} controls style={{ width: '100%', maxHeight: '70vh', borderRadius: 4, background: '#222' }} data-testid={`modal-media-video-${currentMediaIndex}`} />;
                         if (type === 'audio') return <audio src={currentUrl} controls style={{ width: '100%', borderRadius: 4, background: '#222' }} data-testid={`modal-media-audio-${currentMediaIndex}`} />;
@@ -467,7 +479,15 @@ function getMediaType(url: string): 'image' | 'video' | 'audio' | 'pdf' | 'unkno
                         const type = getMediaType(currentUrl);
                         if (type === 'image') {
                           const fullSizeUrl = getResizedImageUrl(currentUrl, 'full');
-                          return <ResponsiveImage src={fullSizeUrl} alt={`Media ${currentMediaIndex + 1}`} data-testid={`modal-media-image-${currentMediaIndex}`} onClick={() => window.open(currentUrl, '_blank')} />;
+                          const originalUrl = getResizedImageUrl(currentUrl, 'original');
+                          return (
+                            <ResponsiveImage 
+                              src={fullSizeUrl} 
+                              alt={`Media ${currentMediaIndex + 1}`} 
+                              data-testid={`modal-media-image-${currentMediaIndex}`} 
+                              onClick={() => window.open(originalUrl, '_blank')} 
+                            />
+                          );
                         }
                         if (type === 'video') return <video src={currentUrl} controls style={{ width: '100%', maxHeight: '70vh', borderRadius: 4, background: '#222' }} data-testid={`modal-media-video-${currentMediaIndex}`} />;
                         if (type === 'audio') return <audio src={currentUrl} controls style={{ width: '100%', borderRadius: 4, background: '#222' }} data-testid={`modal-media-audio-${currentMediaIndex}`} />;

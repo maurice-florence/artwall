@@ -33,25 +33,34 @@ const getGridSpan = (subtype: string, medium?: ArtworkMedium) => {
 const CardContainer = styled.div<{ $medium: ArtworkMedium; $subtype?: string; $blank?: boolean }>`
   perspective: 1000px;
   width: 100%;
-  max-width: 480px;
+  aspect-ratio: 3/4;
   border-radius: 10px;
   ${props => getGridSpan(props.$subtype || 'default', props.$medium)}
 
   font-size: 0.75rem;
 
+  position: relative;
+
   @media (max-width: 768px) {
     grid-column: span 1;
     grid-row: span 1;
     min-width: 0;
+<<<<<<< HEAD
     max-width: 100vw;
     min-height: 60px;
     font-size: 0.65rem;
     aspect-ratio: 4 / 5; /* keep consistent sizing across orientation */
+=======
+    min-height: 80px;
+    font-size: 0.7rem;
+>>>>>>> fix/grid-reorder-by-size
   }
 `;
 
 const CardInner = styled.div`
-  position: relative;
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
   transition: transform 0.6s;
@@ -69,7 +78,6 @@ const CardInner = styled.div`
 const CardFace = styled.div`
   position: absolute;
   width: 100%;
-  max-width: 480px;
   height: 100%;
   -webkit-backface-visibility: hidden; /* Safari */
   backface-visibility: hidden;
@@ -447,7 +455,13 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin, onImageLoaded }: ArtworkCardP
     }, [isWriting, hasImage, onSelect]);
 
     // Determine image URL for overlay computation
-    const imageUrl = hasImage ? getImageUrl(images[0], 'card') : undefined;
+    // Card front preview: use smallest available (thumbnail)
+    // Use an even lower resolution for the card front preview (e.g., 100x100)
+    const imageUrl = hasImage ? getImageUrl(images[0], 'thumbnail') : undefined;
+    // Card inside/back: use medium/full size
+    const imageUrlMedium = hasImage ? getImageUrl(images[0], 'full') : undefined;
+    // Full screen: use original
+    const imageUrlOriginal = hasImage ? getImageUrl(images[0], 'original') : undefined;
 
     // Build a theme-based gradient overlay for images when enabled (must be before any returns)
     const imageOverlayBg = useMemo(() => {
@@ -478,7 +492,7 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin, onImageLoaded }: ArtworkCardP
     // Card front: only show title, image/waveform, language, and footer. No extra text under the title for any medium.
     return (
       <CardContainer $medium={artwork.medium} $subtype={subtype} onClick={onSelect} data-testid={`artwork-card-${artwork.id}`}>
-  <CardInner data-flip={typeof window !== 'undefined' && window.matchMedia ? (window.matchMedia('(hover: hover) and (pointer: fine)').matches ? 'hover-only' : 'disabled') : 'disabled'}>
+        <CardInner data-flip={typeof window !== 'undefined' && window.matchMedia ? (window.matchMedia('(hover: hover) and (pointer: fine)').matches ? 'hover-only' : 'disabled') : 'disabled'}>
           <CardFront 
             $medium={artwork.medium} 
             $imageUrl={imageUrl} 
@@ -493,21 +507,28 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin, onImageLoaded }: ArtworkCardP
               <>
                 <ImageSkeleton aria-hidden="true" className={!imgLoaded ? '' : 'fade-out'} />
                 <CardImage 
-                  src={imageUrl} 
+                  src={getImageUrl(images[0], 'thumbnail')} 
                   alt={artwork.title || 'Artwork'} 
                   loading="lazy"
                   decoding="async"
+<<<<<<< HEAD
                   srcSet={`${getImageUrl(images[0], 'thumbnail')} 200w, ${getImageUrl(images[0], 'card')} 480w, ${getImageUrl(images[0], 'full')} 1200w`}
                   sizes="(max-width: 480px) 90vw, (max-width: 768px) 45vw, 360px"
                   onLoad={() => { setImgLoaded(true); onImageLoaded?.(); }}
                   onError={() => { setImgLoaded(true); onImageLoaded?.(); }}
                   className={imgLoaded ? 'loaded' : ''}
+=======
+                  srcSet={`${getImageUrl(images[0], 'thumbnail')} 100w, ${getImageUrl(images[0], 'card')} 480w, ${getImageUrl(images[0], 'full')} 1200w`}
+                  sizes="(max-width: 480px) 90vw, (max-width: 768px) 45vw, 120px"
+>>>>>>> fix/grid-reorder-by-size
                 />
                 {imageOverlayBg && (
                   <ImageGradientOverlay $bg={imageOverlayBg} aria-hidden="true" />
                 )}
               </>
             ) : (isWriting || isAudio) && !hasImage ? (
+              // TODO: Pass imageUrlMedium to the card back/expanded view
+              // TODO: Pass imageUrlOriginal to the full screen view in the image carousel/modal
               isWriting ? (
                 showPreview ? (
                   <TextOverlay style={{ color: useDarkText ? theme.text : theme.cardText }}>{textPreview}</TextOverlay>

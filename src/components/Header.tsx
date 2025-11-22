@@ -1,4 +1,27 @@
+<<<<<<< HEAD
 
+=======
+import AppInfoModal from './AppInfoModal';
+import { FaInfoCircle } from 'react-icons/fa';
+const appVersion = process.env.NEXT_PUBLIC_APP_VERSION || '0.1.0';
+const gitCommit = process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA || '';
+const InfoButton = styled.button`
+  background: none;
+  border: none;
+  color: #0b8783;
+  font-size: 1.3rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border-radius: 4px;
+  padding: 0.3em 0.5em;
+  transition: background 0.2s;
+  &:hover {
+    background: rgba(11,135,131,0.08);
+  }
+`;
+>>>>>>> fix/grid-reorder-by-size
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import styled from 'styled-components';
 import { FaPenNib, FaPaintBrush, FaMusic, FaEllipsisH, FaCube, FaGlobe, FaCertificate, FaStar, FaSearch } from 'react-icons/fa';
@@ -256,7 +279,12 @@ const Header: React.FC<HeaderProps> = ({
       }
     }
     return counts;
+<<<<<<< HEAD
   }, [artworksForCounts]);
+=======
+  }, [artworks]);
+  const [infoOpen, setInfoOpen] = useState(false);
+>>>>>>> fix/grid-reorder-by-size
   return (
     <HeaderWrapper data-testid="header">
       <TitleRow data-testid="header-title-row">
@@ -362,10 +390,17 @@ const Header: React.FC<HeaderProps> = ({
 
             {/* Note: eval/rating counts are intentionally not shown on the main header; options show numbers inside the dropdown */}
             <ThemeEditor />
+<<<<<<< HEAD
             <InfoButton title="App informatie" aria-label="App informatie" onClick={() => setInfoOpen(true)}>
               <FaInfoCircle />
             </InfoButton>
             <AppInfoModal open={infoOpen} onClose={() => setInfoOpen(false)} version={appVersion} commit={gitCommit} />
+=======
+            <InfoButton title="App informatie" aria-label="App informatie" onClick={() => setInfoOpen(true)}>
+              <FaInfoCircle />
+            </InfoButton>
+            <AppInfoModal open={infoOpen} onClose={() => setInfoOpen(false)} version={appVersion} commit={gitCommit} />
+>>>>>>> fix/grid-reorder-by-size
           </RightSection>
       </ControlsRow>
     </HeaderWrapper>
