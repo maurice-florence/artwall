@@ -1,17 +1,17 @@
 "use client";
 // --- Client-side HomePage with grid reordering, filters, and modal logic ---
 import React, { useState, useEffect, useMemo, Suspense } from 'react';
-import PageLayout, { MainContent, CollageContainer, NoResultsMessage } from '@/app/HomePage.styles';
+import { PageLayout, MainContent, CollageContainer, NoResultsMessage } from '@/app/HomePage.styles';
 import MobileNav from '@/components/MobileNav';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import ArtworkCard from '@/components/ArtworkCard';
 import YearMarkerCard from '@/components/YearMarker';
 import Modal from '@/components/Modal';
-import ErrorBoundary from '@/components/ErrorBoundary';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import AdminModal from '@/components/AdminModal';
 import NewEntryModal from '@/components/NewEntryModal';
-import { useArtworks } from '@/context/ArtworksContext';
+// import { useArtworks } from '@/context/ArtworksContext'; // ArtworksContext is retired; replace with correct data source or remove usage
 import type { Artwork, TimelineItem } from '@/types';
 // (No duplicate export, only the interactive HomePage)
 export interface FilterOptions {
