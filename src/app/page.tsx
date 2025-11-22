@@ -1,15 +1,18 @@
 // --- Client-side HomePage with grid reordering, filters, and modal logic ---
-// (Full implementation preserved, server component version removed)
-
-// ...existing code from the interactive HomePage (as in the resolved version above)...
-
-// (Paste the full, working HomePage implementation here, as in the resolved version above)
-
+import React, { useState, useEffect, useMemo, Suspense } from 'react';
+import PageLayout, { MainContent, CollageContainer, NoResultsMessage } from '@/app/HomePage.styles';
+import MobileNav from '@/components/MobileNav';
+import Header from '@/components/Header';
+import Footer from '@/components/Footer';
+import ArtworkCard from '@/components/ArtworkCard';
+import YearMarkerCard from '@/components/YearMarker';
+import Modal from '@/components/Modal';
+import ErrorBoundary from '@/components/ErrorBoundary';
+import AdminModal from '@/components/AdminModal';
+import NewEntryModal from '@/components/NewEntryModal';
+import { useArtworks } from '@/context/ArtworksContext';
+import type { Artwork, TimelineItem } from '@/types';
 // (No duplicate export, only the interactive HomePage)
-
-// ...existing code...
-
-// (End of file)
 export interface FilterOptions {
     medium: string;
     year: string;
