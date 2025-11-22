@@ -28,11 +28,11 @@ export interface ViewOptions {
 }
 
 export default function HomePage() {
-    // TODO: Replace with actual artworks data source
-    const allArtworks: Artwork[] = [];
-    const isLoading = false;
-    const [imagesLoaded, setImagesLoaded] = useState(false);
-    const [minWaitDone, setMinWaitDone] = useState(false);
+	// TODO: Replace with actual artworks data source
+	const allArtworks: Artwork[] = [];
+	const isLoading = false;
+	const [imagesLoaded, setImagesLoaded] = useState(false);
+	const [minWaitDone, setMinWaitDone] = useState(false);
 
     // Add missing state for evaluation and rating filters
     const [selectedEvaluation, setSelectedEvaluation] = useState<'all' | number>('all');
@@ -49,26 +49,32 @@ export default function HomePage() {
 
         // Wait for all images to load
         useEffect(() => {
-            if (!isLoading && allArtworks.length > 0) {
-                const imageUrls = allArtworks
-                    .map(a => a.imageUrl)
-                    .filter(Boolean);
-                if (imageUrls.length === 0) {
-                    setImagesLoaded(true);
-                    return;
-                }
-                let loadedCount = 0;
-                imageUrls.forEach(url => {
-                    const img = new window.Image();
-                    img.onload = img.onerror = () => {
-                        loadedCount++;
-                        if (loadedCount === imageUrls.length) {
-                            setImagesLoaded(true);
-                        }
-                    };
-                    img.src = url;
-                });
+        if (!isLoading && allArtworks.length > 0) {
+            // Use coverImageUrl for image loading
+            const imageUrls = allArtworks
+                .map(a => {
+                    if (Array.isArray(a.coverImageUrl)) {
+                        return a.coverImageUrl[0];
+                    }
+                    return a.coverImageUrl;
+                })
+                .filter(Boolean);
+            if (imageUrls.length === 0) {
+                setImagesLoaded(true);
+                return;
             }
+            let loadedCount = 0;
+            imageUrls.forEach(url => {
+                const img = new window.Image();
+                img.onload = img.onerror = () => {
+                    loadedCount++;
+                    if (loadedCount === imageUrls.length) {
+                        setImagesLoaded(true);
+                    }
+                };
+                img.src = url as string;
+            });
+        }
         }, [isLoading, allArtworks]);
 
     useEffect(() => {
