@@ -13,6 +13,8 @@ import AdminModal from '@/components/AdminModal';
 import NewEntryModal from '@/components/NewEntryModal';
 // import { useArtworks } from '@/context/ArtworksContext'; // ArtworksContext is retired; replace with correct data source or remove usage
 import type { Artwork, TimelineItem } from '@/types';
+import { realtimeDb } from '@/firebase/client';
+import { ref, onValue, off } from 'firebase/database';
 // (No duplicate export, only the interactive HomePage)
 export interface FilterOptions {
     medium: string;
@@ -39,8 +41,34 @@ export default function HomePage() {
             const [editItem, setEditItem] = useState<Artwork | null>(null);
         // State for controlling how many artworks are visible (for infinite scroll)
         const [visibleCount, setVisibleCount] = useState(100);
-    // TODO: Replace with actual artworks data source
-    const allArtworks: Artwork[] = React.useMemo(() => [], []);
+    // Fetch artworks from Firebase Realtime Database
+    const [allArtworks, setAllArtworks] = useState<Artwork[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    useEffect(() => {
+        const dbRef = ref(realtimeDb, 'artwall');
+        setIsLoading(true);
+        const handleValue = (snapshot: any) => {
+            const data = snapshot.val();
+            if (!data) {
+                setAllArtworks([]);
+                setIsLoading(false);
+                return;
+            }
+            // Flatten the structure: {medium: {id: artwork, ...}, ...} => [artwork, ...]
+            const artworks: Artwork[] = [];
+            Object.values(data).forEach((mediumGroup: any) => {
+                if (mediumGroup && typeof mediumGroup === 'object') {
+                    Object.values(mediumGroup).forEach((artwork: any) => {
+                        artworks.push(artwork as Artwork);
+                    });
+                }
+            });
+            setAllArtworks(artworks);
+            setIsLoading(false);
+        };
+        onValue(dbRef, handleValue);
+        return () => off(dbRef, 'value', handleValue);
+    }, []);
 	const isLoading = false;
 	const [imagesLoaded, setImagesLoaded] = useState(false);
 	const [minWaitDone, setMinWaitDone] = useState(false);
