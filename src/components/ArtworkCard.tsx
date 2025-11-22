@@ -559,25 +559,6 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin, onImageLoaded }: ArtworkCardP
 
     // availableLanguages already declared above
 };
-
-                {/* ...existing code for CardImage and overlays... */}
-                </CardFooter>
-              </>
-            )}
-          </CardFront>
-          <CardBack $medium={artwork.medium}>
-            <CardBackTitle>{artwork.title}</CardBackTitle>
-            <CardBackFooter style={{flexDirection: 'column' }}>
-              <span>{formattedDate}</span>
-              {artwork.location1 && <span>{artwork.location1}</span>}
-              <CardCategory>
-                {getArtworkIcon(artwork)}
-              </CardCategory>
-            </CardBackFooter>
-          </CardBack>
-        </CardInner>
-      </CardContainer>
-    );
 }
 const DeleteButton = styled.button`
   background: #e74c3c;

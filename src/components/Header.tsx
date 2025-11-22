@@ -365,12 +365,6 @@ const Header: React.FC<HeaderProps> = ({
               <FaInfoCircle />
             </InfoButton>
             <AppInfoModal open={infoOpen} onClose={() => setInfoOpen(false)} version={appVersion} commit={gitCommit} />
-=======
-            <InfoButton title="App informatie" aria-label="App informatie" onClick={() => setInfoOpen(true)}>
-              <FaInfoCircle />
-            </InfoButton>
-            <AppInfoModal open={infoOpen} onClose={() => setInfoOpen(false)} version={appVersion} commit={gitCommit} />
->>>>>>> fix/grid-reorder-by-size
           </RightSection>
       </ControlsRow>
     </HeaderWrapper>
