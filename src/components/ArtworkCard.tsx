@@ -33,6 +33,7 @@ const getGridSpan = (subtype: string, medium?: ArtworkMedium) => {
 const CardContainer = styled.div<{ $medium: ArtworkMedium; $subtype?: string; $blank?: boolean }>`
   perspective: 1000px;
   width: 100%;
+  max-width: 400px;
   aspect-ratio: 3/4;
   border-radius: 10px;
   ${props => getGridSpan(props.$subtype || 'default', props.$medium)}
