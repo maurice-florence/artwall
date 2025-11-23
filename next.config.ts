@@ -38,6 +38,7 @@ const nextConfig = {
     ],
     domains: ['firebasestorage.googleapis.com', 'storage.googleapis.com'],
   },
+  transpilePackages: ['react-responsive-masonry'],
   env: {
     NEXT_PUBLIC_APP_VERSION: pkg.version,
     NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA: process.env.VERCEL_GIT_COMMIT_SHA || '',

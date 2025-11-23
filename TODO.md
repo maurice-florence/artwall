@@ -36,3 +36,33 @@ Date: 2025-11-17
 - [ ] Fix grid on mobile
   - Ensure the mobile grid has correct column count, spacing, and no overlaps.
   - Validate with existing Cypress mobile tests and add cases if needed.
+
+Date: 2025-11-23
+
+- [ ] Sanitize Firebase Private Key in `firebaseAdmin.ts`
+  - Use `replace(/\\n/g, '\n')` on the private key for cross-platform compatibility (Vercel, .env, etc.).
+  - Blocker for stable deployment.
+
+- [ ] Singleton Pattern for Firebase Admin Initialization
+  - Ensure `getApps().length > 0` check before calling `initializeApp` in `firebaseAdmin.ts` to prevent multiple initializations.
+
+- [ ] Transpile and Patch `react-responsive-masonry` for React 19
+  - Add `react-responsive-masonry` to `transpilePackages` in `next.config.mjs`.
+  - If needed, use `patch-package` to override peer dependencies for React 19 compatibility.
+
+- [ ] Hydration-Safe Masonry Grid
+  - Refactor `MasonryGrid.tsx` to use a `mounted` state check (with `useEffect`) or dynamic import with `ssr: false`.
+  - Ensure server renders a skeleton grid, not the actual masonry, to prevent hydration errors.
+
+- [ ] Enable Partial Prerendering (PPR) and Suspense
+  - Set `experimental_ppr = true` in `page.tsx`.
+  - Wrap the grid in `<Suspense fallback={<SkeletonGrid />}>` for fast static shell and streaming.
+
+- [ ] Optimize Image Delivery and Costs
+  - Set `Cache-Control: public, max-age=31536000, immutable` on Firebase Storage uploads.
+  - Consider a custom image loader that serves pre-resized thumbnails to reduce Vercel optimization costs.
+
+- [ ] Accessibility: Masonry Grid and Infinite Scroll
+  - Test and ensure DOM order matches visual order for keyboard navigation.
+  - Add "Skip to Content" links for accessibility.
+  - Use `aria-live="polite"` regions to announce new images loaded via infinite scroll.

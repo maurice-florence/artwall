@@ -42,10 +42,13 @@ def make_resized_images_public():
         
         if is_resized:
             try:
+                # Set aggressive cache control for cost optimization
+                blob.cache_control = 'public, max-age=31536000, immutable'
+                blob.patch()  # Save metadata
                 # Make the blob publicly readable
                 blob.make_public()
                 made_public += 1
-                print(f"  ✅ Made public: {blob.name}")
+                print(f"  ✅ Made public & set cache-control: {blob.name}")
             except Exception as e:
                 errors += 1
                 print(f"  ❌ Error making public: {blob.name} - {e}")

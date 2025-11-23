@@ -1,0 +1,465 @@
+Architectural Audit and Optimization Report: Scalable Masonry Grid Implementations in Next.js 15 with Firebase
+1. Introduction and Strategic Context
+1.1. Executive Overview of the Architectural Landscape
+The "Artwall" application represents a sophisticated convergence of modern web technologies, leveraging the Next.js 15 framework's App Router architecture to deliver a visually rich, content-heavy digital asset repository. The application's core value proposition relies on the seamless presentation of visual media, necessitating a robust frontend architecture capable of handling complex layouts—specifically masonry grids—while maintaining high performance and strict type safety.
+
+However, the transition to Next.js 15, coupled with the impending standardization of React 19, introduces a series of architectural friction points. The audit of the repository configuration files (package.json, next.config.mjs) and core utility libraries (src/lib/firebaseAdmin.ts, src/components/MasonryGrid.tsx) reveals a system at a critical juncture. The application is poised between the legacy patterns of client-side React (CSR) and the emerging paradigms of React Server Components (RSC) and Partial Prerendering (PPR).
+
+This report provides an exhaustive analysis of the current codebase, identifying critical vulnerabilities in deployment configuration, hydration stability, and cost-efficiency. It synthesizes research into the specific behaviors of the react-responsive-masonry library within a server-rendered environment, the nuance of Firebase Admin SDK authentication in Vercel-like environments, and the economic implications of image optimization at scale.
+
+1.2. The Shift to Next.js 15 and React 19
+The operational environment for Artwall is defined by Next.js 15, a release that fundamentally alters caching heuristics, request memoization, and rendering lifecycles. Unlike previous iterations where static generation was the aggressive default, Next.js 15 introduces more granular control over caching via directives like force-dynamic and experimental_ppr (Partial Prerendering).   
+
+Simultaneously, the underlying React engine is shifting toward version 19. This transition affects how libraries interact with the DOM. Legacy libraries that rely on specific mounting behaviors or internal React hooks often face compatibility issues when subjected to the React Compiler or the strict concurrency modes of React 19. The audit of package.json  suggests reliance on ecosystem packages that may not yet be fully optimized for this new runtime, requiring careful architectural guarding to prevent build failures and runtime de-optimizations.   
+
+2. Dependency Management and Build Configuration Analysis
+The stability of any TypeScript application is predicated on its dependency graph and build configuration. For Artwall, the intersection of strict type checking and legacy UI libraries creates a specific set of challenges that must be addressed to ensure a reproducible build pipeline.
+
+2.1. The React 19 Peer Dependency Conflict
+The repository relies on react-responsive-masonry  for its core layout. An analysis of the npm registry data indicates that the latest version of this package (v2.7.1) and its associated type definitions (@types/react-responsive-masonry v2.6.0)  were published months prior to the stabilization of React 19.   
+
+In the Node.js ecosystem, peerDependencies dictate the versions of host packages (like React) that a library expects to coexist with. Libraries authored for React 16/17/18 often declare peer dependencies such as `"react": "^16.0.0 |
+
+| ^17.0.0 | | ^18.0.0"`. When installed in a Next.js 15 project running React 19 (or the React 19 RC often used with Next.js 15), the package manager (npm, yarn, or pnpm) will throw strict peer dependency warnings or errors.
+
+Implications for Artwall: If the build pipeline is configured with strict-peer-dependencies=true, the CI/CD process will fail immediately upon npm install. Furthermore, even if installation is forced (--legacy-peer-deps), there is a risk of runtime incompatibility. React 19 deprecates certain patterns, such as defaultProps for functional components and specific string refs. If react-responsive-masonry utilizes these internal patterns, the application may experience silent failures or console warnings in development that degrade performance.
+
+Mitigation Strategy: The package.json  should be audited to explicitly override peer dependencies if necessary, but a more robust solution involves "vendoring" critical adapters or using patch-package to update the library's definitions to acknowledge React 19 compatibility if testing confirms functionality.   
+
+2.2. Type Definition and TypeScript Stringency
+The presence of specific search queries regarding "types definition error"  strongly suggests that the developer has encountered friction between the untyped nature of the underlying JavaScript library and the strict TypeScript configuration of the Next.js project.   
+
+The package @types/react-responsive-masonry is community-maintained (DefinitelyTyped). Community types often lag behind the main library or may use loose typing (any) that violates strict linting rules. Snippet  highlights an error: Element type is invalid: expected a string... but got: undefined. This is symptomatic of a mismatch between how the module exports its components (Default vs. Named exports) and how the TypeScript definitions claim they are exported.   
+
+For example, if the CommonJS module exports via module.exports = Masonry, but the TypeScript definition expects export default Masonry, the import import Masonry from '...' will fail at runtime despite passing type checks, or vice versa.
+
+Table 1: Common Import Mismatches in Legacy Libraries
+
+Module Format	Export Syntax	Correct Import (TS)	Common Error Scenario
+CommonJS (CJS)	module.exports = Component	import Component = require('...') or import Component from '...' (with esModuleInterop)	Importing as a named export { Component } when it is a default export.
+ES Module (ESM)	export default Component	import Component from '...'	Importing via require() in a module configured as type: module.
+UMD	Mixed	Varies based on bundler	"Window is not defined" if the UMD wrapper assumes a browser environment immediately.
+The next.config.mjs  file offers a mechanism to resolve this via the transpilePackages option. Adding react-responsive-masonry to transpilePackages forces Next.js to run the library through its own Babel/SWC pipeline, often resolving ESM/CJS interop issues and ensuring that the library code is compatible with the target environment (client vs. server).   
+
+2.3. AI-Assisted Development Guardrails
+The file .github/copilot-instructions.md  indicates that the development workflow integrates AI coding assistants (GitHub Copilot). While powerful, AI models can introduce subtle architectural flaws if not strictly prompted, particularly regarding the distinction between server-side and client-side logic in Next.js.   
+
+The Hallucination Risk: AI models trained on older data sets often conflate the Firebase Client SDK (firebase/app, firebase/firestore) with the Firebase Admin SDK (firebase-admin).
+
+Client SDK: Designed for browsers. Uses API keys. Safe to expose (mostly).
+
+Admin SDK: Designed for Node.js servers. Uses a Service Account with full privileges. Catastrophic if leaked to the client bundle.
+
+If Copilot suggests importing firebase-admin into a file marked with 'use client', the application build will fail because the Admin SDK relies on Node.js modules (fs, crypto, net) that do not exist in the browser. The .github/copilot-instructions.md file must explicitly contain a directive: "Never import firebase-admin in components located in src/components or any file with 'use client'. Only import firebase-admin in src/lib, API routes, or Server Actions."
+
+3. Backend Architecture: Secure Credential Management
+The backend interface, defined in src/lib/firebaseAdmin.ts , acts as the privileged bridge between the Next.js server and the Google Cloud/Firebase infrastructure. This component is the single point of failure for authentication and is historically the most fragile component regarding deployment configuration.   
+
+3.1. The RSA Private Key Formatting Crisis
+A recurring, severe issue documented in snippets  involves the handling of the Firebase Service Account private key. This key is a PEM-encoded RSA key, which structurally resembles this:   
+
+-----BEGIN PRIVATE KEY-----
+MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQD...
+... (20+ lines of base64 data)...
+-----END PRIVATE KEY-----
+Crucially, the PEM format requires newline characters (\n) to delimit the header, footer, and the wrapped data lines. When this key is generated by Google Cloud, it is provided as a JSON file containing the string with embedded \n characters.
+
+The Deployment Failure Mechanism: When developers copy this key into an environment variable system (like Vercel's dashboard, AWS Parameter Store, or a .env file), the handling of the backslash-n sequence varies:
+
+Local .env: Often interprets \n correctly as a newline.
+
+Vercel Dashboard: Often escapes the sequence, treating it as a literal backslash followed by the letter 'n' (\\n).
+
+Shell Exports: May strip newlines entirely or replace them with spaces.
+
+When the firebase-admin SDK attempts to initialize using a key with corrupted newlines, the internal crypto parser fails. The error messages are obscure: FirebaseAppError: Failed to parse private key: Error: Invalid PEM formatted message  or Error: Unparsed DER bytes remain after ASN.1 parsing.   
+
+Detailed Remediation logic: The application code in src/lib/firebaseAdmin.ts must implement a defensive parsing strategy. It cannot blindly trust process.env.FIREBASE_PRIVATE_KEY. It must sanitize the input at runtime.
+
+The most robust solution identified in the research  is a string replacement operation that restores the literal newlines.   
+
+TypeScript
+/**
+ * Sanitizes the private key for cross-platform compatibility.
+ * Vercel and some CI environments escape newlines as literal strings "\\n".
+ * We must restore them to actual newline characters "\n" for the PEM parser.
+ */
+const formatPrivateKey = (key: string | undefined) => {
+  if (!key) return undefined;
+  return key.replace(/\\n/g, '\n');
+};
+
+const serviceAccount = {
+  projectId: process.env.FIREBASE_PROJECT_ID,
+  clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+  privateKey: formatPrivateKey(process.env.FIREBASE_PRIVATE_KEY),
+};
+This creates a consistent behavior regardless of whether the environment variable was pasted into Vercel (literal \n) or read from a local file (escaped). Without this logic, the Artwall application will fail to deploy to production, despite working perfectly in the local development environment.
+
+3.2. Singleton Initialization and Cold Starts
+In a serverless environment like Vercel Functions, "cold starts" occur when a new container is spun up to handle a request. The firebaseAdmin.ts file is executed during this initialization.
+
+However, in a local development environment (specifically Next.js Fast Refresh), the module may be re-evaluated multiple times without the Node.js process restarting. The Firebase Admin SDK throws a generic error if initializeApp is called more than once on the same app instance: Firebase App named '' already exists.   
+
+The initialization logic must therefore follow the Singleton pattern, checking for the existence of running apps before attempting initialization.
+
+TypeScript
+import { getApps, initializeApp, cert, getApp } from 'firebase-admin/app';
+
+const initFirebase = () => {
+  const apps = getApps();
+  if (apps.length > 0) {
+    return getApp(); // Return existing instance
+  }
+
+  return initializeApp({
+    credential: cert(serviceAccount),
+    storageBucket: process.env.FIREBASE_STORAGE_BUCKET // Critical for image operations
+  });
+};
+
+export const firebaseAdmin = initFirebase();
+This check apps.length > 0  is mandatory for stability in Next.js development workflows.   
+
+4. Frontend Architecture: The Masonry Grid and Rendering Strategy
+The heart of the Artwall application is the MasonryGrid.tsx component. Masonry layouts (often called "Pinterest-style" layouts) solve the 2D bin-packing problem where items of varying aspect ratios must be packed into columns with minimal vertical whitespace. This presents a fundamental conflict with the Server-Side Rendering (SSR) model of Next.js.   
+
+4.1. The Hydration Mismatch: A Theoretical Deep Dive
+The "Hydration Error"  is the most common failure mode for masonry layouts in React frameworks. To understand why, we must analyze the rendering lifecycle:   
+
+The Server Phase: The Next.js server receives a request. It executes the React component tree to generate an HTML string. Crucially, the server has no concept of "viewport width" or "window." It cannot know if the user is on a mobile phone (350px wide) or a 4K monitor (3840px wide).
+
+The Ambiguity: The react-responsive-masonry library needs the container width to decide whether to render 1 column, 2 columns, or 5 columns. Since the server lacks this information, it must guess (usually defaulting to 1 column or 0).
+
+The Client Phase (Hydration): The browser downloads the HTML and the JavaScript bundle. React initializes in the browser. The react-responsive-masonry library immediately measures window.innerWidth.
+
+The Conflict:
+
+Server HTML: <div class="masonry" style="column-count: 1">...</div>
+
+Client React: "I see the window is 1200px wide. I will render 3 columns."
+
+Result: React compares the Virtual DOM (3 columns) with the Actual DOM (1 column), finds a mismatch, and throws a Hydration Error: Text content does not match server-rendered HTML.   
+
+This mismatch causes a visual "flash" of incorrect layout (FOUC) and forces React to discard the server-rendered HTML and rebuild the entire DOM tree from scratch, negating the performance benefits of SSR.
+
+4.2. The "Window is Not Defined" Error
+In addition to hydration logic errors, direct implementation often causes build crashes. Snippet  explicitly details the ReferenceError: window is not defined. This occurs because code inside the main body of a React component or in the library's global scope attempts to access the window object.   
+
+Since window is a browser-only API, accessing it during the server render (Node.js environment) causes an immediate crash. Libraries that are not "SSR-aware" often make this mistake.
+
+Architectural Solution: The Client-Only Boundary To resolve both the hydration mismatch and the window reference error, the MasonryGrid component must be architecturally sequestered from the server-side rendering process for the layout calculation parts.
+
+There are two primary patterns to achieve this in Next.js 15:
+
+Pattern A: Dynamic Import with SSR Disabled Next.js provides a utility to opt-out of SSR for specific components.
+
+TypeScript
+import dynamic from 'next/dynamic';
+
+// This forces the component to only render in the browser
+const MasonryGrid = dynamic(() => import('./MasonryGridContent'), {
+  ssr: false,
+  loading: () => <SkeletonGrid /> // Crucial for UX
+});
+Pattern B: The useEffect Mount Guard If using dynamic imports is not preferred, the component can manage its own mounting state.   
+
+TypeScript
+const MasonryGrid = ({ items }) => {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  },);
+
+  if (!mounted) {
+    // Return a deterministic Loading Skeleton or null
+    // This matches the server (which renders the skeleton) and the
+    // client's first pass (which also renders the skeleton).
+    return <SkeletonGrid />;
+  }
+
+  return (
+    <ResponsiveMasonry>
+      <Masonry>{/*... items... */}</Masonry>
+    </ResponsiveMasonry>
+  );
+};
+Pattern B is generally preferred for "Artwall" because it allows the server to render something (the skeleton), whereas ssr: false might result in a completely empty div until the JS bundle parses.
+
+4.3. Cumulative Layout Shift (CLS) and Visual Stability
+A significant side effect of solving the hydration issue is the introduction of Cumulative Layout Shift (CLS). CLS is a Core Web Vital that measures how much the page layout "jumps" while loading.
+
+If the application loads, displays a loading spinner (0px height), and then suddenly populates a grid of 1000px height, the footer and other content will be pushed down violently. This is a poor user experience and penalizes SEO rankings.   
+
+The Skeleton Strategy: To mitigate CLS, the SkeletonGrid loading state must approximate the final layout. This involves using "Skeleton" screens—gray boxes that pulsate to indicate loading.   
+
+Mechanism: The skeleton grid should define a set height or aspect ratio that roughly matches the incoming images.
+
+Cognitive Load: Research  indicates that skeleton screens reduce perceived wait time compared to spinners because they provide a "progress indication" and set expectations for the layout structure (the user anticipates a grid).   
+
+5. Advanced Data Fetching: Server Actions and Partial Prerendering
+Modern Next.js 15 architecture moves away from useEffect data fetching toward Server Actions and Partial Prerendering (PPR). This shift is critical for performance in data-heavy applications like Artwall.
+
+5.1. Server Actions for Infinite Scroll
+The Artwall repository's functionality likely requires loading more images as the user scrolls (Infinite Scroll). In older Next.js versions, this required a separate API route (pages/api/images). In Next.js 15, this is handled via Server Actions.   
+
+The Pagination Challenge: Firestore uses cursor-based pagination (startAfter). To implement this with Server Actions:
+
+Statelessness: Server Actions are stateless functions. They do not "remember" the last query.
+
+Serialization: The client must track the lastVisible document ID. When the user hits the bottom of the page, the client invokes the Server Action, passing this ID as an argument.
+
+Reconstruction: The Server Action uses the ID to fetch the document snapshot: await db.collection('images').doc(lastId).get(), and then uses that snapshot in the .startAfter(snapshot) query.   
+
+This pattern allows for a seamless infinite scroll without the overhead of maintaining a separate REST API layer.
+
+5.2. Partial Prerendering (PPR) and Streaming
+Next.js 15 introduces experimental_ppr (Partial Prerendering). This feature allows a single route to combine static and dynamic rendering.   
+
+For Artwall's page.tsx :   
+
+The Shell: The navigation bar, footer, and page title are static. They can be pre-built at compile time and served instantly from the Edge CDN.
+
+The Dynamic Hole: The MasonryGrid depends on database data. In a PPR architecture, this component is wrapped in a <Suspense> boundary.
+
+TypeScript
+// app/page.tsx
+import { Suspense } from 'react';
+import MasonryGrid from '@/components/MasonryGrid';
+import { SkeletonGrid } from '@/components/Skeletons';
+
+export const experimental_ppr = true; // Enable PPR 
+
+export default function Page() {
+  return (
+    <main>
+      <h1>Artwall Gallery</h1>
+      <Suspense fallback={<SkeletonGrid />}>
+        <MasonryGrid />
+      </Suspense>
+    </main>
+  );
+}
+Mechanism: When the user visits the page, the server immediately sends the HTML for the Shell and the Skeleton Grid. It keeps the connection open. In the background, the server fetches the Firestore data. Once ready, it streams the HTML for the filled MasonryGrid into the existing HTTP response, replacing the Skeleton automatically. This provides the fastest possible First Contentful Paint (FCP).   
+
+Configuration Warning: As noted in snippet , enabling PPR requires careful handling of dynamic functions like headers() or cookies(). If these are accessed outside the Suspense boundary, the entire page effectively de-opts to dynamic rendering, losing the benefits of the static shell.   
+
+6. Image Delivery Pipeline and Cost Optimization
+For an image-heavy application, the bandwidth and processing costs associated with serving assets are the primary economic constraint. The interaction between Next.js Image Optimization and external storage (Firebase) is complex and costly if misconfigured.
+
+6.1. The Vercel "Source Image" Limit
+The Next.js <Image> component automatically optimizes images. When src points to an external URL (like firebasestorage.googleapis.com), the Vercel server fetches that image, resizes it, compresses it (to WebP/AVIF), and caches it.
+
+The Limit: Vercel's optimization limits are strict. The Pro plan allows for 1,000 "Source Images" per billing cycle. A "Source Image" is a unique URL fetched from the origin.   
+
+If Artwall has 500 images.
+
+And 1 user views the gallery.
+
+Vercel fetches and optimizes 500 images.
+
+You have used 50% of your monthly allowance in one session.
+
+Subsequent requests for those same images are served from cache (free-ish), but cache evictions or new uploads continue to eat into the quota.
+
+6.2. Economic Optimization Strategies
+To build a scalable Artwall, the architecture must minimize reliance on the Vercel Image Optimization API for every single asset.
+
+Strategy 1: Aggressive Caching (Cache-Control) The most effective way to reduce "Source Image" counts is to ensure Vercel never needs to re-fetch the image from Firebase. The Cache-Control header on the Firebase Storage objects is critical.   
+
+Configuration: Set metadata on upload: cacheControl: 'public, max-age=31536000, immutable'.
+
+Effect: This tells Vercel (and user browsers) that the image never changes. Vercel will cache the optimized version for as long as possible, drastically reducing origin fetches.
+
+Strategy 2: The Custom Loader (Bypass Vercel) If the limit is still prohibitive, the application should implement a custom Loader. This bypasses Vercel's optimization entirely and serves images directly from Firebase.   
+
+Prerequisite: You must resize images at upload time using a Firebase Extension ("Resize Images"). You create thumbnails like image_800x600.jpg.
+
+Implementation:
+
+TypeScript
+const firebaseLoader = ({ src, width, quality }) => {
+  // Logic to map the requested width to the nearest pre-generated thumbnail
+  return `https://firebasestorage.googleapis.com/.../${src}_${width}x.jpg`;
+}
+Trade-off: This saves money on Vercel but increases storage costs on Firebase (storing multiple versions) and requires more complex upload logic. However, for high-traffic sites, bandwidth is cheaper than compute (optimization).
+
+7. Accessibility and User Experience
+A truly professional application must be usable by all, including those relying on keyboard navigation or screen readers. Masonry grids present unique accessibility (a11y) defects.
+
+7.1. The Tab Order Disorientation
+In a standard CSS Column masonry layout, elements are ordered vertically:
+
+Col 1: Item 1, Item 2, Item 3
+Col 2: Item 4, Item 5, Item 6
+Visually, Item 4 is to the right of Item 1. But in the DOM, Item 4 comes after Item 3. The Defect: A keyboard user pressing "Tab" expects to move left-to-right (1 -> 4). Instead, focus moves down the first column (1 -> 2 -> 3), then jumps back up to the top of the second column (4). This disjointed navigation violates WCAG expectations for logical reading order.   
+
+Remediation: The react-responsive-masonry library helps by reordering the DOM elements to match the visual left-to-right flow more closely than pure CSS columns. However, the developer must test this explicitly. Additionally, "Skip to Content" links should be provided to allow users to bypass the potentially massive grid if they simply want to reach the footer or other navigation elements.
+
+7.2. Focus Management in Infinite Scroll
+When new items are loaded via Infinite Scroll (Server Actions), the focus context can be lost. If the user is focused on the last item, and new items load, the screen reader might not announce the new content.
+
+Requirement: The application must utilize aria-live="polite" regions to announce "New images loaded."
+
+Focus Preservation: Care must be taken not to forcibly move the user's focus, but to ensure the next logical Tab stop is the first newly loaded item.   
+
+8. Conclusion and Recommendations
+The audit of the Artwall repository confirms that while the functional intent is sound, the architectural implementation requires significant fortification to withstand the rigors of a production environment running on Next.js 15.
+
+Summary of Critical Actions:
+
+Security: Implement strict Private Key sanitization (replace(/\\n/g, '\n')) in firebaseAdmin.ts immediately. This is a blocker for deployment.
+
+Build Stability: Configure transpilePackages in next.config.mjs for react-responsive-masonry and investigate peer dependency overrides to ensure React 19 compatibility.
+
+Hydration Safety: Refactor MasonryGrid.tsx to use a mounted state check or dynamic import, ensuring the server renders a Skeleton Grid rather than a broken or mismatched layout.
+
+Performance: Enable experimental_ppr and wrap the grid in <Suspense> to leverage the "Static Shell" architecture, providing immediate visual feedback.
+
+Cost Control: Implement strict Cache-Control headers on Firebase Storage to protect against Vercel Image Optimization limits, or migrate to a pre-resized thumbnail strategy using a custom loader.
+
+By executing these recommendations, the Artwall application will evolve from a fragile prototype into a resilient, scalable, and accessible platform, fully capitalizing on the advanced capabilities of the Next.js 15 ecosystem.
+
+9. Technical Addendum: Structured Comparison of Rendering Strategies
+Table 2: Comparison of Rendering Architectures for Masonry Grids
+
+Feature	Client-Side Rendering (CSR)	Server-Side Rendering (SSR)	Partial Prerendering (PPR)	Recommendation for Artwall
+Initial HTML	Empty div or Spinner.	Full HTML (but often wrong layout due to unknown window width).	Static Shell (Header/Footer) + Loading Skeleton.	PPR
+Hydration Risk	Low (Layout happens only in browser).	High (Server/Client mismatch likely).	Low (Grid is suspended until client loads).	PPR
+Data Fetching	useEffect fetches data after page load. Slowest LCP.	Server fetches data before sending HTML. Slower TTFB.	Server streams data into the shell. Fastest perceived load.	PPR
+SEO	Poor (Search engines wait for JS).	Excellent (Content in initial HTML).	Excellent (Content streams in).	PPR
+Complexity	Low.	Medium.	High (Requires strict component boundaries).	PPR (Worth the effort)
+Table 3: Private Key Handling Matrix
+
+Method	Robustness	Ease of Use	Vercel Compatible?
+Direct Env Var	Low	High	No (Newlines often stripped)
+Base64 Encoding	High	Medium	Yes (Requires decoding step)
+String Replace (\n)	Medium/High	High	Yes (Standard for JS apps)
+JSON.parse	High	Low (Huge strings)	Yes (But risky to copy-paste)
+
+nextjs.org
+Getting Started: Partial Prerendering - Next.js
+Opens in a new window
+
+github.com
+Next 15 with Partial Prerendering (PPR) and dynamic APIs - Problems · vercel next.js · Discussion #73089 - GitHub
+Opens in a new window
+
+github.com
+Opens in a new window
+
+npmjs.com
+react-responsive-masonry - NPM
+Opens in a new window
+
+npmjs.com
+@types/react-responsive-masonry - NPM
+Opens in a new window
+
+github.com
+Can't use in Nextjs · Issue #127 · cedricdelpoux/react-responsive-masonry - GitHub
+Opens in a new window
+
+github.com
+Opens in a new window
+
+github.com
+Opens in a new window
+
+github.com
+Opens in a new window
+
+park.is
+Add a multiline environment variable to Vercel (or Heroku) - Ye Joo Park's Blog
+Opens in a new window
+
+stackoverflow.com
+Parsing the firebase private key on AWS Elastic beanstalk - Stack Overflow
+Opens in a new window
+
+reddit.com
+Unable to use firebase admin sdk in google cloud run application - Reddit
+Opens in a new window
+
+madhead.me
+How I fucked up with a private key and newlines - madhead
+Opens in a new window
+
+github.com
+How to solve 'Failed to parse private key: Error: Invalid PEM formatted message.' · gladly-team next-firebase-auth · Discussion #95 - GitHub
+Opens in a new window
+
+github.com
+Opens in a new window
+
+nextjs.org
+Text content does not match server-rendered HTML | Next.js
+Opens in a new window
+
+stackoverflow.com
+nextjs layout hydration error hydration failed - Stack Overflow
+Opens in a new window
+
+reddit.com
+Hydration error when installing NextJS 15 - Reddit
+Opens in a new window
+
+stackoverflow.com
+masonry-layout in Next Js gives me ReferenceError: window is not defined - Stack Overflow
+Opens in a new window
+
+medium.com
+Solving Layout Shift Issues in Next.js | by Bale - Medium
+Opens in a new window
+
+dev.to
+What is Skeleton Loading and how to implement it in React - DEV Community
+Opens in a new window
+
+balevdev.medium.com
+Skeletons : The Pinnacle of Loading States in React 19 | by Boyan Balev - Medium
+Opens in a new window
+
+nextjs.org
+Server Actions and Mutations - Data Fetching - Next.js
+Opens in a new window
+
+stackoverflow.com
+reactjs - Next.js/Firebase - How to create infinite scroll? - Stack Overflow
+Opens in a new window
+
+github.com
+Opens in a new window
+
+medium.com
+Next.js 16: The Game-Changing Release That Will Revolutionize How You Build Web Application | by Noor Mohamad - Medium
+Opens in a new window
+
+vercel.com
+Limits - Vercel
+Opens in a new window
+
+vercel.com
+Legacy Pricing for Image Optimization - Vercel
+Opens in a new window
+
+vercel.com
+Managing Usage & Costs - Vercel
+Opens in a new window
+
+firebase.google.com
+Optimize image loading on Next.js | Firebase App Hosting - Google
+Opens in a new window
+
+github.com
+Improve accessibility · Issue #49 · paulcollett/react-masonry-css - GitHub
+Opens in a new window
+
+blog.openreplay.com
+CSS - Implementing Responsive Masonry Layouts
+Opens in a new window
+
+youtube.com
+Making Clickable elements in React Accessible with keyboard navigation - YouTube
+Opens in a new window
