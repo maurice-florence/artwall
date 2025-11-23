@@ -10,7 +10,7 @@ interface MasonryWrapperProps {
 
 export default function MasonryWrapper({
   children,
-  breakpoints = { 350: 1, 750: 2, 900: 3 },
+  breakpoints = { 350: 2, 750: 4, 900: 6, 1200: 8 },
 }: MasonryWrapperProps) {
   const [isMounted, setIsMounted] = useState(false);
 
@@ -30,7 +30,7 @@ export default function MasonryWrapper({
 
   return (
     <ResponsiveMasonry columnsCountBreakPoints={breakpoints}>
-      <Masonry gutter="16px">
+      <Masonry gutter="4px">
         {children}
       </Masonry>
     </ResponsiveMasonry>
