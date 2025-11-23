@@ -561,6 +561,24 @@ The project uses **Vitest** for unit and integration testing and **Cypress** for
 
 ---
 
+
+## Hydration Issues & Browser Extensions
+
+### Debugging Hydration Mismatches
+
+Some browser extensions (such as password managers, ad blockers, or accessibility tools) can inject DOM elements or scripts into your app, causing React hydration mismatches and errors (e.g., "Text content does not match server-rendered HTML").
+
+**How to debug/fix:**
+
+- Reproduce the issue in an incognito window with all extensions disabled. If the error disappears, an extension is likely the cause.
+- Use the browser's DevTools to inspect unexpected DOM nodes or attributes injected by extensions.
+- For persistent hydration errors, wrap dynamic or third-party components (like Masonry grids) in a client-only dynamic import with SSR disabled (see `MasonryGrid.tsx`).
+- Always use a mount check (`useEffect` + `isMounted`) for hydration-unsafe UI.
+- Document known issues and workarounds for users in this section.
+
+If you encounter a hydration error that only appears with certain extensions enabled, it is not a bug in Artwall itself. Advise users to disable extensions or use a clean browser profile for best results.
+
+---
 ## Accessibility & Responsiveness
 
 - All UI components are accessible and mobile-friendly.
