@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { PageLayout, MainContent, NoResultsMessage } from '@/app/HomePage.styles';
-import MasonryWrapper from '@/components/ui/MasonryWrapper';
+import MasonryGrid from '@/components/ui/MasonryGrid';
 import MobileNav from '@/components/MobileNav';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -258,7 +258,7 @@ export default function HomeFeedClient({ allArtworks, initialFilters }: HomeFeed
               selectedRating={selectedRating}
               setSelectedRating={setSelectedRating}
             />
-            <MasonryWrapper>
+            <MasonryGrid>
               {timelineItems.slice(0, visibleCount).map((item: TimelineItem) => {
                 if ('type' in item && item.type === 'year-marker') {
                   return <YearMarkerCard key={item.id} year={item.year} />;
@@ -271,7 +271,7 @@ export default function HomeFeedClient({ allArtworks, initialFilters }: HomeFeed
                 }
                 return null;
               })}
-            </MasonryWrapper>
+            </MasonryGrid>
             <Footer onAddNewArtwork={handleAdd} />
           </MainContent>
         )

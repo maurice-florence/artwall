@@ -2,7 +2,7 @@
 // Server component for Partial Prerendering (PPR) and Suspense
 import { Suspense } from 'react';
 import dynamic from 'next/dynamic';
-import MasonryWrapper from '@/components/ui/MasonryWrapper';
+import MasonryGrid from '@/components/ui/MasonryGrid';
 import Footer from '@/components/Footer';
 import Header from '@/components/Header';
 import MobileNav from '@/components/MobileNav';
@@ -19,11 +19,11 @@ export default async function Page() {
     <main>
       <h1>Artwall Gallery</h1>
       <Suspense fallback={<div>Loading grid...</div>}>
-        <MasonryWrapper>
+        <MasonryGrid>
           {artworks.map(artwork => (
             <ArtworkCard key={artwork.id} artwork={artwork} onSelect={() => {}} />
           ))}
-        </MasonryWrapper>
+        </MasonryGrid>
       </Suspense>
       <Footer artworks={artworks} />
     </main>
