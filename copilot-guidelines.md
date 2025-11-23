@@ -13,4 +13,4 @@ Image Configuration:
 Component Architecture:
 
 - Use server-only for database fetching.
-- Use client-only for Masonry grids
+- Use client-only for Masonry grids.

@@ -1,4 +1,9 @@
 module.exports = {
+  // Disable aggressive caching in development
+  generateBuildId: async () => {
+    return `build-${Date.now()}`;
+  },
+  
   images: {
     remotePatterns: [
       {
@@ -14,5 +19,11 @@ module.exports = {
         pathname: '/**',
       },
     ],
+  },
+  
+  // Disable caching for development
+  onDemandEntries: {
+    maxInactiveAge: 25 * 1000,
+    pagesBufferLength: 2,
   },
 };

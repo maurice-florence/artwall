@@ -3,7 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "clean": "rimraf .next",
+    "dev": "npm run clean && next dev",
+    "dev:nocache": "npm run clean && next dev --experimental-no-cache",
     "build": "node scripts/inject-version-env.mjs && next build",
     "start": "next start",
     "lint": "next lint",
@@ -47,6 +49,7 @@
     "eslint-config-next": "15.3.4",
     "identity-obj-proxy": "^3.0.0",
     "jsdom": "^26.1.0",
+    "rimraf": "^6.1.2",
     "ts-node": "^10.9.2",
     "typescript": "^5",
     "vitest": "^3.2.4",
