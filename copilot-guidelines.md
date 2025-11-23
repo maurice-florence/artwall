@@ -1,4 +1,4 @@
-# Next.js 15 Strict Guidelines
+# Next.js 15 Strict Guidelines for Copilot
 
 Async Request APIs:
 

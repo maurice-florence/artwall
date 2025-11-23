@@ -1,8 +1,7 @@
 'use client';
 
 import { useState, useEffect, ReactNode } from 'react';
-import Masonry from 'react-responsive-masonry';
-const ResponsiveMasonry = Masonry;
+import Masonry, { ResponsiveMasonry } from 'react-responsive-masonry';
 
 interface MasonryWrapperProps {
   children: ReactNode;
