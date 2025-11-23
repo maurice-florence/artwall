@@ -10,6 +10,7 @@ vi.mock('firebase/database', () => {
       // return unsubscribe
       return () => {};
     }),
+    off: vi.fn(),
     remove: vi.fn(async () => {}),
     update: vi.fn(async () => {}),
     push: vi.fn(() => ({ key: 'mock-key' })),

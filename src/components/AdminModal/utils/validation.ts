@@ -1,6 +1,7 @@
 // src/components/AdminModal/utils/validation.ts
 // filepath: c:\Users\friem\OneDrive\Documenten\GitHub\artwall\src\components\AdminModal\utils\validation.ts
 import { ArtworkFormData } from '@/types';
+import { isFieldRequired } from './formLogic';
 
 export interface ValidationError {
   field: string;
@@ -19,18 +20,28 @@ export interface ValidationResult {
 export const validateArtworkForm = (formData: ArtworkFormData): Record<string, string> => {
   const errors: Record<string, string> = {};
 
+  // Always require these fields for 'writing' medium
+  const alwaysRequired = ['title', 'medium', 'year', 'subtype', 'content'];
+  alwaysRequired.forEach((field) => {
+    const value = formData[field as keyof ArtworkFormData];
+    if (!value || (typeof value === 'string' && value.trim() === '')) {
+      if (field === 'title') errors.title = 'Titel is verplicht';
+      else if (field === 'year') errors.year = 'Jaar is verplicht';
+      else if (field === 'content') errors.content = 'Inhoud is verplicht';
+      else if (field === 'medium') errors.medium = 'Medium is verplicht';
+      else if (field === 'subtype') errors.subtype = 'Subtype is verplicht';
+      else errors[field] = 'Dit veld is verplicht';
+    }
+  });
+
   // Enhanced title validation
-  if (!formData.title || formData.title.trim().length === 0) {
-    errors.title = 'Titel is verplicht';
-  } else if (formData.title.length > 200) {
+  if (formData.title && formData.title.length > 200) {
     errors.title = 'Titel mag maximaal 200 tekens bevatten';
   }
 
   // Enhanced year validation
   const currentYear = new Date().getFullYear();
-  if (!formData.year) {
-    errors.year = 'Jaar is verplicht';
-  } else if (formData.year < 1900 || formData.year > currentYear + 1) {
+  if (formData.year && (formData.year < 1900 || formData.year > currentYear + 1)) {
     errors.year = `Jaar moet tussen 1900 en ${currentYear + 1} liggen`;
   }
 
@@ -58,6 +69,10 @@ export const validateArtworkForm = (formData: ArtworkFormData): Record<string, s
     errors.content = 'Content is te lang (max 50.000 tekens)';
   }
 
+  // Always add a general error if any errors exist
+  if (Object.keys(errors).length > 0) {
+    errors.general = 'Er zijn verplichte velden niet ingevuld';
+  }
   return errors;
 };
 

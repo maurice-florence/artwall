@@ -106,90 +106,46 @@ describe('AdminModal', () => {
     describe('Error States', () => {
       it('shows validation error when required fields are missing', async () => {
         renderWithTheme(<AdminModal {...mockProps} />);
+        // Set Medium to 'writing' to require content as well
+        await userEvent.selectOptions(screen.getByLabelText('Medium *'), 'writing');
         // Explicitly clear all required fields
         await userEvent.clear(screen.getByLabelText('Titel'));
         await userEvent.clear(screen.getByLabelText('Jaar'));
-            // Print raw errors-debug before submit
-            const errorsDebugBefore = screen.getByTestId('errors-debug');
-            // eslint-disable-next-line no-console
-            console.log('RAW errors-debug before submit:', errorsDebugBefore.textContent);
-            let debugBeforeParsed: Record<string, any> = {};
-            try {
-              debugBeforeParsed = JSON.parse(errorsDebugBefore.textContent || '{}');
-            } catch (e) {
-              // eslint-disable-next-line no-console
-              console.log('Could not parse errors-debug before submit:', e);
-            }
-            // eslint-disable-next-line no-console
-            console.log('Parsed errors-debug before submit:', debugBeforeParsed);
-            const submitButton = screen.getByRole('button', { name: /opslaan/i });
-            await userEvent.click(submitButton);
-            // Wait for state updates to propagate
-            await new Promise(res => setTimeout(res, 500));
-            // Print raw errors-debug after submit
-            const errorsDebugAfter = screen.getByTestId('errors-debug');
-            let errorsDebugAfterRaw: string = '';
-            let debugAfterParsed: Record<string, any> = {};
-            let formDataAfter: Record<string, any> = {};
-            let errorsAfter: Record<string, any> = {};
-            if (errorsDebugAfter) {
-              errorsDebugAfterRaw = errorsDebugAfter.textContent || '';
-              try {
-                debugAfterParsed = JSON.parse(errorsDebugAfterRaw || '{}');
-                formDataAfter = (debugAfterParsed && typeof debugAfterParsed.formData === 'object') ? debugAfterParsed.formData : {};
-                errorsAfter = (debugAfterParsed && typeof debugAfterParsed.errors === 'object') ? debugAfterParsed.errors : {};
-              } catch (e) {
-                // eslint-disable-next-line no-console
-                console.log('Could not parse errors-debug after submit:', e);
-              }
-            }
-            // eslint-disable-next-line no-console
-            console.log('RAW errors-debug after submit:', errorsDebugAfterRaw);
-            // eslint-disable-next-line no-console
-            console.log('Parsed errors-debug after submit:', debugAfterParsed);
-            // Print the full debug output to the terminal for inspection
-            // eslint-disable-next-line no-console
-            console.log('FULL DEBUG OUTPUT AFTER SUBMIT:', {
-              errorsDebugAfterRaw,
-              errorsDebugAfterParsed: debugAfterParsed,
-              formDataAfter,
-              errorsAfter,
-            });
-            // Write debug output to a file for inspection
-            const fs = require('fs');
-            fs.writeFileSync(
-          'c:/Users/friem/OneDrive/Documenten/GitHub/artwall/debug-output.json',
-          JSON.stringify({
-            errorsDebugAfterRaw,
-            errorsDebugAfterParsed: debugAfterParsed,
-            formDataAfter,
-            errorsAfter,
-          }, null, 2)
-        );
-        // Add more visible debug output in the DOM for manual inspection
-        const debugDom = document.createElement('div');
-        debugDom.setAttribute('id', 'manual-debug-output');
-        debugDom.style.color = 'red';
-        debugDom.style.fontSize = '12px';
-        debugDom.innerText = JSON.stringify({
-          errorsDebugAfterRaw,
-          errorsDebugAfterParsed: debugAfterParsed,
-          formDataAfter,
-          errorsAfter,
-        }, null, 2);
-        document.body.appendChild(debugDom);
-        // Try to find the error message by testid
-        let errorMessage;
-        try {
-          errorMessage = await screen.findByTestId('error-message');
-          // eslint-disable-next-line no-console
-          console.log('Error message found by testid:', errorMessage.textContent);
-          expect(errorMessage.textContent).toMatch(/verplicht|Er zijn verplichte velden niet ingevuld/);
-        } catch (e) {
-          // eslint-disable-next-line no-console
-          console.log('Error message not found by testid.');
-          expect(false).toBe(true);
+        // Content field may not be rendered until medium is set
+        if (screen.queryByLabelText(/Inhoud/i)) {
+          await userEvent.clear(screen.getByLabelText(/Inhoud/i));
         }
+        // Subtype field may be present and required (select element)
+        const subtypeSelect = screen.queryByLabelText(/Subtype/i);
+        if (subtypeSelect) {
+          // Select the empty option if available
+          await userEvent.selectOptions(subtypeSelect, '');
+        }
+        const submitButton = screen.getByRole('button', { name: /opslaan/i });
+        await userEvent.click(submitButton);
+        // Wait for state updates to propagate
+        await new Promise(res => setTimeout(res, 500));
+        // Print errors-debug after submit
+        const errorsDebugAfter = screen.getByTestId('errors-debug');
+        let debugAfterParsed: Record<string, any> = {};
+        if (errorsDebugAfter) {
+          try {
+            debugAfterParsed = JSON.parse(errorsDebugAfter.textContent || '{}');
+          } catch (e) {
+            // eslint-disable-next-line no-console
+            console.log('Could not parse errors-debug after submit:', e);
+          }
+        }
+        // eslint-disable-next-line no-console
+        console.log('DEBUG OUTPUT AFTER SUBMIT:', debugAfterParsed);
+        // Check for field-specific error messages
+        const errorMessages = await screen.findAllByTestId('error-message');
+        const errorTexts = errorMessages.map((el) => el.textContent || '');
+        // eslint-disable-next-line no-console
+        console.log('Error messages found:', errorTexts);
+        // Accept either field-specific or general error
+        const hasRequiredError = errorTexts.some(text => /verplicht|Er zijn verplichte velden niet ingevuld/.test(text));
+        expect(hasRequiredError).toBe(true);
       });
 
       it('shows submission error when Firebase fails', async () => {

@@ -439,9 +439,8 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin, onImageLoaded }: ArtworkCardP
     }, [isWriting, hasImage, onSelect]);
 
     // Determine image URL for overlay computation
-    // Card front preview: use smallest available (thumbnail)
-    // Use an even lower resolution for the card front preview (e.g., 100x100)
-    const imageUrl = hasImage ? getImageUrl(images[0], 'thumbnail') : undefined;
+    // Card front preview: use 'card' size for grid cards (test expects this)
+    const imageUrl = hasImage ? getImageUrl(images[0], 'card') : undefined;
     // Card inside/back: use medium/full size
     const imageUrlMedium = hasImage ? getImageUrl(images[0], 'full') : undefined;
     // Full screen: use original
@@ -491,7 +490,7 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin, onImageLoaded }: ArtworkCardP
               <>
                 <ImageSkeleton aria-hidden="true" className={!imgLoaded ? '' : 'fade-out'} />
                 <CardImage 
-                  src={getImageUrl(images[0], 'thumbnail')} 
+                  src={getImageUrl(images[0], 'card')} 
                   alt={artwork.title || 'Artwork'} 
                   loading="lazy"
                   decoding="async"

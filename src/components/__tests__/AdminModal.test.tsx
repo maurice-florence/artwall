@@ -51,7 +51,7 @@ describe('AdminModal', () => {
     fireEvent.click(submitButton);
     await waitFor(() => {
       // The form shows a summary indicator; assert the presence of at least one error
-      expect(screen.getByText(/errors/i)).toBeInTheDocument();
+      expect(screen.getAllByText(/errors/i).length).toBeGreaterThan(0);
     });
   });
 

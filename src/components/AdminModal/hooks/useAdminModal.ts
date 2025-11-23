@@ -50,6 +50,7 @@ const initialFormData: ArtworkFormData = {
 export const useAdminModal = (artworkToEdit?: Artwork | null) => {
   const [formData, setFormData] = useState<ArtworkFormData>(initialFormData);
   const [errors, setErrors] = useState<ValidationErrors>({});
+  const [errorTick, setErrorTick] = useState(0); // force re-render on error update
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState('');
   const { loadingState, setLoading, setError, clearLoading, isFieldLoading } = useLoadingState();
@@ -173,7 +174,7 @@ export const useAdminModal = (artworkToEdit?: Artwork | null) => {
   const handleSubmit = async (): Promise<boolean> => {
     setIsLoading(true);
     setLoading('form');
-    setErrors({});
+    // Do not clear errors here; only clear after successful submit
     setMessage('');
 
     // Debug: log when handleSubmit is called
@@ -188,21 +189,25 @@ export const useAdminModal = (artworkToEdit?: Artwork | null) => {
       // Debug: log validation errors
       // eslint-disable-next-line no-console
       console.log('useAdminModal: validation errors returned:', validationErrors);
+      // Always update errors state, even if empty
+      // Always update errors state, even if empty, to force re-render
       if (Object.keys(validationErrors).length > 0) {
         // Concatenate all field error messages into errors.general
         const allMessages = Object.values(validationErrors).filter(Boolean).join(' | ');
         const generalError = allMessages || 'Er zijn verplichte velden niet ingevuld';
         setErrors({ ...validationErrors, general: generalError });
+        setErrorTick(tick => tick + 1); // force re-render
         // Debug: log errors after setting
         // eslint-disable-next-line no-console
         console.log('useAdminModal: setErrors called with:', { ...validationErrors, general: generalError });
-        // Print errors state after setErrors (async)
-        setTimeout(() => {
-          // eslint-disable-next-line no-console
-          console.log('useAdminModal: errors state after setErrors (timeout):', errors);
-        }, 500);
+        // Wait for state flush to ensure error is rendered before returning (for test reliability)
+        await new Promise(res => setTimeout(res, 0));
         clearLoading();
         return false;
+      } else {
+        // Only clear errors after successful submit
+        setErrors({});
+        setErrorTick(tick => tick + 1); // force re-render
       }
 
       // Submit to Firebase

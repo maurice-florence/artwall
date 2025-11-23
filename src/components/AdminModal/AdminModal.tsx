@@ -203,9 +203,20 @@ const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, artworkToEdit 
               getSmartSuggestions={getSmartSuggestions}
             />
             {/* Debug: print errors.general before rendering */}
-            {errors.general && (
-              <ErrorMessage data-testid="error-message">{errors.general}</ErrorMessage>
-            )}
+            {/* Render all error messages, or a general error if errors exist but none are field-specific */}
+            {(() => {
+              // Exclude 'general' from field errors
+              const fieldErrors = Object.entries(errors).filter(([key, val]) => key !== 'general' && val);
+              if (fieldErrors.length > 0) {
+                return fieldErrors.map(([field, error]) => (
+                  <ErrorMessage key={field} data-testid="error-message">{error}</ErrorMessage>
+                ));
+              } else if (Object.keys(errors).length > 0) {
+                // If there are errors but none are field-specific, show a general error
+                return <ErrorMessage data-testid="error-message">{errors.general || 'Please fill in all required fields.'}</ErrorMessage>;
+              }
+              return null;
+            })()}
             {message && (
               <SuccessMessage>{message}</SuccessMessage>
             )}

@@ -11,6 +11,7 @@ import Modal from '@/components/Modal';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import AdminModal from '@/components/AdminModal';
 import NewEntryModal from '@/components/NewEntryModal';
+import GlobalSpinner from '@/components/GlobalSpinner';
 // import { useArtworks } from '@/context/ArtworksContext'; // ArtworksContext is retired; replace with correct data source or remove usage
 import type { Artwork, TimelineItem } from '@/types';
 import { realtimeDb } from '@/firebase/client';
@@ -195,14 +196,6 @@ export default function HomePage() {
             novel: { gridColumn: 2, gridRow: 1 },
             prose: { gridColumn: 4, gridRow: 4 }
         };
-            // Firebase imports (mocked for now, replace with real ones if needed)
-            // import { remove, ref, push, update } from 'firebase/database';
-            // import { realtimeDb } from '@/src/firebase';
-            const remove = (...args: any[]) => Promise.resolve();
-            const ref = (...args: any[]) => ({});
-            const push = (...args: any[]) => ({ key: 'mock-key' });
-            const update = (...args: any[]) => Promise.resolve();
-            const realtimeDb = {};
         function getCardArea(subtype: string) {
             const size = cardSizes[subtype] || cardSizes.default;
             return size.gridColumn * size.gridRow;
@@ -301,7 +294,6 @@ export default function HomePage() {
         return (item as Artwork).medium !== undefined;
     }
 
-    const GlobalSpinner = require('@/components/GlobalSpinner').default;
 
     const showSpinner = isLoading || !imagesLoaded || !minWaitDone;
 
