@@ -35,6 +35,13 @@ const nextConfig = {
         port: '',
         pathname: '/artwall-by-jr.firebasestorage.app/**',
       },
+      // Add this pattern for direct storage.googleapis.com/artwall-by-jr.firebasestorage.app/* URLs
+      {
+        protocol: 'https',
+        hostname: 'storage.googleapis.com',
+        port: '',
+        pathname: '/artwall-by-jr.firebasestorage.app/**',
+      },
     ],
     domains: ['firebasestorage.googleapis.com', 'storage.googleapis.com'],
   },

@@ -47,6 +47,13 @@
 			"isBackground": false,
 			"problemMatcher": [],
 			"group": "build"
+		},
+		{
+			"label": "Next.js dev",
+			"type": "shell",
+			"command": "npm run dev",
+			"isBackground": false,
+			"group": "build"
 		}
 	]
 }

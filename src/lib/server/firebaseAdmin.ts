@@ -76,6 +76,25 @@ export async function fetchArtworks(): Promise<Artwork[]> {
   const db = getDatabase(app);
   const snap = await db.ref('artwall').get();
   const val = snap.val() as Record<string, Record<string, any>> | null;
+  if (val) {
+    const mediumKeys = Object.keys(val);
+    let sampleArtworks: any[] = [];
+    for (const medium of mediumKeys) {
+      const group = val[medium] || {};
+      for (const id of Object.keys(group)) {
+        sampleArtworks.push({ id, medium, title: group[id]?.title });
+        if (sampleArtworks.length >= 2) break;
+      }
+      if (sampleArtworks.length >= 2) break;
+    }
+    console.log('[firebaseAdmin] Firebase data overview:', {
+      mediumCount: mediumKeys.length,
+      totalArtworks: mediumKeys.reduce((sum, m) => sum + Object.keys(val[m] || {}).length, 0),
+      sampleArtworks
+    });
+  } else {
+    console.log('[firebaseAdmin] Firebase data is empty or null.');
+  }
   if (!val) return [];
 
   const items: Artwork[] = [];
@@ -104,5 +123,6 @@ export async function fetchArtworks(): Promise<Artwork[]> {
     return bT - aT;
   });
 
+  console.log(`[firebaseAdmin] Returning ${items.length} artworks.`);
   return items;
 }

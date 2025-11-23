@@ -490,10 +490,9 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin, onImageLoaded }: ArtworkCardP
             {imageUrl ? (
               <>
                 <ImageSkeleton aria-hidden="true" className={!imgLoaded ? '' : 'fade-out'} />
-                <Image
+                <img
                   src={getImageUrl(images[0], 'card')}
                   alt={artwork.title || 'Artwork'}
-                  fill={false}
                   width={480}
                   height={480}
                   loading="lazy"

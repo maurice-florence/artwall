@@ -43,14 +43,38 @@ export default function HomeFeedClient({ allArtworks, initialFilters }: HomeFeed
   const [minWaitDone, setMinWaitDone] = useState(false);
   const [isLoading, setIsLoading] = useState(false); // Only for spinner logic
 
-  // Wait for at least 2 seconds, but skip if no artworks
+  // Debug: log spinner state and imageUrls overview
+  useEffect(() => {
+    const imageUrls = allArtworks
+      .map(a => Array.isArray(a.coverImageUrl) ? a.coverImageUrl[0] : a.coverImageUrl)
+      .filter(Boolean);
+    // Only log once on mount or when allArtworks changes
+    // Show count and a sample
+    if (allArtworks.length > 0) {
+      // eslint-disable-next-line no-console
+      console.log('[HomeFeedClient] imageUrls count:', imageUrls.length, 'Sample:', imageUrls.slice(0, 3));
+      // eslint-disable-next-line no-console
+      console.log('[HomeFeedClient] Spinner state:', { imagesLoaded, minWaitDone, isLoading, showSpinner: isLoading || !imagesLoaded || !minWaitDone });
+    }
+  }, [allArtworks, imagesLoaded, minWaitDone, isLoading]);
+
+
+  // Spinner: show for at least 2s, but hide after 3s max (even if not loaded)
   useEffect(() => {
     if (allArtworks.length === 0) {
       setMinWaitDone(true);
       return;
     }
-    const timer = setTimeout(() => setMinWaitDone(true), 2000);
-    return () => clearTimeout(timer);
+    const minTimer = setTimeout(() => setMinWaitDone(true), 2000);
+    const maxTimer = setTimeout(() => {
+      setMinWaitDone(true);
+      setImagesLoaded(true);
+      setIsLoading(false);
+    }, 3000);
+    return () => {
+      clearTimeout(minTimer);
+      clearTimeout(maxTimer);
+    };
   }, [allArtworks.length]);
 
   // Wait for all images to load, or set imagesLoaded true if no artworks
