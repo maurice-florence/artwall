@@ -490,14 +490,14 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin, onImageLoaded }: ArtworkCardP
             {imageUrl ? (
               <>
                 <ImageSkeleton aria-hidden="true" className={!imgLoaded ? '' : 'fade-out'} />
-                <img
+                <Image
                   src={getImageUrl(images[0], 'card')}
                   alt={artwork.title || 'Artwork'}
                   width={480}
                   height={480}
                   loading="lazy"
                   sizes="(max-width: 480px) 90vw, (max-width: 768px) 45vw, 120px"
-                  onLoad={e => { setImgLoaded(true); onImageLoaded?.(); }}
+                  onLoadingComplete={() => { setImgLoaded(true); onImageLoaded?.(); }}
                   onError={() => { setImgLoaded(true); onImageLoaded?.(); }}
                   className={imgLoaded ? 'loaded' : ''}
                   style={{ objectFit: 'cover', borderRadius: 4 }}

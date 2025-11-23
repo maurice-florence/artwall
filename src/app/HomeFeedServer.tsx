@@ -1,7 +1,7 @@
 
 
 import { fetchArtworks } from '@/lib/server/firebaseAdmin';
-import MasonryGrid from '@/components/MasonryGrid';
+import MasonryGrid from '@/components/ui/MasonryGrid';
 
 interface HomeFeedProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;

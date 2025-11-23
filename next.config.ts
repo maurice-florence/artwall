@@ -1,6 +1,4 @@
-// next.config.ts
-import type { NextConfig } from 'next';
-// next.config.js (CommonJS, not TypeScript)
+// @ts-check
 const fs = require('fs');
 const path = require('path');
 const pkg = JSON.parse(fs.readFileSync(path.resolve(__dirname, 'package.json'), 'utf8'));
@@ -23,7 +21,6 @@ const nextConfig = {
         port: '',
         pathname: '/**',
       },
-      // Fix for "Unconfigured Host" error
       {
         protocol: 'https',
         hostname: 'storage.googleapis.com',
@@ -31,7 +28,6 @@ const nextConfig = {
         pathname: '/**',
       },
     ],
-    // domains removed; use only remotePatterns as per Next.js 15+ best practices
   },
   transpilePackages: ['react-responsive-masonry'],
   env: {
