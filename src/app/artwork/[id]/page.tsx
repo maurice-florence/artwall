@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { useRouter, useParams, notFound } from "next/navigation";
 import { realtimeDb } from "@/firebase";
 import { ref, get } from "firebase/database";
@@ -203,6 +203,8 @@ function hasContent(artwork: Artwork): boolean {
 
 export default async function ArtworkModalPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
+  const [showToast, setShowToast] = useState(false);
+  
   if (!id) return null;
   // Search all medium folders in 'artwall' for the artwork
   const artwallRef = ref(realtimeDb, 'artwall');
