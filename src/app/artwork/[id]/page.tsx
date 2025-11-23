@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter, useParams, notFound } from "next/navigation";
 import { realtimeDb } from "@/firebase";
 import { ref, get } from "firebase/database";
@@ -201,31 +201,50 @@ function hasContent(artwork: Artwork): boolean {
 }
 
 
-export default async function ArtworkModalPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
+export default function ArtworkModalPage() {
+  const params = useParams();
+  const router = useRouter();
+  const id = params?.id as string;
   const [showToast, setShowToast] = useState(false);
+  const [artwork, setArtwork] = useState<Artwork | null>(null);
+  const [loading, setLoading] = useState(true);
   
-  if (!id) return null;
-  // Search all medium folders in 'artwall' for the artwork
-  const artwallRef = ref(realtimeDb, 'artwall');
-  const snapshot = await get(artwallRef);
-  const data = snapshot.val();
-  if (!data) {
-    notFound();
-    return null;
-  }
-  let found = null;
-  for (const medium of Object.keys(data)) {
-    if (data[medium] && data[medium][id]) {
-      found = { id, type: 'artwork', ...data[medium][id] };
-      break;
-    }
-  }
-  if (!found) {
-    notFound();
-    return null;
-  }
-  const artwork = found;
+  useEffect(() => {
+    if (!id) return;
+    
+    const fetchArtwork = async () => {
+      try {
+        const artwallRef = ref(realtimeDb, 'artwall');
+        const snapshot = await get(artwallRef);
+        const data = snapshot.val();
+        if (!data) {
+          notFound();
+          return;
+        }
+        let found = null;
+        for (const medium of Object.keys(data)) {
+          if (data[medium] && data[medium][id]) {
+            found = { id, type: 'artwork', ...data[medium][id] };
+            break;
+          }
+        }
+        if (!found) {
+          notFound();
+          return;
+        }
+        setArtwork(found as Artwork);
+      } catch (error) {
+        console.error('Error fetching artwork:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchArtwork();
+  }, [id]);
+  
+  if (!id || loading) return <div>Loading...</div>;
+  if (!artwork) return null;
   // ...existing code...
 
   const dateObj = new Date(artwork.year, (artwork.month ?? 1) - 1, artwork.day ?? 1);
