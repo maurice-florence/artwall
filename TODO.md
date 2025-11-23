@@ -1,32 +1,30 @@
 
-# TODO (2025-11-23 Gemini3 Architectural Remediation)
+# TODO list for Artwall app
 
-- [ ] **Migrate all Server Components to async and await params/searchParams**
-  - In every `page.tsx`, `layout.tsx`, `route.ts`, and `generateMetadata`, ensure the function is `async` and all `params`/`searchParams` are awaited before use.
-  - Update all destructuring to use `const { id } = await params;` pattern.
+## TODO (2025-11-23 Gemini3 Architectural Remediation)
 
-- [ ] **Wrap useSearchParams in Suspense**
-  - For any Client Component using `useSearchParams` (e.g., for filtering), ensure it is wrapped in a `<Suspense>` boundary in the parent Server Component to prevent CSR bailout.
+- [x] **Migrate all Server Components to async and await params/searchParams**
+  - Done: All relevant files now use async/await for params/searchParams as required by Next.js 15.
 
-- [ ] **Refactor MasonryGrid to use next/dynamic (SSR: false)**
-  - Refactor `src/components/MasonryGrid.tsx` to import `react-responsive-masonry` using `next/dynamic` with `{ ssr: false }`.
-  - Remove any direct server-side rendering of the grid; server should render a skeleton or placeholder only.
+- [x] **Wrap useSearchParams in Suspense**
+  - Done: No direct useSearchParams found; all server components using searchParams are wrapped in Suspense where needed.
 
-- [ ] **Harden Firebase Admin Initialization**
-  - In `src/lib/firebaseAdmin.ts`, sanitize the private key with `.replace(/\\n/g, '\n')` for Vercel compatibility.
-  - Ensure singleton pattern: only initialize if `getApps().length === 0`.
+- [x] **Refactor MasonryGrid to use next/dynamic (SSR: false)**
+  - Done: MasonryGrid now uses next/dynamic with SSR disabled; server renders skeleton only.
 
-- [ ] **Update next.config.js to use remotePatterns**
-  - Remove deprecated `domains` array.
-  - Add `remotePatterns` for `firebasestorage.googleapis.com` (protocol: https, pathname: /**).
+- [x] **Harden Firebase Admin Initialization**
+  - Done: Private key is sanitized and singleton pattern enforced in firebaseAdmin.ts.
 
-- [ ] **Document and handle browser extension hydration issues**
-  - Add a note in the README about possible hydration errors caused by browser extensions (e.g., Colorzilla) and how to distinguish these from real code issues.
+- [x] **Update next.config.js to use remotePatterns**
+  - Done: Only remotePatterns are used for images; domains array removed.
 
-- [ ] **Verify all code samples and patterns**
-  - Ensure all code matches the patterns in the Gemini3 remediation report (async/await, Suspense, dynamic import, singleton Firebase, remotePatterns).
+- [x] **Document and handle browser extension hydration issues**
+  - Done: README documents hydration issues from browser extensions and debugging steps.
 
-# TO DO
+- [x] **Verify all code samples and patterns**
+  - Done: All code matches Gemini3 remediation patterns and requirements.
+
+## General TODOs
 
 Date: 2025-11-18
 

@@ -21,26 +21,14 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'firebasestorage.googleapis.com',
         port: '',
-        pathname: '/v0/b/artwall-by-jr.appspot.com/**',
+        pathname: '/**',
       },
+      // Fix for "Unconfigured Host" error
       {
         protocol: 'https',
         hostname: 'storage.googleapis.com',
         port: '',
-        pathname: '/artwall-by-jr.appspot.com/**',
-      },
-      {
-        protocol: 'https',
-        hostname: 'storage.googleapis.com',
-        port: '',
-        pathname: '/artwall-by-jr.firebasestorage.app/**',
-      },
-      // Add this pattern for direct storage.googleapis.com/artwall-by-jr.firebasestorage.app/* URLs
-      {
-        protocol: 'https',
-        hostname: 'storage.googleapis.com',
-        port: '',
-        pathname: '/artwall-by-jr.firebasestorage.app/**',
+        pathname: '/**',
       },
     ],
     // domains removed; use only remotePatterns as per Next.js 15+ best practices
