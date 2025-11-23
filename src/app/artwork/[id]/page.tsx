@@ -279,6 +279,7 @@ export default function ArtworkModalPage() {
                   alt={`Cover voor ${artwork.title}`}
                   preferredSize="full"
                   style={{ marginBottom: '1rem', width: '100%', height: 'auto', maxHeight: 'calc(85vh - 200px)', objectFit: 'contain', borderRadius: 4 }}
+                  disableNext={true}
                 />
               )}
               {hasMediaUrl(artwork) && artwork.mediaUrl && (
@@ -295,6 +296,7 @@ export default function ArtworkModalPage() {
               fallbackSrc="/logo192.png"
               style={{ width: '100%', height: 'auto', maxHeight: 'calc(85vh - 200px)', objectFit: 'contain', borderRadius: 4 }}
               loading="lazy" 
+              disableNext={true}
             />
           )}
           {/* Audio/music: SoundCloud or audio */}
