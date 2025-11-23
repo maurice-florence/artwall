@@ -496,6 +496,7 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin, onImageLoaded }: ArtworkCardP
                   width={480}
                   height={480}
                   loading="lazy"
+                  unoptimized
                   sizes="(max-width: 480px) 90vw, (max-width: 768px) 45vw, 120px"
                   onLoadingComplete={() => { setImgLoaded(true); onImageLoaded?.(); }}
                   onError={() => { setImgLoaded(true); onImageLoaded?.(); }}
