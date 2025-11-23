@@ -1,3 +1,12 @@
+// Mock react-responsive-masonry to avoid named export errors in tests
+import React from 'react';
+vi.mock('react-responsive-masonry', () => {
+  const Masonry = ({ children }: { children: React.ReactNode }) => React.createElement('div', { 'data-testid': 'mock-masonry' }, children);
+  return {
+    __esModule: true,
+    default: Masonry,
+  };
+});
 import '@testing-library/jest-dom';
 import { vi } from 'vitest';
 

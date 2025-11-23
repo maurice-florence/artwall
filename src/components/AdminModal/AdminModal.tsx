@@ -206,9 +206,9 @@ const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, artworkToEdit 
             {/* Always render errors.debug for test reliability */}
             <pre data-testid="errors-debug-visible" style={{ color: 'red', fontSize: '12px' }}>{JSON.stringify(errors, null, 2)}</pre>
             {/* Render all error messages, or a general error if errors exist */}
-            {Object.keys(errors).length > 0 && (
+            {(Object.keys(errors).length > 0 || errors.general) && (
               <ErrorMessage data-testid="error-message">
-                {Object.values(errors).filter(Boolean).join(' | ') || 'Please fill in all required fields.'}
+                {Object.values(errors).filter(Boolean).join(' | ') || errors.general || 'Please fill in all required fields.'}
               </ErrorMessage>
             )}
             {message && (

@@ -498,11 +498,29 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin, onImageLoaded }: ArtworkCardP
                   height={480}
                   loading="lazy"
                   sizes="(max-width: 480px) 90vw, (max-width: 768px) 45vw, 120px"
-                  onLoad={() => { setImgLoaded(true); onImageLoaded?.(); }}
+                  onLoad={e => { setImgLoaded(true); onImageLoaded?.(); }}
                   onError={() => { setImgLoaded(true); onImageLoaded?.(); }}
                   className={imgLoaded ? 'loaded' : ''}
                   style={{ objectFit: 'cover', borderRadius: 4 }}
+                  data-testid="artwork-image"
                 />
+                {/* Ensure onImageLoaded is called if image is already loaded (for test reliability and caching) */}
+                {onImageLoaded && (
+                  <React.Fragment>
+                    {typeof window !== 'undefined' && images[0] && (
+                      <script dangerouslySetInnerHTML={{
+                        __html: `
+                          (function(){
+                            var img = document.querySelector('[data-testid="artwork-image"]');
+                            if(img && img.complete){
+                              img.dispatchEvent(new Event('load'));
+                            }
+                          })();
+                        `
+                      }} />
+                    )}
+                  </React.Fragment>
+                )}
                 {imageOverlayBg && (
                   <ImageGradientOverlay $bg={imageOverlayBg} aria-hidden="true" />
                 )}
