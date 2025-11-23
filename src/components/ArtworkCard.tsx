@@ -92,6 +92,7 @@ const CardFront = styled(CardFace)<{
   $gradient?: string;
   $useDarkText?: boolean;
 }>`
+  position: relative;
   background: ${({ theme, $imageUrl, $isWriting, $isAudio, $gradient, $medium }) => 
     $gradient ? $gradient :
     // Only use background images for paper textures, not actual images
@@ -493,15 +494,14 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin, onImageLoaded }: ArtworkCardP
                 <Image
                   src={getImageUrl(images[0], 'card')}
                   alt={artwork.title || 'Artwork'}
-                  width={480}
-                  height={480}
+                  fill
                   loading="lazy"
                   unoptimized
-                  sizes="(max-width: 480px) 90vw, (max-width: 768px) 45vw, 120px"
-                  onLoadingComplete={() => { setImgLoaded(true); onImageLoaded?.(); }}
+                  sizes="(max-width: 480px) 90vw, (max-width: 768px) 45vw, 300px"
+                  onLoad={() => { setImgLoaded(true); onImageLoaded?.(); }}
                   onError={() => { setImgLoaded(true); onImageLoaded?.(); }}
                   className={imgLoaded ? 'loaded' : ''}
-                  style={{ objectFit: 'cover', borderRadius: 4 }}
+                  style={{ objectFit: 'cover', borderRadius: 12 }}
                   data-testid="artwork-image"
                 />
                 {/* Ensure onImageLoaded is called if image is already loaded (for test reliability and caching) */}
