@@ -1,7 +1,7 @@
 
-
+import { Suspense } from 'react';
 import { fetchArtworks } from '@/lib/server/firebaseAdmin';
-import MasonryGrid from '@/components/ui/MasonryGrid';
+import HomeFeedClient from './HomeFeedClient';
 
 interface HomeFeedProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
@@ -16,17 +16,17 @@ export default async function HomeFeedServer({ searchParams }: HomeFeedProps) {
   const year = (params.year as string) || 'all';
   const evaluation = (params.evaluation as string) || 'all';
   const rating = (params.rating as string) || 'all';
+  const q = (params.q as string) || '';
 
-  console.log('Fetching artworks with:', { medium, year, evaluation, rating });
+  // Fetch all artworks (no server-side filtering; client handles it)
+  const allArtworks = await fetchArtworks();
 
-  // You may need to map/filter params for your fetchArtworks implementation
-  const artworks = await fetchArtworks({
-    medium: medium === 'all' ? undefined : medium,
-    year: year === 'all' ? undefined : year,
-    evaluation: evaluation === 'all' ? undefined : evaluation,
-    rating: rating === 'all' ? undefined : rating,
-    // ...add other params as needed
-  });
-
-  return <MasonryGrid artworks={artworks} />;
+  return (
+    <Suspense fallback={<div>Loading feed...</div>}>
+      <HomeFeedClient
+        allArtworks={allArtworks}
+        initialFilters={{ medium, year, evaluation, rating, q }}
+      />
+    </Suspense>
+  );
 }
