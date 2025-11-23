@@ -2,6 +2,7 @@
 // --- Client-side HomePage with grid reordering, filters, and modal logic ---
 import React, { useState, useEffect, useMemo, Suspense, useCallback } from 'react';
 import { PageLayout, MainContent, CollageContainer, NoResultsMessage } from '@/app/HomePage.styles';
+import MasonryWrapper from '@/components/ui/MasonryWrapper';
 import MobileNav from '@/components/MobileNav';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -15,7 +16,7 @@ import GlobalSpinner from '@/components/GlobalSpinner';
 // import { useArtworks } from '@/context/ArtworksContext'; // ArtworksContext is retired; replace with correct data source or remove usage
 import type { Artwork, TimelineItem } from '@/types';
 import { realtimeDb } from '@/firebase/client';
-import { ref, onValue, off } from 'firebase/database';
+import { ref, onValue, off, remove, update, push } from 'firebase/database';
 // (No duplicate export, only the interactive HomePage)
 export interface FilterOptions {
     medium: string;
@@ -322,20 +323,20 @@ export default function HomePage() {
                     selectedRating={selectedRating}
                     setSelectedRating={setSelectedRating}
                   />
-                  <CollageContainer>
-                      {timelineItems.slice(0, visibleCount).map((item: TimelineItem) => {
-                          if ('type' in item && item.type === 'year-marker') {
-                              return <YearMarkerCard key={item.id} year={item.year} />;
-                          }
-                          if (isArtwork(item)) {
-                              return <ArtworkCard key={item.id} artwork={item as Artwork} onSelect={() => {
-                                  setSelectedItem(item as Artwork);
-                                  if (isAdmin) handleEdit(item as Artwork);
-                              }} isAdmin={isAdmin} />;
-                          }
-                          return null;
-                      })}
-                  </CollageContainer>
+                  <MasonryWrapper>
+                    {timelineItems.slice(0, visibleCount).map((item: TimelineItem) => {
+                        if ('type' in item && item.type === 'year-marker') {
+                            return <YearMarkerCard key={item.id} year={item.year} />;
+                        }
+                        if (isArtwork(item)) {
+                            return <ArtworkCard key={item.id} artwork={item as Artwork} onSelect={() => {
+                                setSelectedItem(item as Artwork);
+                                if (isAdmin) handleEdit(item as Artwork);
+                            }} isAdmin={isAdmin} />;
+                        }
+                        return null;
+                    })}
+                  </MasonryWrapper>
                   <Footer onAddNewArtwork={handleAdd} />
                 </MainContent>
               )

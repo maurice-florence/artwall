@@ -201,7 +201,7 @@ export const useAdminModal = (artworkToEdit?: Artwork | null) => {
         // eslint-disable-next-line no-console
         console.log('useAdminModal: setErrors called with:', { ...validationErrors, general: generalError });
         // Wait for state flush to ensure error is rendered before returning (for test reliability)
-        await new Promise(res => setTimeout(res, 0));
+        await new Promise(res => setTimeout(res, 10));
         clearLoading();
         return false;
       } else {

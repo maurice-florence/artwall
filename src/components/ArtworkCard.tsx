@@ -283,6 +283,7 @@ const truncateText = (text: string, maxLength: number) => {
 
 // Import the image URL utility
 import { getResizedImageUrl as getImageUrl } from '@/utils/image-urls';
+import Image from 'next/image';
 
 interface ArtworkCardProps {
     artwork: Artwork;
@@ -489,16 +490,18 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin, onImageLoaded }: ArtworkCardP
             {imageUrl ? (
               <>
                 <ImageSkeleton aria-hidden="true" className={!imgLoaded ? '' : 'fade-out'} />
-                <CardImage 
-                  src={getImageUrl(images[0], 'card')} 
-                  alt={artwork.title || 'Artwork'} 
+                <Image
+                  src={getImageUrl(images[0], 'card')}
+                  alt={artwork.title || 'Artwork'}
+                  fill={false}
+                  width={480}
+                  height={480}
                   loading="lazy"
-                  decoding="async"
-                  srcSet={`${getImageUrl(images[0], 'thumbnail')} 100w, ${getImageUrl(images[0], 'card')} 480w, ${getImageUrl(images[0], 'full')} 1200w`}
                   sizes="(max-width: 480px) 90vw, (max-width: 768px) 45vw, 120px"
                   onLoad={() => { setImgLoaded(true); onImageLoaded?.(); }}
                   onError={() => { setImgLoaded(true); onImageLoaded?.(); }}
                   className={imgLoaded ? 'loaded' : ''}
+                  style={{ objectFit: 'cover', borderRadius: 4 }}
                 />
                 {imageOverlayBg && (
                   <ImageGradientOverlay $bg={imageOverlayBg} aria-hidden="true" />
