@@ -200,44 +200,31 @@ function hasContent(artwork: Artwork): boolean {
   return artwork.medium === 'writing' && 'content' in artwork && typeof (artwork as any).content === 'string';
 }
 
-export default function ArtworkModalPage() {
-  const router = useRouter();
-  const params = useParams();
-  const id = typeof params?.id === 'string' ? params.id : Array.isArray(params?.id) ? params.id[0] : undefined;
-  const [artwork, setArtwork] = React.useState<Artwork | null>(null);
-  const [showToast, setShowToast] = React.useState(false);
 
-  React.useEffect(() => {
-    if (!id) {
-      notFound();
-      return;
+export default async function ArtworkModalPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  if (!id) return null;
+  // Search all medium folders in 'artwall' for the artwork
+  const artwallRef = ref(realtimeDb, 'artwall');
+  const snapshot = await get(artwallRef);
+  const data = snapshot.val();
+  if (!data) {
+    notFound();
+    return null;
+  }
+  let found = null;
+  for (const medium of Object.keys(data)) {
+    if (data[medium] && data[medium][id]) {
+      found = { id, type: 'artwork', ...data[medium][id] };
+      break;
     }
-    const fetchArtwork = async () => {
-      // Search all medium folders in 'artwall' for the artwork
-      const artwallRef = ref(realtimeDb, 'artwall');
-      const snapshot = await get(artwallRef);
-      const data = snapshot.val();
-      if (!data) {
-        notFound();
-        return;
-      }
-      let found = null;
-      for (const medium of Object.keys(data)) {
-        if (data[medium] && data[medium][id]) {
-          found = { id, type: 'artwork', ...data[medium][id] };
-          break;
-        }
-      }
-      if (!found) {
-        notFound();
-        return;
-      }
-      setArtwork(found);
-    };
-    fetchArtwork();
-  }, [id]);
-
-  if (!id || !artwork) return null;
+  }
+  if (!found) {
+    notFound();
+    return null;
+  }
+  const artwork = found;
+  // ...existing code...
 
   const dateObj = new Date(artwork.year, (artwork.month ?? 1) - 1, artwork.day ?? 1);
   const formattedDateStr = formatDate(dateObj);

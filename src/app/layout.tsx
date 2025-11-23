@@ -3,11 +3,15 @@ import React from 'react';
 import StyledComponentsRegistry from '../lib/registry';
 import ClientProviders from '@/app/ClientProviders';
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
+  params
 }: {
-  children: React.ReactNode
+  children: React.ReactNode,
+  params?: Promise<Record<string, string | string[] | undefined>>
 }) {
+  // Await params for Next.js 15 compliance (even if not used)
+  if (params) await params;
   return (
     <html lang="nl">
       <head>

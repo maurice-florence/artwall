@@ -1,3 +1,31 @@
+
+# TODO (2025-11-23 Gemini3 Architectural Remediation)
+
+- [ ] **Migrate all Server Components to async and await params/searchParams**
+  - In every `page.tsx`, `layout.tsx`, `route.ts`, and `generateMetadata`, ensure the function is `async` and all `params`/`searchParams` are awaited before use.
+  - Update all destructuring to use `const { id } = await params;` pattern.
+
+- [ ] **Wrap useSearchParams in Suspense**
+  - For any Client Component using `useSearchParams` (e.g., for filtering), ensure it is wrapped in a `<Suspense>` boundary in the parent Server Component to prevent CSR bailout.
+
+- [ ] **Refactor MasonryGrid to use next/dynamic (SSR: false)**
+  - Refactor `src/components/MasonryGrid.tsx` to import `react-responsive-masonry` using `next/dynamic` with `{ ssr: false }`.
+  - Remove any direct server-side rendering of the grid; server should render a skeleton or placeholder only.
+
+- [ ] **Harden Firebase Admin Initialization**
+  - In `src/lib/firebaseAdmin.ts`, sanitize the private key with `.replace(/\\n/g, '\n')` for Vercel compatibility.
+  - Ensure singleton pattern: only initialize if `getApps().length === 0`.
+
+- [ ] **Update next.config.js to use remotePatterns**
+  - Remove deprecated `domains` array.
+  - Add `remotePatterns` for `firebasestorage.googleapis.com` (protocol: https, pathname: /**).
+
+- [ ] **Document and handle browser extension hydration issues**
+  - Add a note in the README about possible hydration errors caused by browser extensions (e.g., Colorzilla) and how to distinguish these from real code issues.
+
+- [ ] **Verify all code samples and patterns**
+  - Ensure all code matches the patterns in the Gemini3 remediation report (async/await, Suspense, dynamic import, singleton Firebase, remotePatterns).
+
 # TO DO
 
 Date: 2025-11-18
