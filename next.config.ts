@@ -43,7 +43,7 @@ const nextConfig = {
         pathname: '/artwall-by-jr.firebasestorage.app/**',
       },
     ],
-    domains: ['firebasestorage.googleapis.com', 'storage.googleapis.com'],
+    // domains removed; use only remotePatterns as per Next.js 15+ best practices
   },
   transpilePackages: ['react-responsive-masonry'],
   env: {
