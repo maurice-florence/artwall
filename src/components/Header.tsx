@@ -212,8 +212,6 @@ const Header: React.FC<HeaderProps> = ({
   
   // ...existing code...
   const [infoOpen, setInfoOpen] = useState(false);
-  const initialEvalCounts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
-  const [evalCounts, setEvalCounts] = useState<{[key:number]:number}>(initialEvalCounts);
   const isMobile = useIsMobile();
   // evaluation dropdown state
   const evalRef = useRef<HTMLDivElement>(null);
@@ -230,7 +228,21 @@ const Header: React.FC<HeaderProps> = ({
   // Calculate counts for each filter option using the artworks from context
   const sourceArtworks: Artwork[] = useMemo(() => (artworksForCounts ?? []), [artworksForCounts]);
 
-  // ...existing code for evaluation counts useMemo...
+  const evalCountsComputed = useMemo(() => {
+    const counts: Record<number, number> = {5:0,4:0,3:0,2:0,1:0};
+    if (!artworksForCounts || artworksForCounts.length === 0) return counts;
+    for (const a of artworksForCounts) {
+      const normalizedEval = (a as any).evaluationNum;
+      const rawEval = (a as any).evaluation;
+      const evalVal = typeof normalizedEval === 'number' ? normalizedEval : (typeof rawEval === 'number' ? rawEval : (rawEval && rawEval !== '' ? Number(rawEval) : NaN));
+      if (!isNaN(evalVal)) {
+        for (const n of [1,2,3,4,5]) {
+          if (evalVal >= n) counts[n] = (counts[n] || 0) + 1;
+        }
+      }
+    }
+    return counts;
+  }, [artworksForCounts]);
 
   const ratingCounts = useMemo(() => {
     const counts: Record<number, number> = {5:0,4:0,3:0,2:0,1:0};
@@ -313,7 +325,7 @@ const Header: React.FC<HeaderProps> = ({
                         <span style={{ display: 'inline-flex', gap: 4 }} aria-hidden>
                           {Array.from({length: n}).map((_,i) => <FaCertificate key={i} />)}
                         </span>
-                        <div style={{ color: 'rgba(0,0,0,0.45)', fontSize: 12 }}>{evalCounts[n] ?? 0}</div>
+                        <div style={{ color: 'rgba(0,0,0,0.45)', fontSize: 12 }}>{evalCountsComputed[n] ?? 0}</div>
                       </div>
                     </DropdownButton>
                   ))}
