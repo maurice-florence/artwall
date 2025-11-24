@@ -10,10 +10,10 @@ export const PageLayout = styled.div`
 
 export const MainContent = styled.div`
   flex-grow: 1;
-    width: 100%;
-    max-width: 1400px;
-    margin: 0 auto;
-    padding: 0 12px;
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 24px;
   transition: none;
   @media (max-width: 1024px) {
     padding: 0 24px;
