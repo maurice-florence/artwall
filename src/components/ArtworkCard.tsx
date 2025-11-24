@@ -497,56 +497,15 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin, onImageLoaded }: ArtworkCardP
             {/* Card front: only show gradient background, no content preview */}
           </CardFront>
             <CardBack $medium={artwork.medium}>
-              {imageUrl ? (
-                <>
-                  <ImageSkeleton aria-hidden="true" className={!imgLoaded ? '' : 'fade-out'} />
-                  <Image
-                    src={getImageUrl(images[0], 'card')}
-                    alt={artwork.title || 'Artwork'}
-                    fill
-                    loading="lazy"
-                    unoptimized
-                    sizes="(max-width: 480px) 90vw, (max-width: 768px) 45vw, 300px"
-                    onLoad={() => { setImgLoaded(true); onImageLoaded?.(); }}
-                    onError={() => { setImgLoaded(true); onImageLoaded?.(); }}
-                    className={imgLoaded ? 'loaded' : ''}
-                    style={{ objectFit: 'cover', borderRadius: 12 }}
-                    data-testid="artwork-image"
-                  />
-                  {/* Ensure onImageLoaded is called if image is already loaded (for test reliability and caching) */}
-                  {onImageLoaded && (
-                    <React.Fragment>
-                      {typeof window !== 'undefined' && images[0] && (
-                        <script dangerouslySetInnerHTML={{
-                          __html: `
-                            (function(){
-                              var img = document.querySelector('[data-testid="artwork-image"]');
-                              if(img && img.complete){
-                                img.dispatchEvent(new Event('load'));
-                              }
-                            })();
-                          `
-                        }} />
-                      )}
-                    </React.Fragment>
-                  )}
-                  {imageOverlayBg && (
-                    <ImageGradientOverlay $bg={imageOverlayBg} aria-hidden="true" />
-                  )}
-                </>
-              ) : (
-                <>
-                  <CardBackTitle>{artwork.title}</CardBackTitle>
-                  <CardBackFooter style={{flexDirection: 'column' }}>
-                  {/* Only show date/place from metadata fields */}
-                  <span>{formattedDate}</span>
-                  {artwork.location1 && <span>{artwork.location1}</span>}
-                  <CardCategory>
-                    {getArtworkIcon(artwork)}
-                  </CardCategory>
-                  </CardBackFooter>
-                </>
-              )}
+              <CardBackTitle>{artwork.title}</CardBackTitle>
+              <CardBackFooter style={{flexDirection: 'column' }}>
+                {/* Only show date/place from metadata fields */}
+                <span>{formattedDate}</span>
+                {artwork.location1 && <span>{artwork.location1}</span>}
+                <CardCategory>
+                  {getArtworkIcon(artwork)}
+                </CardCategory>
+              </CardBackFooter>
             </CardBack>
         </CardInner>
       </CardContainer>
