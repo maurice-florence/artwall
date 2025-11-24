@@ -257,6 +257,7 @@ export default function HomeFeedClient({ allArtworks, initialFilters }: HomeFeed
               setSelectedEvaluation={setSelectedEvaluation}
               selectedRating={selectedRating}
               setSelectedRating={setSelectedRating}
+              artworksForCounts={allArtworks}
             />
             <MasonryGrid>
               {timelineItems.slice(0, visibleCount).map((item: TimelineItem) => {
