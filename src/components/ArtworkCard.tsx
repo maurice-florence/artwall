@@ -54,7 +54,9 @@ const CardContainer = styled.div<{ $medium: ArtworkMedium; $subtype?: string; $b
 `;
 
 const CardInner = styled.div`
-  position: relative;
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
   transition: transform 0.6s;
@@ -486,45 +488,8 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin, onImageLoaded }: ArtworkCardP
             $useDarkText={useDarkText}
             onClick={handleFrontClick}
           >
-            {/* Show image as proper img element if available */}
-            {imageUrl ? (
-              <>
-                <ImageSkeleton aria-hidden="true" className={!imgLoaded ? '' : 'fade-out'} />
-                <Image
-                  src={getImageUrl(images[0], 'card')}
-                  alt={artwork.title || 'Artwork'}
-                  fill
-                  loading="lazy"
-                  unoptimized
-                  sizes="(max-width: 480px) 90vw, (max-width: 768px) 45vw, 300px"
-                  onLoad={() => { setImgLoaded(true); onImageLoaded?.(); }}
-                  onError={() => { setImgLoaded(true); onImageLoaded?.(); }}
-                  className={imgLoaded ? 'loaded' : ''}
-                  style={{ objectFit: 'cover', borderRadius: 12 }}
-                  data-testid="artwork-image"
-                />
-                {/* Ensure onImageLoaded is called if image is already loaded (for test reliability and caching) */}
-                {onImageLoaded && (
-                  <React.Fragment>
-                    {typeof window !== 'undefined' && images[0] && (
-                      <script dangerouslySetInnerHTML={{
-                        __html: `
-                          (function(){
-                            var img = document.querySelector('[data-testid="artwork-image"]');
-                            if(img && img.complete){
-                              img.dispatchEvent(new Event('load'));
-                            }
-                          })();
-                        `
-                      }} />
-                    )}
-                  </React.Fragment>
-                )}
-                {imageOverlayBg && (
-                  <ImageGradientOverlay $bg={imageOverlayBg} aria-hidden="true" />
-                )}
-              </>
-            ) : (isWriting || isAudio) && !hasImage ? (
+            {/* Card front: only show title and metadata, no images */}
+            {(isWriting || isAudio) && !hasImage ? (
               // TODO: Pass imageUrlMedium to the card back/expanded view
               // TODO: Pass imageUrlOriginal to the full screen view in the image carousel/modal
               isWriting ? (
@@ -561,15 +526,56 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin, onImageLoaded }: ArtworkCardP
             )}
           </CardFront>
             <CardBack $medium={artwork.medium}>
-              <CardBackTitle>{artwork.title}</CardBackTitle>
-              <CardBackFooter style={{flexDirection: 'column' }}>
-              {/* Only show date/place from metadata fields */}
-              <span>{formattedDate}</span>
-              {artwork.location1 && <span>{artwork.location1}</span>}
-              <CardCategory>
-                {getArtworkIcon(artwork)}
-              </CardCategory>
-              </CardBackFooter>
+              {imageUrl ? (
+                <>
+                  <ImageSkeleton aria-hidden="true" className={!imgLoaded ? '' : 'fade-out'} />
+                  <Image
+                    src={getImageUrl(images[0], 'card')}
+                    alt={artwork.title || 'Artwork'}
+                    fill
+                    loading="lazy"
+                    unoptimized
+                    sizes="(max-width: 480px) 90vw, (max-width: 768px) 45vw, 300px"
+                    onLoad={() => { setImgLoaded(true); onImageLoaded?.(); }}
+                    onError={() => { setImgLoaded(true); onImageLoaded?.(); }}
+                    className={imgLoaded ? 'loaded' : ''}
+                    style={{ objectFit: 'cover', borderRadius: 12 }}
+                    data-testid="artwork-image"
+                  />
+                  {/* Ensure onImageLoaded is called if image is already loaded (for test reliability and caching) */}
+                  {onImageLoaded && (
+                    <React.Fragment>
+                      {typeof window !== 'undefined' && images[0] && (
+                        <script dangerouslySetInnerHTML={{
+                          __html: `
+                            (function(){
+                              var img = document.querySelector('[data-testid="artwork-image"]');
+                              if(img && img.complete){
+                                img.dispatchEvent(new Event('load'));
+                              }
+                            })();
+                          `
+                        }} />
+                      )}
+                    </React.Fragment>
+                  )}
+                  {imageOverlayBg && (
+                    <ImageGradientOverlay $bg={imageOverlayBg} aria-hidden="true" />
+                  )}
+                </>
+              ) : (
+                <>
+                  <CardBackTitle>{artwork.title}</CardBackTitle>
+                  <CardBackFooter style={{flexDirection: 'column' }}>
+                  {/* Only show date/place from metadata fields */}
+                  <span>{formattedDate}</span>
+                  {artwork.location1 && <span>{artwork.location1}</span>}
+                  <CardCategory>
+                    {getArtworkIcon(artwork)}
+                  </CardCategory>
+                  </CardBackFooter>
+                </>
+              )}
             </CardBack>
         </CardInner>
       </CardContainer>
