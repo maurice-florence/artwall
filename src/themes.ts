@@ -60,7 +60,8 @@ export const blueprintTheme = {
   },
   primary: '#0b8783',      // Teal (180°) - Poetry/Writing
   secondary: '#E85D4F',    // Coral-Red (10°) - Audio/Music
-  tertiary: '#F4A742',     // Amber (40°) - Visual Arts
+  tertiary: '#F4A742',     // Amber (40°) - Drawing
+  quaternary: '#9B59B6',   // Purple (280°) - Sculpture
   inactive: '#94A3A8',     // Desaturated teal - Inactive elements
   cardHeight: 360,
   gridGap: 16,
@@ -95,7 +96,8 @@ export const darkModeTheme = {
   },
   primary: '#0b8783',      // Teal (180°) - Poetry/Writing
   secondary: '#E85D4F',    // Coral-Red (10°) - Audio/Music
-  tertiary: '#F4A742',     // Amber (40°) - Visual Arts
+  tertiary: '#F4A742',     // Amber (40°) - Drawing
+  quaternary: '#9B59B6',   // Purple (280°) - Sculpture
   inactive: '#94A3A8',     // Desaturated teal - Inactive elements
   cardHeight: 360,
   gridGap: 16,
@@ -131,7 +133,8 @@ export const natureTheme = {
   },
   primary: '#0b8783',      // Teal (180°) - Poetry/Writing
   secondary: '#E85D4F',    // Coral-Red (10°) - Audio/Music
-  tertiary: '#F4A742',     // Amber (40°) - Visual Arts
+  tertiary: '#F4A742',     // Amber (40°) - Drawing
+  quaternary: '#9B59B6',   // Purple (280°) - Sculpture
   inactive: '#94A3A8',     // Desaturated teal - Inactive elements
   cardHeight: 360,
   gridGap: 24,
@@ -167,7 +170,8 @@ export const earthTheme = {
   },
   primary: '#0b8783',      // Teal (180°) - Poetry/Writing
   secondary: '#E85D4F',    // Coral-Red (10°) - Audio/Music
-  tertiary: '#F4A742',     // Amber (40°) - Visual Arts
+  tertiary: '#F4A742',     // Amber (40°) - Drawing
+  quaternary: '#9B59B6',   // Purple (280°) - Sculpture
   inactive: '#94A3A8',     // Desaturated teal - Inactive elements
   cardHeight: 360,
   gridGap: 24,
@@ -202,7 +206,8 @@ export const tealTheme = {
   },
   primary: '#0b8783',      // Teal (180°) - Poetry/Writing
   secondary: '#E85D4F',    // Coral-Red (10°) - Audio/Music
-  tertiary: '#F4A742',     // Amber (40°) - Visual Arts
+  tertiary: '#F4A742',     // Amber (40°) - Drawing
+  quaternary: '#9B59B6',   // Purple (280°) - Sculpture
   inactive: '#94A3A8',     // Desaturated teal - Inactive elements
   cardHeight: 360,
   gridGap: 16,
@@ -244,6 +249,7 @@ export interface Theme {
   primary: string;
   secondary: string;
   tertiary: string;
+  quaternary: string;
   inactive: string;
   cardHeight: number;
   gridGap: number;
