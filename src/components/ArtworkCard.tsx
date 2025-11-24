@@ -128,7 +128,12 @@ const CardFront = styled(CardFace)<{
 `;
 
 const CardBack = styled(CardFace)<{ $medium: ArtworkMedium }>`
-  background: ${({ theme, $medium }) => $medium === "audio" ? theme.secondary : theme.primary};
+  background: ${({ theme, $medium }) => {
+    if ($medium === 'audio') return theme.secondary;
+    if ($medium === 'writing') return theme.primary;
+    if ($medium === 'drawing' || $medium === 'sculpture') return theme.tertiary;
+    return theme.primary; // fallback
+  }};
   transform: rotateY(180deg);
   padding: 0.7rem;
   justify-content: center;
