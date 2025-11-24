@@ -37,10 +37,10 @@ const CardContainer = styled.div<{ $medium: ArtworkMedium; $subtype?: string; $b
   aspect-ratio: 3/4;
   border-radius: 6px;
   ${props => getGridSpan(props.$subtype || 'default', props.$medium)}
-
-
   font-size: 0.7rem;
   position: relative;
+  /* Ensure container maintains its height */
+  min-height: 0;
 
   @media (max-width: 768px) {
     grid-column: span 1;
@@ -419,11 +419,9 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin, onImageLoaded }: ArtworkCardP
   const [imgLoaded, setImgLoaded] = useState(false);
 
     const uniqueGradient = useMemo(() => {
-      if ((isWriting || isAudio) && !hasImage) {
-        return generateUniqueGradient(artwork.id || artwork.title, theme, artwork.medium);
-      }
-      return undefined;
-    }, [artwork.id, artwork.title, artwork.medium, isWriting, isAudio, hasImage, theme]);
+      // Generate gradient for all cards
+      return generateUniqueGradient(artwork.id || artwork.title, theme, artwork.medium);
+    }, [artwork.id, artwork.title, artwork.medium, theme]);
 
     const useDarkText = useMemo(() => {
       return uniqueGradient ? shouldUseDarkText(uniqueGradient) : false;
