@@ -49,11 +49,13 @@ function getThemeCompatibleColor(
   const primaryColor = theme.primary || '#0b8783'; // Use default if not set
   const secondaryColor = theme.secondary || '#E85D4F'; // Use default if not set
   const tertiaryColor = theme.tertiary || '#F4A742'; // Use default if not set
+  const quaternaryColor = (theme as any).quaternary || '#4A90E2'; // Use default if not set
   const categoryColor = theme.categories[medium as keyof typeof theme.categories];
 
   const primaryHsl = rgbToHsl(hexToRgb(primaryColor));
   const secondaryHsl = rgbToHsl(hexToRgb(secondaryColor));
   const tertiaryHsl = rgbToHsl(hexToRgb(tertiaryColor));
+  const quaternaryHsl = rgbToHsl(hexToRgb(quaternaryColor));
   const categoryHsl = categoryColor ? rgbToHsl(hexToRgb(categoryColor)) : primaryHsl;
 
   // Select base color based on medium
@@ -78,12 +80,19 @@ function getThemeCompatibleColor(
       };
       break;
     case 'drawing':
-    case 'sculpture':
-      // Use tertiary color for visual arts
+      // Use tertiary color for drawing
       baseColorHsl = {
         h: tertiaryHsl.h,
         s: Math.min(90, tertiaryHsl.s * BASE_SATURATION_MULTIPLIER.other),
         l: tertiaryHsl.l
+      };
+      break;
+    case 'sculpture':
+      // Use quaternary color for sculpture
+      baseColorHsl = {
+        h: quaternaryHsl.h,
+        s: Math.min(90, quaternaryHsl.s * BASE_SATURATION_MULTIPLIER.other),
+        l: quaternaryHsl.l
       };
       break;
     default:

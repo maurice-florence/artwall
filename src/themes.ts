@@ -49,7 +49,7 @@ export const blueprintTheme = {
     prosepoem: '#8E44AD',
     prose: '#27AE60',
     sculpture: '#D35400',
-    drawing: '#8E44AD',
+    drawing: '#16A085',  // Distinct teal-green for drawing
   },
   cardBackgrounds: {
     default: '#FFFFFF',
