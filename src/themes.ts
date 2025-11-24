@@ -26,6 +26,7 @@ export const atelierTheme = {
   primary: '#0b8783',      // Teal (180°) - Poetry/Writing
   secondary: '#E85D4F',    // Coral-Red (10°) - Audio/Music
   tertiary: '#F4A742',     // Amber (40°) - Visual Arts
+  quaternary: '#4A90E2',   // Deep Blue (210°) - Sculpture
   inactive: '#94A3A8',     // Desaturated teal - Inactive elements
   cardHeight: 360,
   gridGap: 24,
