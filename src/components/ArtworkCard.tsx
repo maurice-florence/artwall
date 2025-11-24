@@ -486,42 +486,7 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin, onImageLoaded }: ArtworkCardP
             $useDarkText={useDarkText}
             onClick={handleFrontClick}
           >
-            {/* Card front: only show title and metadata, no images */}
-            {(isWriting || isAudio) && !hasImage ? (
-              // TODO: Pass imageUrlMedium to the card back/expanded view
-              // TODO: Pass imageUrlOriginal to the full screen view in the image carousel/modal
-              isWriting ? (
-                showPreview ? (
-                  <TextOverlay style={{ color: useDarkText ? theme.text : theme.cardText }}>{textPreview}</TextOverlay>
-                ) : (
-                  <TextOverlay $subtle>{textPreview}</TextOverlay>
-                )
-              ) : (
-                <TextOverlay $subtle>{textPreview}</TextOverlay>
-              )
-            ) : (
-              <>
-                {/* Only show generated image, no title */}
-                <div style={{ flex: 1, minHeight: 0, minWidth: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 4 }}>
-                  <GeneratedImage title={artwork.title || ''} medium={artwork.medium} />
-                </div>
-                {availableLanguages.length > 1 && (
-                  <LanguageIndicator data-testid={`artwork-languages-${artwork.id}`}> 
-                    {availableLanguages.filter((lang: string) => lang && lang.trim() !== '').map((lang: string, idx: number) => (
-                      <LanguageTag key={getLangKey(lang, idx)}>{lang.toUpperCase()}</LanguageTag>
-                    ))}
-                  </LanguageIndicator>
-                )}
-                <CardFooter style={{ marginTop: '0.5rem', justifyContent: 'space-between', flexShrink: 0 }}>
-                  {/* Only show date/place from metadata fields */}
-                  <span>{formattedDate}</span>
-                  {artwork.location1 && <span>{artwork.location1}</span>}
-                  <CardCategory>
-                    {getArtworkIcon(artwork)}
-                  </CardCategory>
-                </CardFooter>
-              </>
-            )}
+            {/* Card front: only show gradient background, no content preview */}
           </CardFront>
             <CardBack $medium={artwork.medium}>
               {imageUrl ? (
