@@ -30,7 +30,7 @@ export default function MasonryWrapper({
 
   return (
     <ResponsiveMasonry columnsCountBreakPoints={breakpoints}>
-      <Masonry gutter="4px">
+      <Masonry gutter="8px">
         {children}
       </Masonry>
     </ResponsiveMasonry>

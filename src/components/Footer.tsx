@@ -35,7 +35,7 @@ const LastUpdatedText = styled.p`
 
 const VersionTag = styled.div`
   position: fixed;
-  bottom: 12px;
+  top: 12px;
   right: 16px;
   background: #eee;
   color: #333;
