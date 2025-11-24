@@ -561,7 +561,6 @@ The project uses **Vitest** for unit and integration testing and **Cypress** for
 
 ---
 
-
 ## Hydration Issues & Browser Extensions
 
 ### Debugging Hydration Mismatches
@@ -579,6 +578,7 @@ Some browser extensions (such as password managers, ad blockers, or accessibilit
 If you encounter a hydration error that only appears with certain extensions enabled, it is not a bug in Artwall itself. Advise users to disable extensions or use a clean browser profile for best results.
 
 ---
+
 ## Accessibility & Responsiveness
 
 - All UI components are accessible and mobile-friendly.
