@@ -209,6 +209,10 @@ const Modal: React.FC<ModalProps> = ({
   const [isStacked, setIsStacked] = useState(false);
   const textContainerRef = useRef<HTMLDivElement>(null);
   const imageContainerRef = useRef<HTMLDivElement>(null);
+  
+  // Progressive image loading states
+  const [imageLoadState, setImageLoadState] = useState<Record<number, 'loading' | 'loaded'>>({});
+  const [fullSizeLoaded, setFullSizeLoaded] = useState<Record<number, boolean>>({});
 
   // Get available languages
   const availableLanguages = [];
@@ -297,6 +301,53 @@ function getMediaType(url: string): 'image' | 'video' | 'audio' | 'pdf' | 'unkno
     return media.filter(Boolean);
   }, [item.coverImageUrl, item.mediaUrl, item.mediaUrls, item.pdfUrl, item.audioUrl]);
 
+  // Component for progressive image loading
+  const ProgressiveImage: React.FC<{ src: string; alt: string; index: number; onClick?: () => void }> = ({ src, alt, index, onClick }) => {
+    const thumbnailUrl = getResizedImageUrl(src, 'card');
+    const fullSizeUrl = getResizedImageUrl(src, 'full');
+    const [currentSrc, setCurrentSrc] = useState(thumbnailUrl);
+    const [isLoading, setIsLoading] = useState(true);
+    const [isBlurred, setIsBlurred] = useState(true);
+
+    useEffect(() => {
+      // Load thumbnail first
+      const thumbnailImg = new Image();
+      thumbnailImg.src = thumbnailUrl;
+      thumbnailImg.onload = () => {
+        setCurrentSrc(thumbnailUrl);
+        setIsLoading(false);
+        
+        // Start loading full-size image in background
+        const fullImg = new Image();
+        fullImg.src = fullSizeUrl;
+        fullImg.onload = () => {
+          setCurrentSrc(fullSizeUrl);
+          setIsBlurred(false);
+          setFullSizeLoaded(prev => ({ ...prev, [index]: true }));
+        };
+      };
+    }, [thumbnailUrl, fullSizeUrl, index]);
+
+    return (
+      <ProgressiveImageWrapper>
+        <ResponsiveImage 
+          src={currentSrc}
+          alt={alt}
+          onClick={onClick}
+          style={{ 
+            filter: isBlurred ? 'blur(10px)' : 'none',
+            cursor: onClick ? 'pointer' : 'default'
+          }}
+        />
+        {isLoading && (
+          <ImageLoadingOverlay>
+            Loading image...
+          </ImageLoadingOverlay>
+        )}
+      </ProgressiveImageWrapper>
+    );
+  };
+
   useLayoutEffect(() => {
     if (textContainerRef.current && imageContainerRef.current && allMedia.length > 1) {
         const textHeight = textContainerRef.current.scrollHeight;
@@ -382,7 +433,10 @@ function getMediaType(url: string): 'image' | 'video' | 'audio' | 'pdf' | 'unkno
                   {isStacked ? (
                     allMedia.map((url, index) => {
                       const type = getMediaType(url);
-                      if (type === 'image') return <ResponsiveImage key={index} src={url} alt={`Media ${index + 1}`} onClick={() => window.open(url, '_blank')} />;
+                      if (type === 'image') {
+                        const originalUrl = getResizedImageUrl(url, 'original');
+                        return <ProgressiveImage key={index} src={url} alt={`Media ${index + 1}`} index={index} onClick={() => window.open(originalUrl, '_blank')} />;
+                      }
                       if (type === 'video') return <video key={index} src={url} controls style={{ width: '100%', borderRadius: 4, background: '#222' }} />;
                       if (type === 'audio') return <audio key={index} src={url} controls style={{ width: '100%', borderRadius: 4, background: '#222' }} />;
                       if (type === 'pdf') return <PdfViewer key={index} src={url} title={`PDF ${index + 1}`} />;
@@ -401,15 +455,16 @@ function getMediaType(url: string): 'image' | 'video' | 'audio' | 'pdf' | 'unkno
                         const currentUrl = allMedia[currentMediaIndex];
                         const type = getMediaType(currentUrl);
                         if (type === 'image') {
-                          const fullSizeUrl = getResizedImageUrl(currentUrl, 'full');
                           const originalUrl = getResizedImageUrl(currentUrl, 'original');
                           return (
-                            <ResponsiveImage 
-                              src={fullSizeUrl} 
-                              alt={`Media ${currentMediaIndex + 1}`} 
-                              data-testid={`modal-media-image-${currentMediaIndex}`} 
-                              onClick={() => window.open(originalUrl, '_blank')} 
-                            />
+                            <div data-testid={`modal-media-image-${currentMediaIndex}`}>
+                              <ProgressiveImage 
+                                src={currentUrl} 
+                                alt={`Media ${currentMediaIndex + 1}`} 
+                                index={currentMediaIndex}
+                                onClick={() => window.open(originalUrl, '_blank')} 
+                              />
+                            </div>
                           );
                         } else if (type === 'video') {
                           return <video src={currentUrl} controls style={{ width: '100%', maxHeight: '70vh', borderRadius: 4, background: '#222' }} data-testid={`modal-media-video-${currentMediaIndex}`} />;
@@ -458,7 +513,10 @@ function getMediaType(url: string): 'image' | 'video' | 'audio' | 'pdf' | 'unkno
                   {isStacked ? (
                     allMedia.map((url, index) => {
                       const type = getMediaType(url);
-                      if (type === 'image') return <ResponsiveImage key={index} src={url} alt={`Media ${index + 1}`} onClick={() => window.open(url, '_blank')} />;
+                      if (type === 'image') {
+                        const originalUrl = getResizedImageUrl(url, 'original');
+                        return <ProgressiveImage key={index} src={url} alt={`Media ${index + 1}`} index={index} onClick={() => window.open(originalUrl, '_blank')} />;
+                      }
                       if (type === 'video') return <video key={index} src={url} controls style={{ width: '100%', borderRadius: 4, background: '#222' }} />;
                       if (type === 'audio') return <audio key={index} src={url} controls style={{ width: '100%', borderRadius: 4, background: '#222' }} />;
                       if (type === 'pdf') return <PdfViewer key={index} src={url} title={`PDF ${index + 1}`} />;
@@ -477,15 +535,16 @@ function getMediaType(url: string): 'image' | 'video' | 'audio' | 'pdf' | 'unkno
                         const currentUrl = allMedia[currentMediaIndex];
                         const type = getMediaType(currentUrl);
                         if (type === 'image') {
-                          const fullSizeUrl = getResizedImageUrl(currentUrl, 'full');
                           const originalUrl = getResizedImageUrl(currentUrl, 'original');
                           return (
-                            <ResponsiveImage 
-                              src={fullSizeUrl} 
-                              alt={`Media ${currentMediaIndex + 1}`} 
-                              data-testid={`modal-media-image-${currentMediaIndex}`} 
-                              onClick={() => window.open(originalUrl, '_blank')} 
-                            />
+                            <div data-testid={`modal-media-image-${currentMediaIndex}`}>
+                              <ProgressiveImage 
+                                src={currentUrl} 
+                                alt={`Media ${currentMediaIndex + 1}`} 
+                                index={currentMediaIndex}
+                                onClick={() => window.open(originalUrl, '_blank')} 
+                              />
+                            </div>
                           );
                         }
                         if (type === 'video') return <video src={currentUrl} controls style={{ width: '100%', maxHeight: '70vh', borderRadius: 4, background: '#222' }} data-testid={`modal-media-video-${currentMediaIndex}`} />;
@@ -554,6 +613,28 @@ const ResponsiveImage = styled.img`
   max-height: 70vh;
   object-fit: contain;
   border-radius: 4px;
+  transition: filter 0.3s ease-in-out;
+`;
+
+const ImageLoadingOverlay = styled.div`
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  background: rgba(0, 0, 0, 0.5);
+  padding: 1rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  pointer-events: none;
+`;
+
+const ProgressiveImageWrapper = styled.div`
+  position: relative;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 `;
 
 export default Modal;
