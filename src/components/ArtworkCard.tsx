@@ -61,7 +61,11 @@ const CardInner = styled.div`
   height: 100%;
   transition: transform 0.6s;
   transform-style: preserve-3d;
+  transform-origin: center center;
   cursor: pointer;
+  /* Prevent any margin collapse or spacing issues */
+  margin: 0;
+  padding: 0;
   
   /* Only enable flip on devices that support hover and precise pointer */
   @media (hover: hover) and (pointer: fine) {
@@ -73,6 +77,8 @@ const CardInner = styled.div`
 
 const CardFace = styled.div`
   position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
   -webkit-backface-visibility: hidden; /* Safari */
@@ -82,6 +88,8 @@ const CardFace = styled.div`
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  margin: 0;
+  padding: 0;
 `;
 
 // Use a transient prop ($medium) to avoid passing it to the DOM
