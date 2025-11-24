@@ -12,6 +12,7 @@ export const GlobalStyle = createGlobalStyle<{ theme: DefaultTheme }>`
     color: ${({ theme }) => theme.text};
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
     line-height: 1.6;
+    overflow-y: scroll; /* Always show scrollbar to prevent layout shift */
   }
 
   h1, h2, h3, h4, h5, h6 {

@@ -14,6 +14,7 @@ export interface Theme {
   primary: string;
   secondary: string;
   tertiary: string;
+  quaternary: string;
   inactive: string;
   cardHeight: number;
   gridGap: number;
