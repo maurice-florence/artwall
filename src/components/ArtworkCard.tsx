@@ -54,9 +54,7 @@ const CardContainer = styled.div<{ $medium: ArtworkMedium; $subtype?: string; $b
 `;
 
 const CardInner = styled.div`
-  position: absolute;
-  top: 0;
-  left: 0;
+  position: relative;
   width: 100%;
   height: 100%;
   transition: transform 0.6s;
