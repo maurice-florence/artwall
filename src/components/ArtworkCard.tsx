@@ -46,10 +46,10 @@ const CardContainer = styled.div<{ $medium: ArtworkMedium; $subtype?: string; $b
     grid-column: span 1;
     grid-row: span 1;
     min-width: 0;
-    max-width: 100vw;
+    max-width: none; /* Allow cards to size to fit 3 per row */
     min-height: 60px;
     font-size: 0.65rem;
-    aspect-ratio: 4 / 5; /* keep consistent sizing across orientation */
+    aspect-ratio: 3 / 4; /* Keep same aspect ratio as desktop */
   }
 `;
 

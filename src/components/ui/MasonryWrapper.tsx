@@ -10,7 +10,7 @@ interface MasonryWrapperProps {
 
 export default function MasonryWrapper({
   children,
-  breakpoints = { 350: 2, 750: 4, 900: 6, 1200: 8 },
+  breakpoints = { 350: 3, 750: 4, 900: 6, 1200: 8 },
 }: MasonryWrapperProps) {
   const [isMounted, setIsMounted] = useState(false);
 

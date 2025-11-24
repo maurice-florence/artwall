@@ -22,8 +22,8 @@ const YearCardContainer = styled.div`
 
     @media (max-width: 768px) {
       grid-column: span 1;
-      max-width: 100vw;
-      aspect-ratio: 4 / 5;
+      max-width: none;
+      aspect-ratio: 3 / 4;
       font-size: 2rem;
     }
 `;
