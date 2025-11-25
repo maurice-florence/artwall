@@ -304,7 +304,7 @@ function getMediaType(url: string): 'image' | 'video' | 'audio' | 'pdf' | 'unkno
   // Component for progressive image loading
   const ProgressiveImage: React.FC<{ src: string; alt: string; index: number; onClick?: () => void }> = ({ src, alt, index, onClick }) => {
     const thumbnailUrl = getResizedImageUrl(src, 'thumbnail');
-    const displayUrl = getResizedImageUrl(src, 'card'); // Use card size (480x480) instead of full
+    const displayUrl = getResizedImageUrl(src, 'thumbnail'); // Use thumbnail size for both for speed
     const [currentSrc, setCurrentSrc] = useState(thumbnailUrl);
     const [isLoading, setIsLoading] = useState(true);
     const [isBlurred, setIsBlurred] = useState(true);
