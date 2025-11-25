@@ -3,6 +3,7 @@
 // This is a drop-in future replacement for OptimizedImage; begin migrating usage gradually.
 import React, { useState, useEffect } from 'react';
 import Image, { ImageProps } from 'next/image';
+import firebaseLoader from '../../lib/firebase-loader';
 import { getResizedImageUrlWithFallback, getResizedImageUrl } from '@/utils/image-urls';
 
 type SizeVariant = 'thumbnail' | 'card' | 'full' | 'original';
@@ -105,6 +106,9 @@ export const SmartImage: React.FC<SmartImageProps> = ({
       height={(imageProps as any).height || 400}
       loading={imageProps.loading}
       placeholder="empty"
+      loader={firebaseLoader}
+      unoptimized={false}
+      sizes={imageProps.sizes || '(max-width: 768px) 33vw, 150px'}
       {...imageProps}
     />
   );

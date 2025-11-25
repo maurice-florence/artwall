@@ -1,0 +1,374 @@
+
+Comprehensive Technical Analysis of Image Performance Bottlenecks in Next.js Applications Integrated with Firebase Cloud Storage
+
+
+1. Introduction: The Convergence of Serverless Architectures and Media Latency
+
+The evolution of modern web development has increasingly favored the "Jamstack" architecture—decoupling the frontend presentation layer from the backend logic and storage—to achieve scalability, security, and developer velocity. In this paradigm, frameworks like Next.js have emerged as the de facto standard for React-based applications, offering hybrid static and server-side rendering capabilities. Simultaneously, Backend-as-a-Service (BaaS) platforms like Firebase have revolutionized data persistence and file storage, allowing developers to offload infrastructure management. The artwall-next application 2, an apparent digital gallery or portfolio platform, represents a classic implementation of this stack: a Next.js frontend hosting high-fidelity user-generated content (likely artwork) stored in Firebase Cloud Storage.
+However, the integration of Next.js's Image Optimization API with Firebase Cloud Storage is not a frictionless coupling. The user inquiry reports a specific and debilitating symptom profile: images that load either "ridiculously slowly" or "not at all." This binary failure mode—high latency versus total connection failure—is symptomatic of a deeper architectural conflict between the on-demand processing model of Next.js and the security and retrieval mechanisms of Firebase Storage.
+The investigation into the provided research materials reveals that this is not merely a configuration error but a systemic issue involving network topology, serverless execution limits, authentication token management, and memory constraints. When a Next.js application attempts to act as a proxy and optimization engine for remote Firebase assets, it incurs a "round-trip" latency penalty that, under the constraints of serverless function timeouts (typically 10 to 60 seconds), frequently leads to 504 Gateway Timeouts.3 Furthermore, the specific URL structure of Firebase assets, which includes query parameters for access tokens, often triggers validation errors within the Next.js optimization pipeline, resulting in 400 Bad Request errors.6
+This report serves as an exhaustive technical audit of these phenomena. It dissects the request lifecycle of an optimized image, analyzes the "cold start" behaviors of Firebase App Hosting, evaluates the memory pressure on containerized image processors, and prescribes a comprehensive set of remediation strategies ranging from configuration tuning to architectural refactoring using Edge caching and upload-time pre-processing.
+
+2. The Theoretical Framework of Next.js Image Optimization
+
+To diagnose the failure of image loading in artwall-next, one must first establish a baseline understanding of how the Next.js Image Optimization API functions theoretically versus how it performs in the wild when tethered to a high-latency upstream provider.
+
+2.1 The Promise of On-Demand Optimization
+
+Historically, web developers had to manually resize images for different viewports—creating a "thumbnail," a "medium," and a "large" version for every asset—and then use the HTML srcset attribute to instruct the browser which to download. Next.js attempted to abstract this complexity with the <Image /> component and a built-in Image Optimization API.7
+The core philosophy of this system is On-Demand Optimization. Instead of generating thousands of resized images at build time (which would slow down deployments significantly), Next.js waits until a user actually requests an image. When a user visits a page, the browser requests a URL from the Next.js server, typically formatted as:
+/_next/image?url=ENCODED_EXTERNAL_URL&w=1080&q=75
+Upon receiving this request, the Next.js server performs the following synchronous operations:
+Validation: It checks if the url parameter matches a pattern allowed in next.config.js.9
+Fetch: It acts as a proxy client, initiating an HTTP GET request to the external source (in this case, firebasestorage.googleapis.com) to download the full-resolution asset.
+Transformation: It utilizes a native C++ library (Sharp) or a Rust-based alternative (in newer versions) to decode the image, resize it to the requested width (w=1080), and re-encode it into a modern, efficient format like WebP or AVIF.7
+Serving: It streams the optimized binary data back to the user's browser.
+Caching: It writes the optimized result to the filesystem or an LRU cache so that subsequent requests for the same parameters can be served instantly.10
+
+2.2 The "Round-Trip" Latency Penalty
+
+The critical flaw in this architecture, when applied to the artwall-next use case, is the Upstream Fetch phase. In a local development environment, fetching an image might take milliseconds. However, in a production environment, specifically one using Firebase, this step becomes the primary bottleneck.
+When the Next.js server requests the image from Firebase, it must traverse the public internet or internal Google Cloud networks. If the image is a high-resolution artwork (common in an "artwall" app), the file size could be 5MB, 10MB, or larger. Downloading a 10MB file from Firebase Storage to the container running Next.js takes a non-trivial amount of time—potentially 2 to 5 seconds depending on bandwidth and proximity.11
+This time is added to the processing time. The user's browser is left hanging, waiting for the "First Byte" (TTFB). If the download takes 3 seconds and the resizing takes 2 seconds, the user sees a blank space for at least 5 seconds. This explains the "slow loading" symptom described in the user query.5 The server is working; it is simply overwhelmed by the physics of moving large data blocks across the network before it can even begin to optimize them.
+
+2.3 Serverless Execution Limits and the "Not at All" Failure
+
+The "not loading at all" symptom is almost certainly a manifestation of Serverless Function Timeouts. Most modern Next.js deployments, including those on Vercel or Firebase App Hosting, run the image optimization logic inside ephemeral serverless containers (Cloud Functions or Cloud Run).12
+These environments enforce strict execution time limits.
+Vercel: Often limits serverless functions to 10 seconds on the Hobby plan, or up to 60 seconds on Pro.14
+Firebase Functions: Default timeout is often 60 seconds, but HTTP 504 errors can occur at the gateway level much sooner if the handshake is not completed.15
+If the artwall-next application attempts to serve a particularly large image, or if the network between the Next.js container and the Firebase bucket is momentarily congested, the combined duration of "Fetch + Resize" may exceed the timeout threshold. When this happens, the platform terminates the process and returns a 504 Gateway Timeout to the browser.4 To the user, the image simply appears broken.
+This failure mode is binary. There is no partial rendering. The browser requests the image, waits 10-60 seconds, and then receives an error. This aligns perfectly with the research snippets describing images that "load slowly or not at all".5
+
+3. Investigating the Firebase Storage Integration
+
+The artwall-next application stores its assets in Firebase Cloud Storage. Unlike a standard web server or a dedicated Image CDN, Firebase Storage behaves as an object store (built on Google Cloud Storage) with specific security and access patterns that complicate the Next.js proxying mechanism.
+
+3.1 The Taxonomy of Firebase URLs
+
+Understanding the specific structure of the URL is crucial for diagnosing configuration errors. Firebase Storage generally provides two types of access URLs:
+Public/Signed Download URLs: These are the most common and look like:
+https://firebasestorage.googleapis.com/v0/b/PROJECT.appspot.com/o/FOLDER%2FIMAGE.jpg?alt=media&token=UUID
+.6
+Google Cloud Storage URI: gs://bucket/object (Not directly usable by browsers or Next.js without an SDK).
+The presence of the token query parameter in the standard download URL is a significant variable. This token acts as a capability key; anyone possessing the URL with the token can read the file. However, this token complicates the caching logic within Next.js.
+
+3.2 The Token-Cache Mismatch
+
+Next.js caches optimized images based on a hash of the source URL and the requested parameters (width, quality).10
+If the application logic in artwall-next generates the image URL dynamically using the Firebase SDK (e.g., getDownloadURL), and if that process somehow results in a different token or if the token expires and is refreshed, Next.js treats the new URL as a completely distinct asset.17
+Scenario:
+User A visits the page. The app generates image.jpg?token=123. Next.js optimizes and caches it.
+User B visits the page. Due to app logic (or token rotation), the app generates image.jpg?token=456.
+Result: Cache Miss. Next.js must re-fetch and re-process the image.
+This defeats the purpose of caching. Instead of serving the pre-calculated image from the cache (milliseconds), the server is forced to perform the expensive round-trip optimization for every single user session or token rotation. This contributes massively to the "slow loading" perception, as the cache hit ratio effectively drops to zero.10
+
+3.3 Security Rules and the 403 Forbidden Error
+
+Another potential cause for images not loading "at all" is the expiration of these tokens. If the artwall-next application caches the Firebase URLs in a database (e.g., Firestore) rather than generating them fresh, and if those URLs contain tokens that eventually expire or are revoked, the Next.js server will receive a 403 Forbidden error when it attempts to fetch the upstream image.19
+Since the <Image /> component hides the upstream error behind the 500 or 400 error it returns to the browser, the developer might not immediately see that the root cause is a permission denial from Firebase. The user simply sees a broken image icon.
+
+4. Configuration Vulnerabilities in next.config.js
+
+The next.config.js file 2 governs the behavior of the application, including the crucial security allowlists for image optimization. A thorough investigation suggests that misconfiguration here is a primary suspect for the "broken" images.
+
+4.1 The "URL Parameter is Not Allowed" Error
+
+Research snippet 6 and 21 explicitly highlight a common error: 400 Bad Request: "url" parameter is not allowed. This occurs when the hostname of the remote image is not present in the images.remotePatterns (or the legacy images.domains) configuration.
+For Firebase, simply adding firebasestorage.googleapis.com to the domains array is often insufficient in newer Next.js versions which enforce stricter pattern matching. The configuration must accurately reflect the complex path structure of Firebase URLs, which includes the bucket name as part of the path segment (/v0/b/...).
+Table 1: Evolution of Image Configuration
+Feature
+Legacy (domains)
+Modern (remotePatterns)
+Impact on Firebase
+Precision
+Hostname only
+Protocol, Host, Port, Path
+remotePatterns allows locking down to specific buckets.
+Security
+Low (Allows any path)
+High (Strict path matching)
+High security prevents misuse but requires precise config.
+Wildcards
+No
+Yes (*, **)
+Essential for Firebase paths which vary by project ID.
+
+If artwall-next uses remotePatterns but fails to include a wildcard for the object path (e.g., /v0/b/my-bucket.appspot.com/o/**), legitimate image requests will be blocked by the Next.js server before they are even attempted, resulting in immediate load failures.9
+
+4.2 Malformed URL Encoding
+
+Firebase URLs utilize URL-encoded slashes (%2F) to represent directory structures within the query path (e.g., folder%2Fimage.jpg). Snippet 22 suggests that double-encoding issues or the way Next.js decodes these paths can sometimes cause the pattern matcher to fail. If the configuration expects a literal slash / but receives an encoded %2F, the match fails, and the image is rejected.
+
+5. Architectural Stressors: Memory and CPU in Serverless Containers
+
+The "slow" performance is not just network latency; it is also computational latency. The artwall-next app likely deals with high-fidelity images. Processing these requires significant CPU and Memory resources.
+
+5.1 The "Sharp" Memory Spike
+
+Next.js uses the sharp library for image processing.11 sharp is highly efficient, but image manipulation is inherently memory-intensive. To resize a 4000x4000 pixel image, the library must decode the compressed JPEG/PNG into a raw pixel buffer in memory. A 16-megapixel image, when uncompressed (4 channels: RGBA), can occupy over 64MB of RAM just for the raw buffer, plus the overhead of the operation buffers.
+Snippet 13 and 23 reveal that serverless functions often struggle with this. If the function is allocated 128MB or 256MB of RAM (common defaults to save costs), processing a single high-res art upload can trigger an Out Of Memory (OOM) error. The container crashes, the request fails, and the platform must spin up a new container.
+
+5.2 Cold Starts and Concurrency
+
+In Firebase App Hosting or Cloud Run, if a container crashes or if traffic spikes, new instances must be started. This "Cold Start" introduces a delay of 1 to 5 seconds before the code even begins executing.13
+Furthermore, snippet 5 poses the question: "When a second container starts, does the new container need to optimize every image again?"
+The answer is Yes. The default Next.js caching is filesystem-based. In a serverless environment, the filesystem is ephemeral. When a new container starts, it has an empty cache. It must re-fetch and re-optimize every image requested.
+Implication: In a serverless environment without a persistent external cache (like a separate CDN or mounted volume), the cache hit rate is extremely low for rarely-visited pages or during scale-out events. The application is perpetually paying the "optimization penalty," leading to consistently slow load times.
+
+6. Remediation Strategy A: Disabling Server-Side Optimization (The "Escape Hatch")
+
+Given the myriad ways the server-side optimization pipeline can fail with Firebase, the most immediate remediation—often suggested in developer discussions 5—is to bypass it entirely.
+
+6.1 The unoptimized Prop
+
+Next.js provides an escape hatch via the unoptimized prop on the <Image /> component.
+
+JavaScript
+
+
+<Image src={firebaseUrl} unoptimized />
+
+
+When this prop is set, Next.js does not rewrite the URL to /_next/image. Instead, it renders a standard HTML <img> tag pointing directly to the Firebase firebasestorage.googleapis.com URL.
+
+6.2 Trade-offs and Analysis
+
+Reliability (High): This eliminates 504 timeouts, 400 configuration errors, and server-side OOM crashes. The browser fetches the image directly from Google's highly available storage servers.
+Performance (Low): This reintroduces the problem Next.js was meant to solve. If the user uploaded a 5MB image, the mobile user downloads a 5MB image. This destroys the Largest Contentful Paint (LCP) metric, damaging SEO and user experience on slow networks.9
+Verdict: This is a viable debugging step to prove the bottleneck is the Next.js server, but it is not a production-grade solution for an "Art Wall" application where visual fidelity and speed are paramount.
+
+7. Remediation Strategy B: The "Resize Images" Extension (Pre-Processing)
+
+The most robust architectural fix identified in the research is to shift from "On-Demand" optimization (at read time) to "Pre-Processing" (at write time). This aligns with the "dumb server, smart storage" philosophy.
+
+7.1 Implementing the Extension
+
+Firebase offers a pre-built extension: Resize Images (now "Image Processing").25
+Mechanism: When a user uploads a file to a specific bucket path, this extension triggers a Cloud Function that automatically generates resized versions (e.g., 200x200, 640x640, 1920x1920).
+Output: The resized images are saved back to the bucket with predictable suffixes: image_200x200.jpg.
+
+7.2 The Custom Loader Integration
+
+To utilize these pre-generated images with Next.js, one must implement a Custom Loader. The loader tells Next.js: "Don't try to optimize this yourself; I already have a resized version waiting for you."
+Implementation Logic 12:
+The loader function receives the src and the requested width. It maps the requested width to the nearest available pre-generated size.
+
+JavaScript
+
+
+// firebase-loader.js
+export default function firebaseLoader({ src, width, quality }) {
+  // src: https://firebasestorage.../o/folder%2Fimage.jpg?alt=media&token=...
+  
+  // 1. Parse the filename from the src
+  // 2. Determine the closest available size (e.g., if width=500, use 640)
+  // 3. Construct the URL for the resized asset: folder%2Fimage_640x640.jpg
+  
+  // CRITICAL: Handling Tokens (See Section 7.3)
+}
+
+
+
+7.3 The "Token Trap" and Public Access
+
+A critical implementation detail discovered in the research is that the Resize Extension creates new files, which implies new access tokens (or no tokens).27
+If the frontend simply appends _200x200 to the filename but keeps the old token from the original upload, the request will fail with 403 Forbidden.
+Solutions:
+Public Access: Configure the extension to make resized images public.29 This removes the need for tokens entirely. The URL becomes purely path-based. This is the simplest approach for an art gallery where images are meant to be seen.
+Firestore Synchronization: If images must remain private, the upload workflow must be modified. Upon upload completion, a Cloud Function should capture the download URLs (and tokens) of all generated sizes and store them in a Firestore document linked to the image. The frontend then queries this document to get the authenticated URLs for every size.30
+
+8. Remediation Strategy C: Advanced Caching and CDN Layering
+
+To address the "slow loading" even when optimization is working, the caching strategy must be aggressive.
+
+8.1 Cache-Control Headers
+
+By default, Firebase Storage might serve assets with a short cache life (e.g., max-age=3600). This forces browsers and the Next.js server to re-validate frequently.
+The artwall-next upload logic must be updated to set metadata on upload:
+cacheControl: 'public, max-age=31536000, immutable'.31
+Impact: This tells the Next.js server (and any intermediate CDN) that the image will never change. Next.js can then cache its optimized version indefinitely, significantly raising the cache hit rate and reducing server load.
+
+8.2 Using a Dedicated Image CDN (Imgix/Cloudinary)
+
+If the complexities of managing tokens and resize extensions are too high, snippets suggest "linking your Firebase Storage bucket to Imgix".5
+Concept: Imgix connects to the Firebase bucket. The Next.js loader simply points to https://my-app.imgix.net/image.jpg?w=500.
+Benefit: Imgix handles the resizing globally at the edge. It is faster and more reliable than a Next.js serverless function.
+Drawback: Cost. This adds a paid dependency to the project.
+
+9. UX Enhancements: The Role of Placeholders
+
+Even with faster loading, large art files take time to transfer over cellular networks. To mitigate the perceived slowness, the application should implement Progressive Loading techniques.
+
+9.1 BlurHash and Plaiceholder
+
+Snippet 33 and 34 discuss BlurHash and Plaiceholder. These libraries generate a tiny string of characters that represents a blurred version of the image.
+Strategy: When the user uploads an image, generate the BlurHash on the client (or via a Cloud Function) and save this string to the database object representing the artwork.
+Rendering: Pass this string to the blurDataURL prop of the Next.js <Image /> component.35
+Result: The user sees an immediate, beautiful blurred version of the art while the high-res version fetches. This eliminates the "white space" and layout shifts, making the app feel significantly faster even if the network speed hasn't changed.
+
+10. Conclusion and Recommendation Roadmap
+
+The investigation concludes that the artwall-next application is suffering from a "perfect storm" of architectural mismatches: using a high-latency object store (Firebase) as a direct upstream for a latency-sensitive, compute-intensive serverless process (Next.js Image Optimization). The timeouts and failures are inherent to this specific topology when handling large files under default configurations.
+Prioritized Recommendations:
+Immediate Stabilization:
+Verify next.config.js has the correct remotePatterns configuration, specifically utilizing pathname: '/v0/b/**' to allow all bucket paths.
+If timeouts persist, temporarily apply unoptimized to large distinct images to restore availability.
+Architectural Fix (Recommended):
+Implement the Firebase Resize Images Extension to generate _small, _medium, and _large variants upon upload.
+Switch to a Custom Image Loader in Next.js that maps the requested size to these pre-generated variants.
+Modify storage rules to make these resized assets public (if security policy permits) to resolve token management issues.
+Performance Optimization:
+Update upload logic to set Cache-Control: public, max-age=31536000.
+Implement BlurHash generation on upload to provide instant visual feedback during the loading phase.
+By moving the expensive image processing task from the "read" path (Next.js server request) to the "write" path (Firebase upload trigger), the application will achieve sub-second load times, eliminate 504 timeouts, and drastically reduce the compute costs associated with repeated optimization.
+
+11. Appendix: Technical Implementation Details
+
+
+11.1 Correct next.config.js for Firebase
+
+To resolve the 400 Bad Request errors, the configuration must look like this to accommodate the dynamic nature of Firebase paths:
+
+JavaScript
+
+
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  images: {
+    remotePatterns:,
+    // Preventing OOM by limiting the max dimensions the server will process
+    deviceSizes: , 
+    imageSizes: ,
+  },
+};
+
+module.exports = nextConfig;
+
+
+
+11.2 Custom Loader for Pre-Resized Images
+
+This code assumes the use of the Resize Images extension and that files are accessible without unique tokens per size (Public access).
+
+JavaScript
+
+
+// lib/firebase-loader.ts
+'use client';
+
+export default function firebaseLoader({ src, width, quality }: { src: string, width: number, quality?: number }) {
+  // src example: https://firebasestorage.googleapis.com/v0/b/app.appspot.com/o/art%2Fmy-painting.jpg?alt=media&token=...
+  
+  // 1. Check if it's actually a firebase URL
+  if (!src.includes('firebasestorage.googleapis.com')) {
+    return src;
+  }
+
+  // 2. Extract base path and filename
+  // We need to inject the size suffix before the file extension
+  // Note: This logic depends heavily on the specific naming convention of the extension
+  // and assumes the "alt=media" param is sufficient.
+  
+  // Regex to capture the filename before the query params
+  const urlParts = src.split('?');
+  const baseUrl = urlParts;
+  const query = urlParts[1] |
+
+| '';
+  
+  // Find the supported size closest to the requested width
+  // Assuming extension is configured for: 320, 640, 1280
+  const supportedSizes = ;
+  const targetWidth = supportedSizes.find(s => s >= width) |
+
+| 1280;
+
+  // Extension behavior: "image.jpg" -> "image_640x640.jpg"
+  // We need to carefully handle the encoded slash %2F if present
+  const lastDotIndex = baseUrl.lastIndexOf('.');
+  const name = baseUrl.substring(0, lastDotIndex);
+  const ext = baseUrl.substring(lastDotIndex);
+  
+  const newUrl = `${name}_${targetWidth}x${targetWidth}${ext}?${query}`;
+  
+  return newUrl;
+}
+
+
+
+11.3 Comparison of Loading Strategies
+
+Table 2: Strategic Trade-offs for Image Loading
+Feature
+Default (next/image)
+Unoptimized
+Custom Loader + Resize Ext.
+Image CDN (Imgix/Cloudinary)
+Setup Effort
+Low (Out of box)
+Very Low
+High (Ext. + Loader Code)
+Medium (DNS/Config)
+Processing Cost
+High (Server CPU)
+None
+High (One-time Cloud Func)
+Paid Service
+Latency (First Load)
+High (Round-trip)
+Medium (Large File)
+Low (Static Fetch)
+Very Low (Edge Cached)
+Reliability
+Low (Timeouts/OOM)
+High
+High
+High
+Cache Hit Rate
+Volatile (Ephemeral)
+Browser Cache
+High (CDN/Browser)
+Very High (Global CDN)
+Bandwidth Usage
+Optimal (WebP/AVIF)
+Poor (Original Size)
+Good (Resized)
+Optimal (Auto-Format)
+
+This comparative analysis solidifies the Custom Loader + Resize Extension as the most cost-effective and performant solution for artwall-next, balancing the need for speed with the constraints of the Firebase ecosystem.
+Works cited
+accessed January 1, 1970, https://github.com/maurice-florence/artwall-next/blob/main/next.config.js
+NextJs Images returning Connection Timeout in ScreamingFrog / GSC returning Crawled Not Indexed : r/SEO - Reddit, accessed November 25, 2025, https://www.reddit.com/r/SEO/comments/158kxio/nextjs_images_returning_connection_timeout_in/
+next/image with remote URL return 504 error · vercel next.js · Discussion #34433 - GitHub, accessed November 25, 2025, https://github.com/vercel/next.js/discussions/34433
+Next.js Image Optimization + Firebase App Hosting - Reddit, accessed November 25, 2025, https://www.reddit.com/r/Firebase/comments/1gah26k/nextjs_image_optimization_firebase_app_hosting/
+Fetching an image from firebase using next/image results in a 400 status code · vercel next.js · Discussion #19848 - GitHub, accessed November 25, 2025, https://github.com/vercel/next.js/discussions/19848
+Image Optimization - Next.js, accessed November 25, 2025, https://nextjs.org/docs/14/app/building-your-application/optimizing/images
+SEO: Automatic Image Optimization | Next.js, accessed November 25, 2025, https://nextjs.org/learn/seo/images
+Getting Started: Image Optimization - Next.js, accessed November 25, 2025, https://nextjs.org/docs/app/getting-started/images
+Guides: Caching - Next.js, accessed November 25, 2025, https://nextjs.org/docs/app/guides/caching
+Next Image is slow, do image proxy instead, accessed November 25, 2025, https://viiiprock.com/blog/next-image-is-slow-do-image-proxy-instead-648a306b3e1434a854efa081
+Optimize image loading on Next.js | Firebase App Hosting - Google, accessed November 25, 2025, https://firebase.google.com/docs/app-hosting/optimize-image-loading
+NextJS - Extreme latency and out of memory cloud functions on Firebase after upgrading next to >13.4.12 · Issue #6349 - GitHub, accessed November 25, 2025, https://github.com/firebase/firebase-tools/issues/6349
+Overcoming Next.js Vercel Timeout With Firebase Functions - Better Programming, accessed November 25, 2025, https://betterprogramming.pub/overcoming-the-vercel-timeout-problem-with-firebase-functions-41554a517ec0
+Serve dynamic content and host microservices with Cloud Functions - Firebase - Google, accessed November 25, 2025, https://firebase.google.com/docs/hosting/functions
+504 timeout when querying Firebase Realtime Database in Next JS / Vercel - Stack Overflow, accessed November 25, 2025, https://stackoverflow.com/questions/67878645/504-timeout-when-querying-firebase-realtime-database-in-next-js-vercel
+difference between getSignedUrl() and getDownloadUrl() - Stack Overflow, accessed November 25, 2025, https://stackoverflow.com/questions/58310843/difference-between-getsignedurl-and-getdownloadurl
+Persistent Caching Issues on Next.js Firebase App Hosting - Old Version Still Live After Deploy - Reddit, accessed November 25, 2025, https://www.reddit.com/r/Firebase/comments/1m9tmyl/persistent_caching_issues_on_nextjs_firebase_app/
+Handle errors for Cloud Storage on Web - Firebase, accessed November 25, 2025, https://firebase.google.com/docs/storage/web/handle-errors
+Firebase storage image not displaying in nextjs application - Stack Overflow, accessed November 25, 2025, https://stackoverflow.com/questions/68890916/firebase-storage-image-not-displaying-in-nextjs-application
+Image optimisation external resource not working · Issue #18412 · vercel/next.js - GitHub, accessed November 25, 2025, https://github.com/vercel/next.js/issues/18412
+How to allow all domains for Image nextjs config? - Stack Overflow, accessed November 25, 2025, https://stackoverflow.com/questions/71235874/how-to-allow-all-domains-for-image-nextjs-config
+Next/Image is loading slow or throw 504 error. · vercel next.js · Discussion #80458 - GitHub, accessed November 25, 2025, https://github.com/vercel/next.js/discussions/80458
+Next.js Image not loading from Firebase - Stack Overflow, accessed November 25, 2025, https://stackoverflow.com/questions/79346429/next-js-image-not-loading-from-firebase
+Resize Images | Firebase Extensions Hub, accessed November 25, 2025, https://extensions.dev/extensions/firebase/storage-resize-images
+next.config.js Options: images | Next.js, accessed November 25, 2025, https://nextjs.org/docs/pages/api-reference/config/next-config-js/images
+google cloud platform - Firebase resize image extension - Stack Overflow, accessed November 25, 2025, https://stackoverflow.com/questions/72706337/firebase-resize-image-extension
+Avoid re-generating token when using Firebase Image Resize Extension - Stack Overflow, accessed November 25, 2025, https://stackoverflow.com/questions/68895327/avoid-re-generating-token-when-using-firebase-image-resize-extension
+Firebase Resize Images extension. What does it mean to "Make resized images public"?, accessed November 25, 2025, https://stackoverflow.com/questions/74681963/firebase-resize-images-extension-what-does-it-mean-to-make-resized-images-publ
+Simple implementation for resizing images in Firebase - FlutterFlow Community, accessed November 25, 2025, https://community.flutterflow.io/integrations/post/simple-implementation-for-resizing-images-in-firebase-xMhMLcHsB9tjze0
+Firebase Storage upload image file from Node.js - Stack Overflow, accessed November 25, 2025, https://stackoverflow.com/questions/60922198/firebase-storage-upload-image-file-from-node-js
+Firebase Storage cacheControl headers not sent - Stack Overflow, accessed November 25, 2025, https://stackoverflow.com/questions/65132120/firebase-storage-cachecontrol-headers-not-sent
+Blurred Placeholders Using BlurHash in Node.js with Cloudinary Custom Functions & Netlify, accessed November 25, 2025, https://www.youtube.com/watch?v=zz_WyNULLOY
+Usage | Plaiceholder, accessed November 25, 2025, https://plaiceholder.co/docs/usage
+How to present a blurred version of an image in NextJS as it's being downloaded?, accessed November 25, 2025, https://stackoverflow.com/questions/63519312/how-to-present-a-blurred-version-of-an-image-in-nextjs-as-its-being-downloaded

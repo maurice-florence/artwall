@@ -300,6 +300,7 @@ const truncateText = (text: string, maxLength: number) => {
 // Import the image URL utility
 import { getResizedImageUrl as getImageUrl } from '@/utils/image-urls';
 import Image from 'next/image';
+import firebaseLoader from '../../lib/firebase-loader';
 
 interface ArtworkCardProps {
     artwork: Artwork;
@@ -455,11 +456,11 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin, onImageLoaded }: ArtworkCardP
 
     // Determine image URL for overlay computation
     // Card front preview: use 'card' size for grid cards (test expects this)
-    const imageUrl = hasImage ? getImageUrl(images[0], 'card') : undefined;
+    const imageUrl = hasImage ? images[0] : undefined;
     // Card inside/back: use medium/full size
-    const imageUrlMedium = hasImage ? getImageUrl(images[0], 'full') : undefined;
+    const imageUrlMedium = hasImage ? images[0] : undefined;
     // Full screen: use original
-    const imageUrlOriginal = hasImage ? getImageUrl(images[0], 'original') : undefined;
+    const imageUrlOriginal = hasImage ? images[0] : undefined;
 
     // Build a theme-based gradient overlay for images when enabled (must be before any returns)
     const imageOverlayBg = useMemo(() => {
@@ -501,6 +502,28 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin, onImageLoaded }: ArtworkCardP
             onClick={handleFrontClick}
           >
             {/* Card front: only show gradient background, no content preview */}
+            {imageUrl && (
+              <Image
+                src={imageUrl}
+                alt={artwork.title || 'Artwork'}
+                loader={firebaseLoader}
+                width={400}
+                height={400}
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                  borderRadius: '6px',
+                  zIndex: 0,
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                }}
+                sizes="(max-width: 768px) 33vw, 150px"
+                priority={false}
+                unoptimized={false}
+              />
+            )}
           </CardFront>
             <CardBack $medium={artwork.medium}>
               <CardBackTitle>{artwork.title}</CardBackTitle>

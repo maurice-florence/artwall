@@ -9,6 +9,8 @@ import { Artwork } from '@/types';
 import { useRouter } from 'next/navigation';
 import { createPortal } from 'react-dom';
 import { getResizedImageUrl } from '@/utils/image-urls';
+import Image from 'next/image';
+import firebaseLoader from '../../lib/firebase-loader';
 
 const ModalBackdrop = styled.div.attrs({
   role: 'dialog',
@@ -303,101 +305,27 @@ function getMediaType(url: string): 'image' | 'video' | 'audio' | 'pdf' | 'unkno
 
   // Component for progressive image loading
   const ProgressiveImage: React.FC<{ src: string; alt: string; index: number; onClick?: () => void }> = ({ src, alt, index, onClick }) => {
-    const thumbnailUrl = getResizedImageUrl(src, 'thumbnail');
-    const displayUrl = getResizedImageUrl(src, 'thumbnail'); // Use thumbnail size for both for speed
-    const [currentSrc, setCurrentSrc] = useState(thumbnailUrl);
-    const [isLoading, setIsLoading] = useState(true);
-    const [isBlurred, setIsBlurred] = useState(true);
-    const [hasError, setHasError] = useState(false);
-
-    useEffect(() => {
-      setIsLoading(true);
-      setHasError(false);
-      
-      // Load thumbnail first
-      const thumbnailImg = new Image();
-      thumbnailImg.src = thumbnailUrl;
-      
-      thumbnailImg.onload = () => {
-        setCurrentSrc(thumbnailUrl);
-        setIsLoading(false);
-        
-        // Start loading display-size image in background
-        const displayImg = new Image();
-        displayImg.src = displayUrl;
-        
-        displayImg.onload = () => {
-          setCurrentSrc(displayUrl);
-          setIsBlurred(false);
-          setFullSizeLoaded(prev => ({ ...prev, [index]: true }));
-        };
-        
-        displayImg.onerror = () => {
-          console.warn(`Failed to load display image, falling back to original: ${displayUrl}`);
-          // Fallback to original if resized version doesn't exist
-          const originalImg = new Image();
-          originalImg.src = src;
-          originalImg.onload = () => {
-            setCurrentSrc(src);
-            setIsBlurred(false);
-          };
-          originalImg.onerror = () => {
-            setHasError(true);
-            setIsBlurred(false);
-          };
-        };
-      };
-      
-      thumbnailImg.onerror = () => {
-        console.warn(`Failed to load thumbnail, trying original: ${thumbnailUrl}`);
-        // If thumbnail fails, try original directly
-        const originalImg = new Image();
-        originalImg.src = src;
-        originalImg.onload = () => {
-          setCurrentSrc(src);
-          setIsLoading(false);
-          setIsBlurred(false);
-        };
-        originalImg.onerror = () => {
-          setIsLoading(false);
-          setHasError(true);
-        };
-      };
-    }, [thumbnailUrl, displayUrl, src, index]);
-
+    // Always use Next.js Image with firebaseLoader for modal images
     return (
       <ProgressiveImageWrapper>
-        {hasError ? (
-          <div style={{ 
-            width: '100%', 
-            minHeight: '200px', 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'center',
-            background: 'rgba(0,0,0,0.05)',
+        <Image
+          src={src}
+          alt={alt}
+          loader={firebaseLoader}
+          width={800}
+          height={600}
+          style={{
+            width: '100%',
+            height: 'auto',
+            objectFit: 'contain',
             borderRadius: '4px',
-            color: '#888'
-          }}>
-            <span>Image failed to load</span>
-          </div>
-        ) : (
-          <>
-            <ResponsiveImage 
-              src={currentSrc}
-              alt={alt}
-              onClick={onClick}
-              style={{ 
-                filter: isBlurred ? 'blur(10px)' : 'none',
-                cursor: onClick ? 'pointer' : 'default'
-              }}
-            />
-            {isLoading && (
-              <ImageLoadingOverlay>
-                Loading image...
-              </ImageLoadingOverlay>
-            )}
-          </>
-        )}
+            cursor: onClick ? 'pointer' : 'default',
+          }}
+          onClick={onClick}
+          sizes="(max-width: 900px) 90vw, 800px"
+          unoptimized={false}
+          placeholder="empty"
+        />
       </ProgressiveImageWrapper>
     );
   };
