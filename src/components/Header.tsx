@@ -14,7 +14,7 @@ const appVersion = process.env.NEXT_PUBLIC_APP_VERSION || '0.1.0';
 const gitCommit = process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA || '';
 
 // --- Artwork Stats Helper ---
-function getArtworkStats(artworks) {
+function getArtworkStats(artworks: Artwork[]) {
   if (!artworks || artworks.length === 0) return null;
   // Total
   const total = artworks.length;
