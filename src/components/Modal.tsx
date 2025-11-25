@@ -303,46 +303,100 @@ function getMediaType(url: string): 'image' | 'video' | 'audio' | 'pdf' | 'unkno
 
   // Component for progressive image loading
   const ProgressiveImage: React.FC<{ src: string; alt: string; index: number; onClick?: () => void }> = ({ src, alt, index, onClick }) => {
-    const thumbnailUrl = getResizedImageUrl(src, 'card');
-    const fullSizeUrl = getResizedImageUrl(src, 'full');
+    const thumbnailUrl = getResizedImageUrl(src, 'thumbnail');
+    const displayUrl = getResizedImageUrl(src, 'card'); // Use card size (480x480) instead of full
     const [currentSrc, setCurrentSrc] = useState(thumbnailUrl);
     const [isLoading, setIsLoading] = useState(true);
     const [isBlurred, setIsBlurred] = useState(true);
+    const [hasError, setHasError] = useState(false);
 
     useEffect(() => {
+      setIsLoading(true);
+      setHasError(false);
+      
       // Load thumbnail first
       const thumbnailImg = new Image();
       thumbnailImg.src = thumbnailUrl;
+      
       thumbnailImg.onload = () => {
         setCurrentSrc(thumbnailUrl);
         setIsLoading(false);
         
-        // Start loading full-size image in background
-        const fullImg = new Image();
-        fullImg.src = fullSizeUrl;
-        fullImg.onload = () => {
-          setCurrentSrc(fullSizeUrl);
+        // Start loading display-size image in background
+        const displayImg = new Image();
+        displayImg.src = displayUrl;
+        
+        displayImg.onload = () => {
+          setCurrentSrc(displayUrl);
           setIsBlurred(false);
           setFullSizeLoaded(prev => ({ ...prev, [index]: true }));
         };
+        
+        displayImg.onerror = () => {
+          console.warn(`Failed to load display image, falling back to original: ${displayUrl}`);
+          // Fallback to original if resized version doesn't exist
+          const originalImg = new Image();
+          originalImg.src = src;
+          originalImg.onload = () => {
+            setCurrentSrc(src);
+            setIsBlurred(false);
+          };
+          originalImg.onerror = () => {
+            setHasError(true);
+            setIsBlurred(false);
+          };
+        };
       };
-    }, [thumbnailUrl, fullSizeUrl, index]);
+      
+      thumbnailImg.onerror = () => {
+        console.warn(`Failed to load thumbnail, trying original: ${thumbnailUrl}`);
+        // If thumbnail fails, try original directly
+        const originalImg = new Image();
+        originalImg.src = src;
+        originalImg.onload = () => {
+          setCurrentSrc(src);
+          setIsLoading(false);
+          setIsBlurred(false);
+        };
+        originalImg.onerror = () => {
+          setIsLoading(false);
+          setHasError(true);
+        };
+      };
+    }, [thumbnailUrl, displayUrl, src, index]);
 
     return (
       <ProgressiveImageWrapper>
-        <ResponsiveImage 
-          src={currentSrc}
-          alt={alt}
-          onClick={onClick}
-          style={{ 
-            filter: isBlurred ? 'blur(10px)' : 'none',
-            cursor: onClick ? 'pointer' : 'default'
-          }}
-        />
-        {isLoading && (
-          <ImageLoadingOverlay>
-            Loading image...
-          </ImageLoadingOverlay>
+        {hasError ? (
+          <div style={{ 
+            width: '100%', 
+            minHeight: '200px', 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center',
+            background: 'rgba(0,0,0,0.05)',
+            borderRadius: '4px',
+            color: '#888'
+          }}>
+            <span>Image failed to load</span>
+          </div>
+        ) : (
+          <>
+            <ResponsiveImage 
+              src={currentSrc}
+              alt={alt}
+              onClick={onClick}
+              style={{ 
+                filter: isBlurred ? 'blur(10px)' : 'none',
+                cursor: onClick ? 'pointer' : 'default'
+              }}
+            />
+            {isLoading && (
+              <ImageLoadingOverlay>
+                Loading image...
+              </ImageLoadingOverlay>
+            )}
+          </>
         )}
       </ProgressiveImageWrapper>
     );
