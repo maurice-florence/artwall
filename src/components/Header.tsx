@@ -439,7 +439,7 @@ const Header: React.FC<HeaderProps> = ({
               commit={gitCommit}
               extraInfo={(() => {
                 // Try to get all artworks from HomeFeedClient if available
-                let artworks = [];
+                let artworks: Artwork[] = [];
                 if (typeof window !== 'undefined' && window.__ALL_ARTWORKS__) {
                   artworks = window.__ALL_ARTWORKS__;
                 }
