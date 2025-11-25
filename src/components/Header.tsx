@@ -454,7 +454,7 @@ const Header: React.FC<HeaderProps> = ({
                     <div style={{marginTop: 6}}><strong>Per categorie:</strong></div>
                     <ul style={{margin: 0, paddingLeft: 18}}>
                       {Object.entries(stats.byMedium).map(([m, count]) => (
-                        <li key={m}>{MEDIUM_LABELS[m] || m}: {count}</li>
+                        <li key={m}>{MEDIUM_LABELS[m as keyof typeof MEDIUM_LABELS] || m}: {count}</li>
                       ))}
                     </ul>
                     <div style={{marginTop: 6}}><strong>Per subcategorie:</strong></div>
