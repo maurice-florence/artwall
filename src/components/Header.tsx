@@ -19,13 +19,13 @@ function getArtworkStats(artworks: Artwork[]) {
   // Total
   const total = artworks.length;
   // Per category
-  const byMedium = {};
+  const byMedium: { [key: string]: number } = {};
   // Per subcategory
-  const bySubtype = {};
+  const bySubtype: { [key: string]: number } = {};
   // Date range
   let minDate = null, maxDate = null;
   // Year histogram
-  const yearCounts = {};
+  const yearCounts: { [key: number]: number } = {};
   // Most common medium/subtype
   for (const a of artworks) {
     // Medium
