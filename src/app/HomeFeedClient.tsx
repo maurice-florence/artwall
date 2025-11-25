@@ -26,6 +26,10 @@ interface HomeFeedClientProps {
 }
 
 export default function HomeFeedClient({ allArtworks, initialFilters }: HomeFeedClientProps) {
+  // Expose allArtworks for AppInfoModal stats (client-only hack)
+  if (typeof window !== 'undefined') {
+    window.__ALL_ARTWORKS__ = allArtworks;
+  }
   // Filters and admin state
   const [selectedMedium, setSelectedMedium] = useState<string>(initialFilters.medium || 'all');
   const [selectedYear, setSelectedYear] = useState<string>(initialFilters.year || 'all');
