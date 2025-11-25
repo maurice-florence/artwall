@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import styled from 'styled-components';
 import { FaPenNib, FaPaintBrush, FaMusic, FaEllipsisH, FaCube, FaGlobe, FaCertificate, FaStar, FaSearch, FaInfoCircle, FaChartBar } from 'react-icons/fa';
 import AnalyticsModal from './AnalyticsModal';
-import BarChart from './BarChart';
+import HorizontalBarChart from './HorizontalBarChart';
 import ThemeEditor from './ThemeEditor';
 import AppInfoModal from './AppInfoModal';
 import { MEDIUM_LABELS, SUBTYPE_LABELS, getSubtypesForMedium, MEDIUMS } from '@/constants/medium';
@@ -455,40 +455,46 @@ const Header: React.FC<HeaderProps> = ({
                 const mediumData = Object.entries(stats.byMedium).map(([m, v]) => ({ label: MEDIUM_LABELS[m as keyof typeof MEDIUM_LABELS] || m, value: v }));
                 const subtypeData = Object.entries(stats.bySubtype).map(([s, v]) => ({ label: SUBTYPE_LABELS[s] || s, value: v }));
                 return (
-                  <div style={{marginTop: '0.5em', fontSize: '1.05em'}}>
-                    <h2 style={{marginBottom: 16, fontSize: '1.2em', color: '#0b8783'}}>App Metrics</h2>
-                    <div style={{display: 'flex', flexWrap: 'wrap', gap: '2.5em'}}>
-                      <div>
-                        <div style={{fontWeight: 600, fontSize: '1.1em'}}>Totaal aantal werken</div>
+                  <div style={{marginTop: '0.5em', fontSize: '1.05em', maxHeight: '65vh', overflowY: 'auto'}}>
+                    <h2 style={{marginBottom: 18, fontSize: '1.2em', color: '#0b8783'}}>App Metrics</h2>
+                    <div style={{
+                      display: 'grid',
+                      gridTemplateColumns: '1fr 1fr 1fr',
+                      gap: '2.5em',
+                      alignItems: 'start',
+                      minWidth: 0,
+                    }}>
+                      <div style={{minWidth: 0}}>
+                        <div style={{fontWeight: 600, fontSize: '1.1em', marginBottom: 8}}>Totaal aantal werken</div>
                         <div style={{fontSize: '2em', color: '#0b8783', margin: '0.2em 0 0.7em 0'}}>{stats.total}</div>
-                        <div style={{fontWeight: 600}}>Jaren</div>
-                        <div>{stats.years[0]} – {stats.years[stats.years.length-1]}</div>
-                        <BarChart data={yearData} maxBarWidth={120} height={40} color="#0b8783" />
-                        <div style={{fontWeight: 600, marginTop: 8}}>Eerste werk</div>
+                        <div style={{fontWeight: 600, marginBottom: 4}}>Jaren</div>
+                        <div style={{marginBottom: 8}}>{stats.years[0]} – {stats.years[stats.years.length-1]}</div>
+                        <HorizontalBarChart data={yearData} maxBarWidth={140} barHeight={16} labelWidth={32} />
+                        <div style={{fontWeight: 600, marginTop: 12}}>Eerste werk</div>
                         <div>{stats.minDate ? stats.minDate.toLocaleDateString() : 'n.v.t.'}</div>
                         <div style={{fontWeight: 600}}>Laatste werk</div>
                         <div>{stats.maxDate ? stats.maxDate.toLocaleDateString() : 'n.v.t.'}</div>
                       </div>
-                      <div>
-                        <div style={{fontWeight: 600}}>Per categorie</div>
-                        <BarChart data={mediumData} maxBarWidth={120} height={40} color="#0b8783" />
-                        <ul style={{margin: 0, paddingLeft: 18, fontSize: '1em'}}>
+                      <div style={{minWidth: 0}}>
+                        <div style={{fontWeight: 600, marginBottom: 8}}>Per categorie</div>
+                        <HorizontalBarChart data={mediumData} maxBarWidth={140} barHeight={18} labelWidth={70} />
+                        <ul style={{margin: '10px 0 0 0', paddingLeft: 18, fontSize: '1em'}}>
                           {mediumData.map(({ label, value }) => (
                             <li key={label}>{label}: <b>{value}</b></li>
                           ))}
                         </ul>
-                        <div style={{fontWeight: 600, marginTop: 8}}>Meest voorkomend</div>
+                        <div style={{fontWeight: 600, marginTop: 10}}>Meest voorkomend</div>
                         <div>{stats.mostMedium ? (MEDIUM_LABELS[stats.mostMedium as keyof typeof MEDIUM_LABELS] || stats.mostMedium) : '-'} ({stats.mostMediumCount})</div>
                       </div>
-                      <div>
-                        <div style={{fontWeight: 600}}>Per subcategorie</div>
-                        <BarChart data={subtypeData} maxBarWidth={120} height={40} color="#0b8783" />
-                        <ul style={{margin: 0, paddingLeft: 18, columns: 2, fontSize: '1em'}}>
+                      <div style={{minWidth: 0}}>
+                        <div style={{fontWeight: 600, marginBottom: 8}}>Per subcategorie</div>
+                        <HorizontalBarChart data={subtypeData} maxBarWidth={140} barHeight={16} labelWidth={80} />
+                        <ul style={{margin: '10px 0 0 0', paddingLeft: 18, columns: 2, fontSize: '1em'}}>
                           {subtypeData.map(({ label, value }) => (
                             <li key={label}>{label}: <b>{value}</b></li>
                           ))}
                         </ul>
-                        <div style={{fontWeight: 600, marginTop: 8}}>Meest voorkomend</div>
+                        <div style={{fontWeight: 600, marginTop: 10}}>Meest voorkomend</div>
                         <div>{stats.mostSubtype ? (SUBTYPE_LABELS[stats.mostSubtype] || stats.mostSubtype) : '-'} ({stats.mostSubtypeCount})</div>
                       </div>
                     </div>
