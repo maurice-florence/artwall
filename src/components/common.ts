@@ -49,4 +49,32 @@ export const Dropdown = styled.div<{ $closing?: boolean }>`
   @keyframes fadeOutDown {
     to { opacity: 0; transform: translateY(-6px) scale(0.99); }
   }
+
+  /* Prevent dropdown from going off-screen on mobile */
+  @media (max-width: 768px) {
+    right: auto;
+    left: 50%;
+    transform: translateX(-50%) translateY(-6px) scale(0.99);
+    
+    &:not([style*="animation"]) {
+      /* Ensure centered position during animation */
+      animation: ${({ $closing }) => $closing ? 'fadeOutDownCenter 140ms ease forwards' : 'fadeInUpCenter 160ms ease forwards'};
+    }
+
+    @keyframes fadeInUpCenter {
+      to { 
+        opacity: 1; 
+        transform: translateX(-50%) translateY(0) scale(1);
+      }
+    }
+    @keyframes fadeOutDownCenter {
+      to { 
+        opacity: 0; 
+        transform: translateX(-50%) translateY(-6px) scale(0.99);
+      }
+    }
+
+    /* Prevent overflowing viewport */
+    max-width: calc(100vw - 2rem);
+  }
 `;
