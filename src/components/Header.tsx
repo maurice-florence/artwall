@@ -4,7 +4,6 @@ import { FaPenNib, FaPaintBrush, FaMusic, FaEllipsisH, FaCube, FaGlobe, FaCertif
 import ThemeEditor from './ThemeEditor';
 import AppInfoModal from './AppInfoModal';
 import { MEDIUM_LABELS, SUBTYPE_LABELS, getSubtypesForMedium } from '@/constants/medium';
-import { MEDIUMS, MEDIUM_LABELS, SUBTYPE_LABELS } from '@/constants/medium';
 import { useDropdown } from '@/hooks/useDropdown';
 import { BaseIconButton, Dropdown } from './common';
 import useIsMobile from '@/hooks/useIsMobile';
