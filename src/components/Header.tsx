@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import styled from 'styled-components';
-import { FaPenNib, FaPaintBrush, FaMusic, FaEllipsisH, FaCube, FaGlobe, FaCertificate, FaStar, FaSearch, FaInfoCircle } from 'react-icons/fa';
+import { FaPenNib, FaPaintBrush, FaMusic, FaEllipsisH, FaCube, FaGlobe, FaCertificate, FaStar, FaSearch, FaInfoCircle, FaChartBar } from 'react-icons/fa';
+import AnalyticsModal from './AnalyticsModal';
 import ThemeEditor from './ThemeEditor';
 import AppInfoModal from './AppInfoModal';
 import { MEDIUM_LABELS, SUBTYPE_LABELS, getSubtypesForMedium, MEDIUMS } from '@/constants/medium';
@@ -275,6 +276,7 @@ const Header: React.FC<HeaderProps> = ({
   
   // ...existing code...
   const [infoOpen, setInfoOpen] = useState(false);
+  const [analyticsOpen, setAnalyticsOpen] = useState(false);
   const isMobile = useIsMobile();
   // evaluation dropdown state
   const evalRef = useRef<HTMLDivElement>(null);
@@ -428,49 +430,75 @@ const Header: React.FC<HeaderProps> = ({
 
             {/* Note: eval/rating counts are intentionally not shown on the main header; options show numbers inside the dropdown */}
             <ThemeEditor />
+            <InfoButton title="Analytics & Statistieken" aria-label="Analytics & Statistieken" onClick={() => setAnalyticsOpen(true)} style={{marginRight: 8}}>
+              <FaChartBar />
+            </InfoButton>
             <InfoButton title="App informatie" aria-label="App informatie" onClick={() => setInfoOpen(true)}>
               <FaInfoCircle />
             </InfoButton>
-            {/* Compute and pass artwork stats to modal */}
+            {/* Analytics Modal */}
+            <AnalyticsModal open={analyticsOpen} onClose={() => setAnalyticsOpen(false)}>
+              {(() => {
+                let artworks: Artwork[] = [];
+                if (typeof window !== 'undefined' && window.__ALL_ARTWORKS__) {
+                  artworks = window.__ALL_ARTWORKS__;
+                }
+                if (!artworks || artworks.length === 0) return <div>Geen data beschikbaar.</div>;
+                const stats = getArtworkStats(artworks);
+                if (!stats) return <div>Geen data beschikbaar.</div>;
+                return (
+                  <div style={{marginTop: '0.5em', fontSize: '1.05em'}}>
+                    <h2 style={{marginBottom: 16, fontSize: '1.2em', color: '#0b8783'}}>App Metrics</h2>
+                    <div style={{display: 'flex', flexWrap: 'wrap', gap: '2.5em'}}>
+                      <div>
+                        <div style={{fontWeight: 600, fontSize: '1.1em'}}>Totaal aantal werken</div>
+                        <div style={{fontSize: '2em', color: '#0b8783', margin: '0.2em 0 0.7em 0'}}>{stats.total}</div>
+                        <div style={{fontWeight: 600}}>Jaren</div>
+                        <div>{stats.years[0]} – {stats.years[stats.years.length-1]}</div>
+                        <div style={{fontWeight: 600, marginTop: 8}}>Eerste werk</div>
+                        <div>{stats.minDate ? stats.minDate.toLocaleDateString() : 'n.v.t.'}</div>
+                        <div style={{fontWeight: 600}}>Laatste werk</div>
+                        <div>{stats.maxDate ? stats.maxDate.toLocaleDateString() : 'n.v.t.'}</div>
+                      </div>
+                      <div>
+                        <div style={{fontWeight: 600}}>Per categorie</div>
+                        <ul style={{margin: 0, paddingLeft: 18, fontSize: '1em'}}>
+                          {Object.entries(stats.byMedium).map(([m, count]) => (
+                            <li key={m}>{MEDIUM_LABELS[m as keyof typeof MEDIUM_LABELS] || m}: <b>{count}</b></li>
+                          ))}
+                        </ul>
+                        <div style={{fontWeight: 600, marginTop: 8}}>Meest voorkomend</div>
+                        <div>{stats.mostMedium ? (MEDIUM_LABELS[stats.mostMedium as keyof typeof MEDIUM_LABELS] || stats.mostMedium) : '-'} ({stats.mostMediumCount})</div>
+                      </div>
+                      <div>
+                        <div style={{fontWeight: 600}}>Per subcategorie</div>
+                        <ul style={{margin: 0, paddingLeft: 18, columns: 2, fontSize: '1em'}}>
+                          {Object.entries(stats.bySubtype).map(([s, count]) => (
+                            <li key={s}>{SUBTYPE_LABELS[s] || s}: <b>{count}</b></li>
+                          ))}
+                        </ul>
+                        <div style={{fontWeight: 600, marginTop: 8}}>Meest voorkomend</div>
+                        <div>{stats.mostSubtype ? (SUBTYPE_LABELS[stats.mostSubtype] || stats.mostSubtype) : '-'} ({stats.mostSubtypeCount})</div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+            </AnalyticsModal>
+            {/* App Info Modal */}
             <AppInfoModal
               open={infoOpen}
               onClose={() => setInfoOpen(false)}
               version={appVersion}
               commit={gitCommit}
-              extraInfo={(() => {
-                // Try to get all artworks from HomeFeedClient if available
-                let artworks: Artwork[] = [];
-                if (typeof window !== 'undefined' && window.__ALL_ARTWORKS__) {
-                  artworks = window.__ALL_ARTWORKS__;
-                }
-                // Fallback: try to find in DOM or context (not robust, but avoids SSR issues)
-                if (!artworks || artworks.length === 0) return null;
-                const stats = getArtworkStats(artworks);
-                if (!stats) return null;
-                return (
-                  <div style={{marginTop: '1.5em', fontSize: '0.98em'}}>
-                    <h3 style={{marginBottom: 8}}>Database Statistieken</h3>
-                    <div><strong>Totaal aantal werken:</strong> {stats.total}</div>
-                    <div style={{marginTop: 6}}><strong>Per categorie:</strong></div>
-                    <ul style={{margin: 0, paddingLeft: 18}}>
-                      {Object.entries(stats.byMedium).map(([m, count]) => (
-                        <li key={m}>{MEDIUM_LABELS[m as keyof typeof MEDIUM_LABELS] || m}: {count}</li>
-                      ))}
-                    </ul>
-                    <div style={{marginTop: 6}}><strong>Per subcategorie:</strong></div>
-                    <ul style={{margin: 0, paddingLeft: 18, columns: 2, fontSize: '0.97em'}}>
-                      {Object.entries(stats.bySubtype).map(([s, count]) => (
-                        <li key={s}>{SUBTYPE_LABELS[s] || s}: {count}</li>
-                      ))}
-                    </ul>
-                    <div style={{marginTop: 6}}><strong>Jaren:</strong> {stats.years[0]} – {stats.years[stats.years.length-1]}</div>
-                    <div><strong>Eerste werk:</strong> {stats.minDate ? stats.minDate.toLocaleDateString() : 'n.v.t.'}</div>
-                    <div><strong>Laatste werk:</strong> {stats.maxDate ? stats.maxDate.toLocaleDateString() : 'n.v.t.'}</div>
-                    <div style={{marginTop: 6}}><strong>Meest voorkomende categorie:</strong> {stats.mostMedium ? (MEDIUM_LABELS[stats.mostMedium as keyof typeof MEDIUM_LABELS] || stats.mostMedium) : '-'} ({stats.mostMediumCount})</div>
-                    <div><strong>Meest voorkomende subcategorie:</strong> {stats.mostSubtype ? (SUBTYPE_LABELS[stats.mostSubtype] || stats.mostSubtype) : '-'} ({stats.mostSubtypeCount})</div>
-                  </div>
-                );
-              })()}
+              extraInfo={
+                <div style={{marginTop: '1.5em', fontSize: '1.05em'}}>
+                  <h3 style={{marginBottom: 8}}>Over deze app</h3>
+                  <div><strong>Gemaakt door:</strong> Johannes Renders</div>
+                  <div style={{marginTop: 6}}><strong>Beschrijving:</strong> Artwall is een Next.js-applicatie voor het tonen, filteren en beheren van kunstwerken. De app gebruikt React, TypeScript, Firebase en Vercel voor hosting en CI/CD.</div>
+                  <div style={{marginTop: 6}}><strong>Broncode:</strong> <a href="https://github.com/maurice-florence/artwall-next" target="_blank" rel="noopener noreferrer" style={{color:'#0b8783', textDecoration:'underline'}}>GitHub Repository</a></div>
+                </div>
+              }
             />
           </RightSection>
       </ControlsRow>
