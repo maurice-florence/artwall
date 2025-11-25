@@ -3,14 +3,78 @@ import styled from 'styled-components';
 import { FaPenNib, FaPaintBrush, FaMusic, FaEllipsisH, FaCube, FaGlobe, FaCertificate, FaStar, FaSearch, FaInfoCircle } from 'react-icons/fa';
 import ThemeEditor from './ThemeEditor';
 import AppInfoModal from './AppInfoModal';
+import { MEDIUMS, MEDIUM_LABELS, SUBTYPE_LABELS, getSubtypesForMedium } from '@/constants/medium';
 import { MEDIUMS, MEDIUM_LABELS, SUBTYPE_LABELS } from '@/constants/medium';
 import { useDropdown } from '@/hooks/useDropdown';
 import { BaseIconButton, Dropdown } from './common';
 import useIsMobile from '@/hooks/useIsMobile';
 import type { Artwork } from '@/types';
 
+
 const appVersion = process.env.NEXT_PUBLIC_APP_VERSION || '0.1.0';
 const gitCommit = process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA || '';
+
+// --- Artwork Stats Helper ---
+function getArtworkStats(artworks) {
+  if (!artworks || artworks.length === 0) return null;
+  // Total
+  const total = artworks.length;
+  // Per category
+  const byMedium = {};
+  // Per subcategory
+  const bySubtype = {};
+  // Date range
+  let minDate = null, maxDate = null;
+  // Year histogram
+  const yearCounts = {};
+  // Most common medium/subtype
+  for (const a of artworks) {
+    // Medium
+    byMedium[a.medium] = (byMedium[a.medium] || 0) + 1;
+    // Subtype
+    if (a.subtype) {
+      bySubtype[a.subtype] = (bySubtype[a.subtype] || 0) + 1;
+    }
+    // Date
+    if (a.year && a.month && a.day) {
+      const d = new Date(a.year, a.month - 1, a.day);
+      if (!minDate || d < minDate) minDate = d;
+      if (!maxDate || d > maxDate) maxDate = d;
+    }
+    // Year histogram
+    if (a.year) yearCounts[a.year] = (yearCounts[a.year] || 0) + 1;
+  }
+  // Most common medium/subtype
+  let mostMedium = null, mostMediumCount = 0;
+  for (const m in byMedium) {
+    if (byMedium[m] > mostMediumCount) {
+      mostMedium = m;
+      mostMediumCount = byMedium[m];
+    }
+  }
+  let mostSubtype = null, mostSubtypeCount = 0;
+  for (const s in bySubtype) {
+    if (bySubtype[s] > mostSubtypeCount) {
+      mostSubtype = s;
+      mostSubtypeCount = bySubtype[s];
+    }
+  }
+  // Years range
+  const years = Object.keys(yearCounts).map(Number).sort((a, b) => a - b);
+  return {
+    total,
+    byMedium,
+    bySubtype,
+    minDate,
+    maxDate,
+    yearCounts,
+    years,
+    mostMedium,
+    mostMediumCount,
+    mostSubtype,
+    mostSubtypeCount,
+  };
+}
 
 
 
@@ -368,7 +432,47 @@ const Header: React.FC<HeaderProps> = ({
             <InfoButton title="App informatie" aria-label="App informatie" onClick={() => setInfoOpen(true)}>
               <FaInfoCircle />
             </InfoButton>
-            <AppInfoModal open={infoOpen} onClose={() => setInfoOpen(false)} version={appVersion} commit={gitCommit} />
+            {/* Compute and pass artwork stats to modal */}
+            <AppInfoModal
+              open={infoOpen}
+              onClose={() => setInfoOpen(false)}
+              version={appVersion}
+              commit={gitCommit}
+              extraInfo={(() => {
+                // Try to get all artworks from HomeFeedClient if available
+                let artworks = [];
+                if (typeof window !== 'undefined' && window.__ALL_ARTWORKS__) {
+                  artworks = window.__ALL_ARTWORKS__;
+                }
+                // Fallback: try to find in DOM or context (not robust, but avoids SSR issues)
+                if (!artworks || artworks.length === 0) return null;
+                const stats = getArtworkStats(artworks);
+                if (!stats) return null;
+                return (
+                  <div style={{marginTop: '1.5em', fontSize: '0.98em'}}>
+                    <h3 style={{marginBottom: 8}}>Database Statistieken</h3>
+                    <div><strong>Totaal aantal werken:</strong> {stats.total}</div>
+                    <div style={{marginTop: 6}}><strong>Per categorie:</strong></div>
+                    <ul style={{margin: 0, paddingLeft: 18}}>
+                      {Object.entries(stats.byMedium).map(([m, count]) => (
+                        <li key={m}>{MEDIUM_LABELS[m] || m}: {count}</li>
+                      ))}
+                    </ul>
+                    <div style={{marginTop: 6}}><strong>Per subcategorie:</strong></div>
+                    <ul style={{margin: 0, paddingLeft: 18, columns: 2, fontSize: '0.97em'}}>
+                      {Object.entries(stats.bySubtype).map(([s, count]) => (
+                        <li key={s}>{SUBTYPE_LABELS[s] || s}: {count}</li>
+                      ))}
+                    </ul>
+                    <div style={{marginTop: 6}}><strong>Jaren:</strong> {stats.years[0]} – {stats.years[stats.years.length-1]}</div>
+                    <div><strong>Eerste werk:</strong> {stats.minDate ? stats.minDate.toLocaleDateString() : 'n.v.t.'}</div>
+                    <div><strong>Laatste werk:</strong> {stats.maxDate ? stats.maxDate.toLocaleDateString() : 'n.v.t.'}</div>
+                    <div style={{marginTop: 6}}><strong>Meest voorkomende categorie:</strong> {stats.mostMedium ? (MEDIUM_LABELS[stats.mostMedium] || stats.mostMedium) : '-'} ({stats.mostMediumCount})</div>
+                    <div><strong>Meest voorkomende subcategorie:</strong> {stats.mostSubtype ? (SUBTYPE_LABELS[stats.mostSubtype] || stats.mostSubtype) : '-'} ({stats.mostSubtypeCount})</div>
+                  </div>
+                );
+              })()}
+            />
           </RightSection>
       </ControlsRow>
     </HeaderWrapper>
