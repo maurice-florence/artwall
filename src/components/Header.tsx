@@ -3,7 +3,7 @@ import styled from 'styled-components';
 import { FaPenNib, FaPaintBrush, FaMusic, FaEllipsisH, FaCube, FaGlobe, FaCertificate, FaStar, FaSearch, FaInfoCircle } from 'react-icons/fa';
 import ThemeEditor from './ThemeEditor';
 import AppInfoModal from './AppInfoModal';
-import { MEDIUM_LABELS, SUBTYPE_LABELS, getSubtypesForMedium } from '@/constants/medium';
+import { MEDIUM_LABELS, SUBTYPE_LABELS, getSubtypesForMedium, MEDIUMS } from '@/constants/medium';
 import { useDropdown } from '@/hooks/useDropdown';
 import { BaseIconButton, Dropdown } from './common';
 import useIsMobile from '@/hooks/useIsMobile';
