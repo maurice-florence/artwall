@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import styled from 'styled-components';
 import { FaPenNib, FaPaintBrush, FaMusic, FaEllipsisH, FaCube, FaGlobe, FaCertificate, FaStar, FaSearch, FaInfoCircle, FaChartBar } from 'react-icons/fa';
 import AnalyticsModal from './AnalyticsModal';
+import BarChart from './BarChart';
 import ThemeEditor from './ThemeEditor';
 import AppInfoModal from './AppInfoModal';
 import { MEDIUM_LABELS, SUBTYPE_LABELS, getSubtypesForMedium, MEDIUMS } from '@/constants/medium';
@@ -149,10 +150,13 @@ const RightSection = styled.div`
   font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
   display: flex;
   align-items: center;
-  gap: 0.5rem; /* match IconsWrapper gap for consistent spacing */
+  gap: 0.85rem;
+  > * {
+    margin-right: 0 !important;
+  }
   @media (max-width: 768px) {
-    justify-content: flex-start; /* left align on mobile */
-    order: 2; /* second row on mobile */
+    justify-content: flex-start;
+    order: 2;
     flex-wrap: wrap;
     width: 100%;
   }
@@ -446,6 +450,10 @@ const Header: React.FC<HeaderProps> = ({
                 if (!artworks || artworks.length === 0) return <div>Geen data beschikbaar.</div>;
                 const stats = getArtworkStats(artworks);
                 if (!stats) return <div>Geen data beschikbaar.</div>;
+                // Prepare data for charts
+                const yearData = stats.years.map(y => ({ label: y.toString(), value: stats.yearCounts[y] }));
+                const mediumData = Object.entries(stats.byMedium).map(([m, v]) => ({ label: MEDIUM_LABELS[m as keyof typeof MEDIUM_LABELS] || m, value: v }));
+                const subtypeData = Object.entries(stats.bySubtype).map(([s, v]) => ({ label: SUBTYPE_LABELS[s] || s, value: v }));
                 return (
                   <div style={{marginTop: '0.5em', fontSize: '1.05em'}}>
                     <h2 style={{marginBottom: 16, fontSize: '1.2em', color: '#0b8783'}}>App Metrics</h2>
@@ -455,6 +463,7 @@ const Header: React.FC<HeaderProps> = ({
                         <div style={{fontSize: '2em', color: '#0b8783', margin: '0.2em 0 0.7em 0'}}>{stats.total}</div>
                         <div style={{fontWeight: 600}}>Jaren</div>
                         <div>{stats.years[0]} – {stats.years[stats.years.length-1]}</div>
+                        <BarChart data={yearData} maxBarWidth={120} height={40} color="#0b8783" />
                         <div style={{fontWeight: 600, marginTop: 8}}>Eerste werk</div>
                         <div>{stats.minDate ? stats.minDate.toLocaleDateString() : 'n.v.t.'}</div>
                         <div style={{fontWeight: 600}}>Laatste werk</div>
@@ -462,9 +471,10 @@ const Header: React.FC<HeaderProps> = ({
                       </div>
                       <div>
                         <div style={{fontWeight: 600}}>Per categorie</div>
+                        <BarChart data={mediumData} maxBarWidth={120} height={40} color="#0b8783" />
                         <ul style={{margin: 0, paddingLeft: 18, fontSize: '1em'}}>
-                          {Object.entries(stats.byMedium).map(([m, count]) => (
-                            <li key={m}>{MEDIUM_LABELS[m as keyof typeof MEDIUM_LABELS] || m}: <b>{count}</b></li>
+                          {mediumData.map(({ label, value }) => (
+                            <li key={label}>{label}: <b>{value}</b></li>
                           ))}
                         </ul>
                         <div style={{fontWeight: 600, marginTop: 8}}>Meest voorkomend</div>
@@ -472,9 +482,10 @@ const Header: React.FC<HeaderProps> = ({
                       </div>
                       <div>
                         <div style={{fontWeight: 600}}>Per subcategorie</div>
+                        <BarChart data={subtypeData} maxBarWidth={120} height={40} color="#0b8783" />
                         <ul style={{margin: 0, paddingLeft: 18, columns: 2, fontSize: '1em'}}>
-                          {Object.entries(stats.bySubtype).map(([s, count]) => (
-                            <li key={s}>{SUBTYPE_LABELS[s] || s}: <b>{count}</b></li>
+                          {subtypeData.map(({ label, value }) => (
+                            <li key={label}>{label}: <b>{value}</b></li>
                           ))}
                         </ul>
                         <div style={{fontWeight: 600, marginTop: 8}}>Meest voorkomend</div>

@@ -34,7 +34,13 @@ export default function HomeFeedClient({ allArtworks, initialFilters }: HomeFeed
   const [selectedMedium, setSelectedMedium] = useState<string>(initialFilters.medium || 'all');
   const [selectedYear, setSelectedYear] = useState<string>(initialFilters.year || 'all');
   const [searchTerm, setSearchTerm] = useState<string>(initialFilters.q || '');
-  const [selectedEvaluation, setSelectedEvaluation] = useState<'all' | number>(initialFilters.evaluation === 'all' ? 'all' : Number(initialFilters.evaluation));
+  const [selectedEvaluation, setSelectedEvaluation] = useState<'all' | number>(
+    initialFilters.evaluation === undefined || initialFilters.evaluation === ''
+      ? 3
+      : initialFilters.evaluation === 'all'
+        ? 'all'
+        : Number(initialFilters.evaluation)
+  );
   const [selectedRating, setSelectedRating] = useState<'all' | number>(initialFilters.rating === 'all' ? 'all' : Number(initialFilters.rating));
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
