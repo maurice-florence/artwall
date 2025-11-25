@@ -466,7 +466,7 @@ const Header: React.FC<HeaderProps> = ({
                     <div style={{marginTop: 6}}><strong>Jaren:</strong> {stats.years[0]} – {stats.years[stats.years.length-1]}</div>
                     <div><strong>Eerste werk:</strong> {stats.minDate ? stats.minDate.toLocaleDateString() : 'n.v.t.'}</div>
                     <div><strong>Laatste werk:</strong> {stats.maxDate ? stats.maxDate.toLocaleDateString() : 'n.v.t.'}</div>
-                    <div style={{marginTop: 6}}><strong>Meest voorkomende categorie:</strong> {stats.mostMedium ? (MEDIUM_LABELS[stats.mostMedium] || stats.mostMedium) : '-'} ({stats.mostMediumCount})</div>
+                    <div style={{marginTop: 6}}><strong>Meest voorkomende categorie:</strong> {stats.mostMedium ? (MEDIUM_LABELS[stats.mostMedium as keyof typeof MEDIUM_LABELS] || stats.mostMedium) : '-'} ({stats.mostMediumCount})</div>
                     <div><strong>Meest voorkomende subcategorie:</strong> {stats.mostSubtype ? (SUBTYPE_LABELS[stats.mostSubtype] || stats.mostSubtype) : '-'} ({stats.mostSubtypeCount})</div>
                   </div>
                 );
