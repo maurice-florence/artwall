@@ -249,17 +249,18 @@ const Modal: React.FC<ModalProps> = ({
     let content = translation.content ? translation.content.replace(/---VERSION_\d+---/g, '') : '';
     if (!content) return '';
     const lines = content.split(/\r?\n/);
-    // Remove first two lines
-    let newLines = lines.slice(2);
-    // Remove last four lines
-    if (newLines.length > 4) {
-      newLines = newLines.slice(0, newLines.length - 4);
+    if (lines.length > 7) {
+      // Remove first two and last four lines, ensure first two blank
+      let newLines = lines.slice(2, lines.length - 4);
+      newLines.unshift('', '');
+      return newLines.join('\n');
+    } else if (lines.length > 1) {
+      // Remove only the first line (title)
+      return lines.slice(1).join('\n');
     } else {
-      newLines = [];
+      // Not enough lines, return as is
+      return content;
     }
-    // Ensure first two lines are blank
-    newLines.unshift('', '');
-    return newLines.join('\n');
   })();
 
   const handleClose = () => {
