@@ -507,21 +507,17 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin, onImageLoaded }: ArtworkCardP
                 src={imageUrl}
                 alt={artwork.title || 'Artwork'}
                 loader={firebaseLoader}
-                width={400}
-                height={400}
+                fill
                 style={{
-                  width: '100%',
-                  height: '100%',
                   objectFit: 'cover',
                   borderRadius: '6px',
                   zIndex: 0,
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
                 }}
-                sizes="(max-width: 768px) 33vw, 150px"
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                 priority={false}
                 unoptimized={false}
+                placeholder="blur"
+                blurDataURL={artwork.blurHash || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjMwIiBoZWlnaHQ9IjQwIiBmaWxsPSIjZGRkZGRkIi8+PC9zdmc+'}
               />
             )}
           </CardFront>
