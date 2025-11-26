@@ -519,6 +519,7 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin, onImageLoaded }: ArtworkCardP
                 unoptimized={false}
                 placeholder="blur"
                 blurDataURL={(artwork as any).blurHash ? blurHashToDataURL((artwork as any).blurHash) : 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjMwIiBoZWlnaHQ9IjQwIiBmaWxsPSIjZGRkZGRkIi8+PC9zdmc+'}
+                onLoad={() => { if (onImageLoaded) onImageLoaded(); }}
               />
             )}
           </CardFront>

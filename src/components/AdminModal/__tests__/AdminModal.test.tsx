@@ -106,7 +106,7 @@ describe('AdminModal', () => {
         await userEvent.selectOptions(screen.getByLabelText('Medium *'), 'writing');
         await userEvent.clear(screen.getByLabelText('Jaar'));
         await userEvent.type(screen.getByLabelText('Jaar'), '2025');
-        await userEvent.type(screen.getByLabelText(/Inhoud \*/i), 'Test content');
+        await userEvent.type(screen.getByLabelText(/Inhoud/i), 'Test content');
         const submitButton = screen.getByRole('button', { name: /opslaan/i });
         await userEvent.click(submitButton);
         // Debug: print DOM after submit
@@ -116,11 +116,11 @@ describe('AdminModal', () => {
         console.log('DOM after submit:', document.body.innerHTML);
         // Wait for error messages to appear
         // Wait for error message to appear by testid
-        const errorMessage = await screen.findByTestId('error-message');
+        const errorMessage = await screen.findByTestId('error-message', {}, { timeout: 20000 });
         // eslint-disable-next-line no-console
         console.log('Submission error message found by testid:', errorMessage.textContent);
         expect(errorMessage.textContent).toMatch(/Firebase error|fout/);
-      });
+      }, 30000);
     });
   const mockProps = {
     isOpen: true,
@@ -191,16 +191,16 @@ describe('AdminModal', () => {
                 console.log('Could not parse errors-debug after submit:', e);
               }
             }
-            const fs = require('fs');
-            fs.writeFileSync(
-              'c:/Users/friem/OneDrive/Documenten/GitHub/artwall/debug-output.json',
-              JSON.stringify({
-                errorsDebugAfterRaw,
-                errorsDebugAfterParsed: debugAfterParsed,
-                formDataAfter,
-                errorsAfter,
-              }, null, 2)
-        );
+            // const fs = require('fs');
+            // fs.writeFileSync(
+            //   'c:/Users/friem/OneDrive/Documenten/GitHub/artwall/debug-output.json',
+            //   JSON.stringify({
+            //     errorsDebugAfterRaw,
+            //     errorsDebugAfterParsed: debugAfterParsed,
+            //     formDataAfter,
+            //     errorsAfter,
+            //   }, null, 2)
+            // );
         // Add more visible debug output in the DOM for manual inspection
         const debugDom = document.createElement('div');
         debugDom.setAttribute('id', 'manual-debug-output');

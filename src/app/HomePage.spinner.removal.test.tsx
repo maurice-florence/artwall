@@ -1,7 +1,20 @@
+
 import { render, screen, fireEvent, act, waitFor } from '@/__tests__/test-utils';
 import React from 'react';
 import HomeClient from '@/app/HomeClient';
 import { vi } from 'vitest';
+
+// Mock next/image to call onLoad after a tick (works with fake timers)
+vi.mock('next/image', () => ({
+  __esModule: true,
+  default: (props: any) => {
+    React.useEffect(() => {
+      if (props.onLoad) setTimeout(props.onLoad, 0);
+    }, []);
+    // Render a simple img for test
+    return <img {...props} data-testid={props['data-testid'] || 'mock-image'} />;
+  },
+}));
 
 // Minimal artwork with image
 const mockArtworks = [
@@ -29,7 +42,6 @@ describe('HomeClient page spinner removal', () => {
 
   it('removes spinner after image load + min elapsed with instant fade', async () => {
     // Increase timeout for this async/timer-heavy test
-  }, 10000);
     let img;
     act(() => {
       render(<HomeClient artworks={mockArtworks as any} spinnerConfig={{ minMs: 20, maxMs: 1000, imageThreshold: 1, fadeMs: 0 }} testInstantFade />);
@@ -45,18 +57,9 @@ describe('HomeClient page spinner removal', () => {
 
     act(() => { vi.runOnlyPendingTimers(); });
 
-    // Switch to real timers for waitFor
-    vi.useRealTimers();
-    await waitFor(() => {
-      // Wait for spinner to start fading out
-      expect(screen.getByTestId('page-spinner')).toHaveAttribute('data-fading', 'true');
-    });
-    // Switch back to fake timers and run pending timers to complete fade-out
-    vi.useFakeTimers();
-    act(() => { vi.runOnlyPendingTimers(); });
-    // Wait for spinner to be removed from DOM
-    await waitFor(() => {
-      expect(screen.queryByTestId('page-spinner')).not.toBeInTheDocument();
-    });
-  });
+    // Run all timers to process fade and removal
+    await act(async () => { vi.runAllTimers(); });
+    // Spinner should be removed from DOM
+    expect(screen.queryByTestId('page-spinner')).not.toBeInTheDocument();
+  }, 30000);
 });

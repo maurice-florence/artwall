@@ -55,7 +55,10 @@ describe('Image size variants', () => {
     // When images are present, the slider shows an <img> with full size variant
     const img = await screen.findByTestId('modal-media-image-0');
     await waitFor(() => {
-      expect((img as HTMLImageElement).src).toContain('image_1200x1200.jpg');
+      expect(img).toBeInstanceOf(HTMLDivElement);
+      const innerImg = img.querySelector('img');
+      expect(innerImg).toBeInstanceOf(HTMLImageElement);
+      expect((innerImg as HTMLImageElement).src).toContain('image_1200x1200.jpg');
     });
   });
 });

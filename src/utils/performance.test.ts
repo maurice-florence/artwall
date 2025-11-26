@@ -1,13 +1,15 @@
 import { debounce } from './performance';
 
 describe('debounce', () => {
-  it('should delay execution', (done) => {
+  it('should delay execution', async () => {
     let called = false;
-    const fn = debounce(() => {
-      called = true;
-      expect(called).toBe(true);
-      done();
-    }, 50);
-    fn();
+    await new Promise((resolve) => {
+      const fn = debounce(() => {
+        called = true;
+        expect(called).toBe(true);
+        resolve(null);
+      }, 50);
+      fn();
+    });
   });
 });
