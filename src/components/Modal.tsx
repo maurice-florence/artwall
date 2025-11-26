@@ -244,7 +244,23 @@ const Modal: React.FC<ModalProps> = ({
   };
 
   const translation = getCurrentTranslation();
-  const cleanContent = translation.content ? translation.content.replace(/---VERSION_\d+---/g, '') : '';
+  // Clean content: remove first two lines, last four lines, ensure first two are blank
+  const cleanContent = (() => {
+    let content = translation.content ? translation.content.replace(/---VERSION_\d+---/g, '') : '';
+    if (!content) return '';
+    const lines = content.split(/\r?\n/);
+    // Remove first two lines
+    let newLines = lines.slice(2);
+    // Remove last four lines
+    if (newLines.length > 4) {
+      newLines = newLines.slice(0, newLines.length - 4);
+    } else {
+      newLines = [];
+    }
+    // Ensure first two lines are blank
+    newLines.unshift('', '');
+    return newLines.join('\n');
+  })();
 
   const handleClose = () => {
     setCurrentLanguage(item.language1 || 'en');
