@@ -10,7 +10,7 @@ export default function firebaseLoader({ src, width }: { src: string, width: num
   if (!src.includes('firebasestorage.googleapis.com')) return src;
 
   // Supported sizes (must match Firebase extension config)
-  const supported = [200, 640, 1280];
+  const supported = [200, 480, 1200];
   const size = supported.find(s => s >= width) || supported[supported.length - 1];
 
   // Insert _{size}x{size} before file extension

@@ -29,8 +29,8 @@ export function getResizedImageUrl(originalUrl: string, size: ImageSize = 'origi
   // Map legacy size tokens to actual dimensions
   const sizeMap: Record<Exclude<ImageSize, 'original'>, string> = {
     thumbnail: '200x200',
-    card: '400x400',      // Reduced from 480x480 for faster loading
-    full: '800x800',      // Reduced from 1200x1200 for better performance
+    card: '480x480',
+    full: '1200x1200',
   };
   const dims = sizeMap[size as Exclude<ImageSize, 'original'>] || '1200x1200';
   const resizedPath = `${basePath}_${dims}.${extension}`;

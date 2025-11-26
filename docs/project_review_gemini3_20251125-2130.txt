@@ -337,38 +337,3 @@ Good (Resized)
 Optimal (Auto-Format)
 
 This comparative analysis solidifies the Custom Loader + Resize Extension as the most cost-effective and performant solution for artwall-next, balancing the need for speed with the constraints of the Firebase ecosystem.
-Works cited
-accessed January 1, 1970, https://github.com/maurice-florence/artwall-next/blob/main/next.config.js
-NextJs Images returning Connection Timeout in ScreamingFrog / GSC returning Crawled Not Indexed : r/SEO - Reddit, accessed November 25, 2025, https://www.reddit.com/r/SEO/comments/158kxio/nextjs_images_returning_connection_timeout_in/
-next/image with remote URL return 504 error · vercel next.js · Discussion #34433 - GitHub, accessed November 25, 2025, https://github.com/vercel/next.js/discussions/34433
-Next.js Image Optimization + Firebase App Hosting - Reddit, accessed November 25, 2025, https://www.reddit.com/r/Firebase/comments/1gah26k/nextjs_image_optimization_firebase_app_hosting/
-Fetching an image from firebase using next/image results in a 400 status code · vercel next.js · Discussion #19848 - GitHub, accessed November 25, 2025, https://github.com/vercel/next.js/discussions/19848
-Image Optimization - Next.js, accessed November 25, 2025, https://nextjs.org/docs/14/app/building-your-application/optimizing/images
-SEO: Automatic Image Optimization | Next.js, accessed November 25, 2025, https://nextjs.org/learn/seo/images
-Getting Started: Image Optimization - Next.js, accessed November 25, 2025, https://nextjs.org/docs/app/getting-started/images
-Guides: Caching - Next.js, accessed November 25, 2025, https://nextjs.org/docs/app/guides/caching
-Next Image is slow, do image proxy instead, accessed November 25, 2025, https://viiiprock.com/blog/next-image-is-slow-do-image-proxy-instead-648a306b3e1434a854efa081
-Optimize image loading on Next.js | Firebase App Hosting - Google, accessed November 25, 2025, https://firebase.google.com/docs/app-hosting/optimize-image-loading
-NextJS - Extreme latency and out of memory cloud functions on Firebase after upgrading next to >13.4.12 · Issue #6349 - GitHub, accessed November 25, 2025, https://github.com/firebase/firebase-tools/issues/6349
-Overcoming Next.js Vercel Timeout With Firebase Functions - Better Programming, accessed November 25, 2025, https://betterprogramming.pub/overcoming-the-vercel-timeout-problem-with-firebase-functions-41554a517ec0
-Serve dynamic content and host microservices with Cloud Functions - Firebase - Google, accessed November 25, 2025, https://firebase.google.com/docs/hosting/functions
-504 timeout when querying Firebase Realtime Database in Next JS / Vercel - Stack Overflow, accessed November 25, 2025, https://stackoverflow.com/questions/67878645/504-timeout-when-querying-firebase-realtime-database-in-next-js-vercel
-difference between getSignedUrl() and getDownloadUrl() - Stack Overflow, accessed November 25, 2025, https://stackoverflow.com/questions/58310843/difference-between-getsignedurl-and-getdownloadurl
-Persistent Caching Issues on Next.js Firebase App Hosting - Old Version Still Live After Deploy - Reddit, accessed November 25, 2025, https://www.reddit.com/r/Firebase/comments/1m9tmyl/persistent_caching_issues_on_nextjs_firebase_app/
-Handle errors for Cloud Storage on Web - Firebase, accessed November 25, 2025, https://firebase.google.com/docs/storage/web/handle-errors
-Firebase storage image not displaying in nextjs application - Stack Overflow, accessed November 25, 2025, https://stackoverflow.com/questions/68890916/firebase-storage-image-not-displaying-in-nextjs-application
-Image optimisation external resource not working · Issue #18412 · vercel/next.js - GitHub, accessed November 25, 2025, https://github.com/vercel/next.js/issues/18412
-How to allow all domains for Image nextjs config? - Stack Overflow, accessed November 25, 2025, https://stackoverflow.com/questions/71235874/how-to-allow-all-domains-for-image-nextjs-config
-Next/Image is loading slow or throw 504 error. · vercel next.js · Discussion #80458 - GitHub, accessed November 25, 2025, https://github.com/vercel/next.js/discussions/80458
-Next.js Image not loading from Firebase - Stack Overflow, accessed November 25, 2025, https://stackoverflow.com/questions/79346429/next-js-image-not-loading-from-firebase
-Resize Images | Firebase Extensions Hub, accessed November 25, 2025, https://extensions.dev/extensions/firebase/storage-resize-images
-next.config.js Options: images | Next.js, accessed November 25, 2025, https://nextjs.org/docs/pages/api-reference/config/next-config-js/images
-google cloud platform - Firebase resize image extension - Stack Overflow, accessed November 25, 2025, https://stackoverflow.com/questions/72706337/firebase-resize-image-extension
-Avoid re-generating token when using Firebase Image Resize Extension - Stack Overflow, accessed November 25, 2025, https://stackoverflow.com/questions/68895327/avoid-re-generating-token-when-using-firebase-image-resize-extension
-Firebase Resize Images extension. What does it mean to "Make resized images public"?, accessed November 25, 2025, https://stackoverflow.com/questions/74681963/firebase-resize-images-extension-what-does-it-mean-to-make-resized-images-publ
-Simple implementation for resizing images in Firebase - FlutterFlow Community, accessed November 25, 2025, https://community.flutterflow.io/integrations/post/simple-implementation-for-resizing-images-in-firebase-xMhMLcHsB9tjze0
-Firebase Storage upload image file from Node.js - Stack Overflow, accessed November 25, 2025, https://stackoverflow.com/questions/60922198/firebase-storage-upload-image-file-from-node-js
-Firebase Storage cacheControl headers not sent - Stack Overflow, accessed November 25, 2025, https://stackoverflow.com/questions/65132120/firebase-storage-cachecontrol-headers-not-sent
-Blurred Placeholders Using BlurHash in Node.js with Cloudinary Custom Functions & Netlify, accessed November 25, 2025, https://www.youtube.com/watch?v=zz_WyNULLOY
-Usage | Plaiceholder, accessed November 25, 2025, https://plaiceholder.co/docs/usage
-How to present a blurred version of an image in NextJS as it's being downloaded?, accessed November 25, 2025, https://stackoverflow.com/questions/63519312/how-to-present-a-blurred-version-of-an-image-in-nextjs-as-its-being-downloaded
