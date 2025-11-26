@@ -455,8 +455,8 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin, onImageLoaded }: ArtworkCardP
     }, [isWriting, hasImage, onSelect]);
 
     // Determine image URL for overlay computation
-    // Card front preview: use 'card' size for grid cards (test expects this)
-    const imageUrl = hasImage ? images[0] : undefined;
+    // Card front preview: use 'thumbnail' size for grid cards for maximum speed
+    const imageUrl = hasImage ? getImageUrl(images[0], 'thumbnail') : undefined;
     // Card inside/back: use medium/full size
     const imageUrlMedium = hasImage ? images[0] : undefined;
     // Full screen: use original
