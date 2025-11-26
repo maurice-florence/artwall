@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 """
 Script to upload an image to Firebase Storage with aggressive cache control for cost optimization.
+
+IMPORTANT: Use this script for ALL image uploads to Firebase Storage to ensure
+the correct Cache-Control header is set (public, max-age=31536000, immutable).
+This is required for optimal CDN caching and to minimize Vercel image optimization costs.
 """
 from firebase_admin import credentials, initialize_app, storage
 import firebase_admin

@@ -50,7 +50,7 @@ Date: 2025-11-17
   - Each ArtworkCard now displays a placeholder/skeleton while its thumbnail/image is loading.
   - No layout shift occurs once the image appears (implemented).
 
-- [ ] Add a version on the corner with each new adjustment and push
+- [x] Add a version on the corner with each new adjustment and push
   - Render the app version/commit tag in a corner of the UI.
   - Auto-source from package.json version or VERCEL_GIT_COMMIT_SHA.
   - Update on every deploy.
@@ -59,24 +59,24 @@ Date: 2025-11-17
   - Remove date/place text embedded in the content body.
   - Display date/place sourced from explicit metadata fields only.
 
-- [ ] Fix grid on mobile
+- [x] Fix grid on mobile
   - Ensure the mobile grid has correct column count, spacing, and no overlaps.
   - Validate with existing Cypress mobile tests and add cases if needed.
 
 Date: 2025-11-23
 
-- [ ] Sanitize Firebase Private Key in `firebaseAdmin.ts`
+- [x] Sanitize Firebase Private Key in `firebaseAdmin.ts`
   - Use `replace(/\\n/g, '\n')` on the private key for cross-platform compatibility (Vercel, .env, etc.).
   - Blocker for stable deployment.
 
-- [ ] Singleton Pattern for Firebase Admin Initialization
+- [x] Singleton Pattern for Firebase Admin Initialization
   - Ensure `getApps().length > 0` check before calling `initializeApp` in `firebaseAdmin.ts` to prevent multiple initializations.
 
-- [ ] Transpile and Patch `react-responsive-masonry` for React 19
+- [x] Transpile and Patch `react-responsive-masonry` for React 19
   - Add `react-responsive-masonry` to `transpilePackages` in `next.config.mjs`.
   - If needed, use `patch-package` to override peer dependencies for React 19 compatibility.
 
-- [ ] Hydration-Safe Masonry Grid
+- [x] Hydration-Safe Masonry Grid
   - Refactor `MasonryGrid.tsx` to use a `mounted` state check (with `useEffect`) or dynamic import with `ssr: false`.
   - Ensure server renders a skeleton grid, not the actual masonry, to prevent hydration errors.
 
