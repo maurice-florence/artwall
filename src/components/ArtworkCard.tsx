@@ -380,25 +380,27 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin, onImageLoaded }: ArtworkCardP
         .replace(/<br\s*\/?>/gi, '\n') // Replace <br> and <br/> with newlines
         .replace(/<[^>]+>/g, ''); // Remove all other HTML tags
 
-    // Remove the title from the first line of content if present
-    const removeTitleFromContent = (content: string, title: string) => {
+    // Remove the first and second lines, and the last four lines from content
+    const cleanContent = (content: string) => {
       const lines = content.split(/\r?\n/);
-      // If the first line matches the title (case-insensitive, trimmed), and the second line is empty, remove both
-      if (
-        lines.length > 2 &&
-        lines[0].trim().toLowerCase() === title.trim().toLowerCase() &&
-        lines[1].trim() === ''
-      ) {
-        return lines.slice(2).join('\n');
+      // Remove first two lines
+      let newLines = lines.slice(2);
+      // Remove last four lines
+      if (newLines.length > 4) {
+        newLines = newLines.slice(0, newLines.length - 4);
+      } else {
+        newLines = [];
       }
-      return content;
+      // Ensure first two lines are blank
+      newLines.unshift('', '');
+      return newLines.join('\n');
     };
 
     // Only show description or cleaned content (without embedded date/place)
     const cardText = hasDescription
       ? artwork.description.trim()
       : (artwork.content
-          ? removeTitleFromContent(stripHtml(artwork.content), artwork.title || '').trim()
+          ? cleanContent(stripHtml(artwork.content)).trim()
           : '');
     // Date/place are now only shown from metadata below, not from cardText.
 
@@ -526,12 +528,13 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin, onImageLoaded }: ArtworkCardP
             <CardBack $medium={artwork.medium}>
               <CardBackTitle>{artwork.title}</CardBackTitle>
               <CardBackFooter style={{flexDirection: 'column' }}>
-                {/* Only show date/place from metadata fields */}
-                <span>{formattedDate}</span>
-                {artwork.location1 && <span>{artwork.location1}</span>}
-                <CardCategory>
-                  {getArtworkIcon(artwork)}
-                </CardCategory>
+                  {/* Show date, location, medium, and (sub)category in the footer */}
+                  <span>{formattedDate}</span>
+                  {artwork.location1 && <span>{artwork.location1}</span>}
+                  <span>{artwork.medium}{artwork.subtype ? ` / ${artwork.subtype}` : ''}</span>
+                  <CardCategory>
+                    {getArtworkIcon(artwork)}
+                  </CardCategory>
               </CardBackFooter>
             </CardBack>
         </CardInner>
