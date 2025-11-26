@@ -300,6 +300,7 @@ const truncateText = (text: string, maxLength: number) => {
 // Import the image URL utility
 import { getResizedImageUrl as getImageUrl } from '@/utils/image-urls';
 import Image from 'next/image';
+import { blurHashToDataURL } from '@/utils/blurhash';
 import firebaseLoader from '../../lib/firebase-loader';
 
 interface ArtworkCardProps {
@@ -517,7 +518,7 @@ const ArtworkCard = ({ artwork, onSelect, isAdmin, onImageLoaded }: ArtworkCardP
                 priority={false}
                 unoptimized={false}
                 placeholder="blur"
-                blurDataURL={(artwork as any).blurHash || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjMwIiBoZWlnaHQ9IjQwIiBmaWxsPSIjZGRkZGRkIi8+PC9zdmc+'}
+                blurDataURL={(artwork as any).blurHash ? blurHashToDataURL((artwork as any).blurHash) : 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjMwIiBoZWlnaHQ9IjQwIiBmaWxsPSIjZGRkZGRkIi8+PC9zdmc+'}
               />
             )}
           </CardFront>
