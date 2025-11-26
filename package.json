@@ -1,6 +1,6 @@
 {
   "name": "artwall-by-jr",
-  "version": "0.1.0",
+  "version": "0.12",
   "private": true,
   "scripts": {
     "clean": "rimraf .next",
