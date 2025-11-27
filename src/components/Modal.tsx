@@ -248,19 +248,24 @@ const Modal: React.FC<ModalProps> = ({
   const cleanContent = (() => {
     let content = translation.content ? translation.content.replace(/---VERSION_\d+---/g, '') : '';
     if (!content) return '';
-    const lines = content.split(/\r?\n/);
-    if (lines.length > 7) {
-      // Remove first two and last four lines, ensure first two blank
-      let newLines = lines.slice(2, lines.length - 4);
-      newLines.unshift('', '');
-      return newLines.join('\n');
-    } else if (lines.length > 1) {
-      // Remove only the first line (title)
-      return lines.slice(1).join('\n');
-    } else {
-      // Not enough lines, return as is
-      return content;
+    let lines = content.split(/\r?\n/).filter(line => line.trim() !== '');
+    // Remove title if it matches the first non-empty line
+    if (lines.length && lines[0].trim().toLowerCase() === (translation.title || item.title || '').trim().toLowerCase()) {
+      lines = lines.slice(1);
     }
+    // Remove date and location if they match the last two lines
+    const dateStr = formatDate(new Date(item.year, (item.month ?? 1) - 1, item.day ?? 1));
+    const locationStr = item.location1 || '';
+    if (lines.length >= 2) {
+      const last = lines[lines.length - 1].trim();
+      const secondLast = lines[lines.length - 2].trim();
+      if ((last === locationStr || last === '') && (secondLast === dateStr || secondLast === '')) {
+        lines = lines.slice(0, -2);
+      } else if (last === locationStr || last === dateStr) {
+        lines = lines.slice(0, -1);
+      }
+    }
+    return lines.join('\n');
   })();
 
   const handleClose = () => {
@@ -286,147 +291,85 @@ const Modal: React.FC<ModalProps> = ({
       }
       tag.replaceWith(img);
     });
-    return doc.body.innerHTML;
-  };
-
-  // Media type detection utility
-function getMediaType(url: string): 'image' | 'video' | 'audio' | 'pdf' | 'unknown' {
-    if (!url) return 'unknown';
-    const ext = url.split('.').pop()?.toLowerCase().split('?')[0];
-    if (!ext) return 'unknown';
-    if (/(jpg|jpeg|png|gif|webp|svg)$/i.test(ext)) return 'image';
-    if (/(mp4|webm|mov|avi|mkv)$/i.test(ext)) return 'video';
-    if (/(mp3|wav|ogg|aac|flac)$/i.test(ext)) return 'audio';
-    if (/(pdf)$/i.test(ext)) return 'pdf';
-    // Fallback for Google Drive/Storage URLs
-    if (/mime=video/.test(url)) return 'video';
-    if (/mime=audio/.test(url)) return 'audio';
-    if (/mime=image/.test(url)) return 'image';
-    if (/mime=application\/pdf/.test(url)) return 'pdf';
-    return 'unknown';
-  }
-
-  const allMedia = useMemo(() => {
-    const media: string[] = [];
-    if (item.coverImageUrl) media.push(item.coverImageUrl);
-    if (item.mediaUrl && !media.includes(item.mediaUrl)) media.push(item.mediaUrl);
-    if (item.mediaUrls && Array.isArray(item.mediaUrls)) {
-      item.mediaUrls.forEach(url => {
-        if (url && !media.includes(url)) media.push(url);
-      });
-    }
-    if (item.pdfUrl && !media.includes(item.pdfUrl)) media.push(item.pdfUrl);
-    if (item.audioUrl && !media.includes(item.audioUrl)) media.push(item.audioUrl);
-    return media.filter(Boolean);
-  }, [item.coverImageUrl, item.mediaUrl, item.mediaUrls, item.pdfUrl, item.audioUrl]);
-
-  // Component for progressive image loading
-  const ProgressiveImage: React.FC<{ src: string; alt: string; index: number; onClick?: () => void }> = ({ src, alt, index, onClick }) => {
-    // Always use Next.js Image with firebaseLoader for modal images
-    return (
-      <ProgressiveImageWrapper>
-        <Image
-          src={src}
-          alt={alt}
-          loader={firebaseLoader}
-          width={800}
-          height={600}
-          style={{
-            width: '100%',
-            height: 'auto',
-            objectFit: 'contain',
-            borderRadius: '4px',
-            cursor: onClick ? 'pointer' : 'default',
-          }}
-          onClick={onClick}
-          sizes="(max-width: 900px) 90vw, 800px"
-          unoptimized={false}
-          placeholder="empty"
-        />
-      </ProgressiveImageWrapper>
-    );
-  };
-
-  useLayoutEffect(() => {
-    if (textContainerRef.current && imageContainerRef.current && allMedia.length > 1) {
-        const textHeight = textContainerRef.current.scrollHeight;
-        const mediaHeight = imageContainerRef.current.scrollHeight;
-        if (textHeight > mediaHeight) {
-            setIsStacked(true);
-        } else {
-            setIsStacked(false);
-        }
-    } else {
-        setIsStacked(false);
-    }
-  }, [allMedia, cleanContent]);
-
-  useEffect(() => {
-    if (isOpen) {
-      // Trap focus within modal
-      const modal = document.getElementById('modal-root');
-      const focusableElements = modal?.querySelectorAll(
-        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-      );
-      
-      const firstElement = focusableElements?.[0] as HTMLElement;
-      const lastElement = focusableElements?.[focusableElements.length - 1] as HTMLElement;
-      
-      const handleTabKey = (e: KeyboardEvent) => {
-        if (e.key === 'Tab') {
-          if (e.shiftKey) {
-            if (document.activeElement === firstElement) {
-              lastElement?.focus();
-              e.preventDefault();
-            }
-          } else {
-            if (document.activeElement === lastElement) {
-              firstElement?.focus();
-              e.preventDefault();
-            }
-          }
-        }
-      };
-      
-      document.addEventListener('keydown', handleTabKey);
-      firstElement?.focus();
-      
-      return () => {
-        document.removeEventListener('keydown', handleTabKey);
-      };
-    }
-  }, [isOpen]);
-
-  // Only render if isOpen is true
-  if (!isOpen) return null;
-
-  return createPortal(
-    <ModalBackdrop onClick={handleClose}>
-      <ModalContent onClick={(e) => e.stopPropagation()} id="modal-root">
-        <h2 data-testid="modal-title">{translation.title || item.title}</h2>
-        <ModalHeader>
-          {/* Language Switcher */}
-          {availableLanguages.length > 1 ? (
-            <LanguageSwitcher data-testid="modal-language-switcher">
-              {availableLanguages.map((lang, idx) => (
-                <LanguageButton
-                  key={getLangKey(lang, idx)}
-                  $active={currentLanguage === lang}
-                  onClick={() => setCurrentLanguage(lang)}
-                  data-testid={`modal-language-btn-${lang}`}
-                >
-                  {lang.toUpperCase()}
-                </LanguageButton>
-              ))}
-            </LanguageSwitcher>
-          ) : <div />}
-          <CloseButton onClick={handleClose} aria-label="Sluit modal">
-            <FaTimes />
-          </CloseButton>
-        </ModalHeader>
         <div role="dialog" data-testid="modal">
-          {isMobile ? (
-            <MediaTextContainer>
+          <MediaTextContainer>
+            {translation.content && (
+              <TextContainer
+                ref={textContainerRef}
+                data-testid="modal-content"
+                style={{ marginTop: '1rem', whiteSpace: 'pre-wrap' }}
+                dangerouslySetInnerHTML={{ __html: parseContent(cleanContent) }}
+              />
+            )}
+            {allMedia.length > 0 && (
+              <ImageContainer ref={imageContainerRef} style={{ position: 'relative', alignItems: 'center', justifyContent: 'center' }}>
+                {isStacked ? (
+                  allMedia.map((url, index) => {
+                    const type = getMediaType(url);
+                    if (type === 'image') {
+                      const originalUrl = getResizedImageUrl(url, 'original');
+                      return <ProgressiveImage key={index} src={url} alt={`Media ${index + 1}`} index={index} onClick={() => window.open(originalUrl, '_blank')} />;
+                    }
+                    if (type === 'video') return <video key={index} src={url} controls style={{ width: '100%', borderRadius: 4, background: '#222' }} />;
+                    if (type === 'audio') return <audio key={index} src={url} controls style={{ width: '100%', borderRadius: 4, background: '#222' }} />;
+                    if (type === 'pdf') return <PdfViewer key={index} src={url} title={`PDF ${index + 1}`} />;
+                    return <div key={index}>Onbekend mediabestand</div>;
+                  })
+                ) : (
+                  <>
+                    {allMedia.length > 1 && (
+                      <button
+                        style={{ position: 'absolute', left: 0, top: '50%', transform: 'translateY(-50%)', background: 'rgba(0,0,0,0.3)', color: '#fff', border: 'none', borderRadius: '50%', width: 32, height: 32, cursor: 'pointer', zIndex: 2 }}
+                        onClick={ev => { ev.stopPropagation(); setCurrentMediaIndex((currentMediaIndex - 1 + allMedia.length) % allMedia.length); }}
+                        aria-label="Previous media"
+                      >&lt;</button>
+                    )}
+                    {(() => {
+                      const currentUrl = allMedia[currentMediaIndex];
+                      const type = getMediaType(currentUrl);
+                      if (type === 'image') {
+                        const originalUrl = getResizedImageUrl(currentUrl, 'original');
+                        return (
+                          <div data-testid={`modal-media-image-${currentMediaIndex}`}>
+                            <ProgressiveImage 
+                              src={currentUrl} 
+                              alt={`Media ${currentMediaIndex + 1}`} 
+                              index={currentMediaIndex}
+                              onClick={() => window.open(originalUrl, '_blank')} 
+                            />
+                          </div>
+                        );
+                      }
+                      if (type === 'video') return <video src={currentUrl} controls style={{ width: '100%', maxHeight: '70vh', borderRadius: 4, background: '#222' }} data-testid={`modal-media-video-${currentMediaIndex}`} />;
+                      if (type === 'audio') return <audio src={currentUrl} controls style={{ width: '100%', borderRadius: 4, background: '#222' }} data-testid={`modal-media-audio-${currentMediaIndex}`} />;
+                      if (type === 'pdf') return <iframe src={currentUrl} style={{ width: '100%', height: '70vh', border: '1px solid #ddd', borderRadius: 4 }} title={`PDF ${currentMediaIndex + 1}`} data-testid={`modal-media-pdf-${currentMediaIndex}`} />;
+                      return <div style={{ width: '100%', minHeight: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#888', fontSize: 16 }}><span>Onbekend mediabestand</span></div>;
+                    })()}
+                    {allMedia.length > 1 && (
+                      <button
+                        style={{ position: 'absolute', right: 0, top: '50%', transform: 'translateY(-50%)', background: 'rgba(0,0,0,0.3)', color: '#fff', border: 'none', borderRadius: '50%', width: 32, height: 32, cursor: 'pointer', zIndex: 2 }}
+                        onClick={ev => { ev.stopPropagation(); setCurrentMediaIndex((currentMediaIndex + 1) % allMedia.length); }}
+                        aria-label="Next media"
+                      >&gt;</button>
+                    )}
+                    {allMedia.length > 1 && (
+                      <span style={{ position: 'absolute', bottom: 8, right: 16, fontSize: 14, color: '#fff', background: 'rgba(0,0,0,0.3)', borderRadius: 8, padding: '0 8px' }}>{currentMediaIndex + 1}/{allMedia.length}</span>
+                    )}
+                  </>
+                )}
+              </ImageContainer>
+            )}
+          </MediaTextContainer>
+          {/* Footer for date and location */}
+          <div style={{marginTop: '2rem', fontStyle: 'italic', color: '#444', fontSize: '1rem'}}>
+            {item.day && item.month && item.year && (
+              <span>{formatDate(new Date(item.year, (item.month ?? 1) - 1, item.day ?? 1))}</span>
+            )}
+            {item.location1 && (
+              <span>{item.day && item.month && item.year ? ' — ' : ''}{item.location1}</span>
+            )}
+          </div>
+        </div>
               {allMedia.length > 0 && (
                 <ImageContainer ref={imageContainerRef} style={{ position: 'relative', alignItems: 'center', justifyContent: 'center' }}>
                   {isStacked ? (
