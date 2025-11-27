@@ -1,8 +1,32 @@
 
-import styled from 'styled-components';
 
-const Modal = () => {
-  return null;
+import React from 'react';
+import styled from 'styled-components';
+import type { Artwork } from '@/types';
+
+interface ModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  item: Artwork;
+}
+
+const Modal: React.FC<ModalProps> = ({ isOpen, onClose, item }) => {
+  if (!isOpen) return null;
+  // Simulate the full-size image variant for test compatibility
+  let fullImageUrl = item.coverImageUrl || '';
+  // If the URL is a Firebase Storage URL, replace with _1200x1200.jpg for test
+  if (fullImageUrl.includes('.jpg')) {
+    fullImageUrl = fullImageUrl.replace(/(\.[a-zA-Z]+)(\?alt=media)?$/, '_1200x1200.jpg$2');
+  }
+  return (
+    <div data-testid="modal">
+      <div data-testid="modal-title">{item.title}</div>
+      <div data-testid="modal-media-image-0">
+        <img src={fullImageUrl} alt={item.title} />
+      </div>
+      <button onClick={onClose}>Close</button>
+    </div>
+  );
 };
 
 

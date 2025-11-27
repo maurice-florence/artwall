@@ -1,12 +1,9 @@
 {
   "extends": "next/core-web-vitals",
   "rules": {
-    // Downgrade these React rules to warnings instead of errors
     "react-hooks/exhaustive-deps": "warn",
     "react-hooks/rules-of-hooks": "error",
     "react/no-unescaped-entities": "warn",
-    
-    // Downgrade Next.js optimization warnings
     "@next/next/no-img-element": "warn"
   }
 }
