@@ -435,18 +435,7 @@ const Modal: React.FC<ModalProps> = ({
                 <TextContainer
                   ref={textContainerRef}
                   data-testid="modal-content"
-                  style={{ marginTop: '0.75rem', whiteSpace: 'pre-wrap' }}
-                  dangerouslySetInnerHTML={{ __html: parseContent(cleanContent) }}
-                />
-              )}
-            </MediaTextContainer>
-          ) : (
-            <MediaTextContainer>
-              {translation.content && (
-                <TextContainer
-                  ref={textContainerRef}
-                  data-testid="modal-content"
-                  style={{ marginTop: '1rem', whiteSpace: 'pre-wrap' }}
+                  style={{ marginTop: allMedia.length > 0 ? '0.75rem' : '1rem', whiteSpace: 'pre-wrap' }}
                   dangerouslySetInnerHTML={{ __html: parseContent(cleanContent) }}
                 />
               )}
