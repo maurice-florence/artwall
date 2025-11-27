@@ -359,16 +359,16 @@ const Modal: React.FC<ModalProps> = ({
                 )}
               </ImageContainer>
             )}
+            {/* Footer for date and location */}
+            <div style={{marginTop: '2rem', fontStyle: 'italic', color: '#444', fontSize: '1rem', width: '100%'}}>
+              {item.day && item.month && item.year && (
+                <span>{formatDate(new Date(item.year, (item.month ?? 1) - 1, item.day ?? 1))}</span>
+              )}
+              {item.location1 && (
+                <span>{item.day && item.month && item.year ? ' — ' : ''}{item.location1}</span>
+              )}
+            </div>
           </MediaTextContainer>
-          {/* Footer for date and location */}
-          <div style={{marginTop: '2rem', fontStyle: 'italic', color: '#444', fontSize: '1rem'}}>
-            {item.day && item.month && item.year && (
-              <span>{formatDate(new Date(item.year, (item.month ?? 1) - 1, item.day ?? 1))}</span>
-            )}
-            {item.location1 && (
-              <span>{item.day && item.month && item.year ? ' — ' : ''}{item.location1}</span>
-            )}
-          </div>
         </div>
               {allMedia.length > 0 && (
                 <ImageContainer ref={imageContainerRef} style={{ position: 'relative', alignItems: 'center', justifyContent: 'center' }}>
