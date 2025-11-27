@@ -497,7 +497,7 @@ const Modal: React.FC<ModalProps> = ({
                   )}
                 </ImageContainer>
               )}
-            </MediaTextContainer>
+            {/* </MediaTextContainer> removed: fixed unmatched closing tag */}
           )}
         </div>
       </ModalContent>
