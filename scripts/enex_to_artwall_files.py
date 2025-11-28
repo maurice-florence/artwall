@@ -91,7 +91,8 @@ NIEUWE OPTIONELE VELDEN:
 
 # Load mediums and subtypes from shared JSON file
 import json
-MEDIUM_SUBTYPES_PATH = pathlib.Path(__file__).parent / 'src' / 'constants' / 'medium-subtypes.json'
+# Fix: resolve path to src/constants/medium-subtypes.json from scripts folder
+MEDIUM_SUBTYPES_PATH = pathlib.Path(__file__).parent.parent / 'src' / 'constants' / 'medium-subtypes.json'
 with open(MEDIUM_SUBTYPES_PATH, encoding='utf-8') as f:
     VALID_SUBTYPES = json.load(f)
 VALID_MEDIUMS = list(VALID_SUBTYPES.keys())
@@ -183,65 +184,44 @@ def extract_metadata_and_content(note_content: str) -> Tuple[Dict[str, Any] | No
         # Try to parse as YAML first
         metadata = yaml.safe_load(meta_block_cleaned) or {}
         main_content = note_content.split('---META_BEGIN---', 1)[0].strip()
-        
-        # Convert to lowercase keys
-        # Remove all empty lines before processing
-        # metadata = {str(k).lower(): v for k, v in metadata.items() if v != ''}
-
         metadata = {str(k).lower(): v for k, v in metadata.items()}
-        
-        # Handle medium/subtype mapping
+        # Apply medium/subtype normalization
         if 'medium' in metadata and 'subtype' in metadata:
-            # New format: medium and subtype are explicitly provided
             medium = metadata['medium']
             subtype = normalize_subtype(medium, metadata['subtype'])
             metadata['subtype'] = subtype
-            
             # Validate medium/subtype combination
             if not validate_medium_subtype(medium, subtype):
                 print(f"    ⚠️ Invalid medium/subtype combination: {medium}/{subtype}, using defaults")
                 medium, subtype = ('other', 'other')
                 metadata['medium'] = medium
                 metadata['subtype'] = subtype
-            
         elif 'category' in metadata:
-            # Legacy format: only category is provided, derive medium/subtype
             category = metadata['category']
             medium, subtype = get_medium_subtype_from_category(category)
             metadata['medium'] = medium
             metadata['subtype'] = subtype
-            
-        else:
-            # Neither medium nor category provided
-            return None, "Noch 'medium' noch 'category' gevonden in metadata"
-        
         return metadata, main_content
-        
     except yaml.YAMLError as e:
+        # Print the problematic metadata block for debugging
+        print("---- Problematic metadata block ----")
+        print(meta_block_cleaned)
+        print("---- End problematic block ----")
         # If YAML parsing fails, try to manually parse key-value pairs
         try:
-            print(f"    ⚠️ YAML parsing failed, trying manual parsing: {e}")
+            print(f"    \u26a0\ufe0f YAML parsing failed, trying manual parsing: {e}")
             metadata = {}
             main_content = note_content.split('---META_BEGIN---', 1)[0].strip()
-            
-            # Parse each line as key: value
-
             for line in meta_block_cleaned.split('\n'):
                 line = line.strip()
                 if ':' in line and not line.startswith('#'):
                     key, value = line.split(':', 1)
                     key = key.strip()
                     value = value.strip()
-
-                    # Remove outer single or double quotes, but preserve inner quotes
                     if (value.startswith("'") and value.endswith("'")) or (value.startswith('"') and value.endswith('"')):
                         value = value[1:-1]
-
-                    # Clean problematic YAML characters inside values
                     if isinstance(value, str):
                         value = value.replace('`', '').replace('~', '')
-
-                    # Convert numeric values
                     if key in ['year', 'month', 'day', 'evaluation', 'rating']:
                         try:
                             if isinstance(value, str):
@@ -265,30 +245,23 @@ def extract_metadata_and_content(note_content: str) -> Tuple[Dict[str, Any] | No
                             else:
                                 metadata[key] = ''
                     else:
-                        # Store string values as-is (no extra wrapping)
                         metadata[key] = value
-            
             # Apply medium/subtype normalization
             if 'medium' in metadata and 'subtype' in metadata:
                 medium = metadata['medium']
                 subtype = normalize_subtype(medium, metadata['subtype'])
                 metadata['subtype'] = subtype
-                
-                # Validate medium/subtype combination
                 if not validate_medium_subtype(medium, subtype):
-                    print(f"    ⚠️ Invalid medium/subtype combination: {medium}/{subtype}, using defaults")
+                    print(f"    \u26a0\ufe0f Invalid medium/subtype combination: {medium}/{subtype}, using defaults")
                     medium, subtype = ('other', 'other')
                     metadata['medium'] = medium
                     metadata['subtype'] = subtype
-                
             elif 'category' in metadata:
                 category = metadata['category']
                 medium, subtype = get_medium_subtype_from_category(category)
                 metadata['medium'] = medium
                 metadata['subtype'] = subtype
-            
             return metadata, main_content
-            
         except Exception as manual_error:
             error_message = f"YAML FOUT: {e}\nManual parsing error: {manual_error}\n--- Problematische Metadata ---\n{meta_block_cleaned}"
             return None, error_message
