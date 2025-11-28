@@ -5,16 +5,19 @@ import HomeClient from '@/app/HomeClient';
 import { vi } from 'vitest';
 
 // Mock next/image to call onLoad after a tick (works with fake timers)
-vi.mock('next/image', () => ({
-  __esModule: true,
-  default: (props: any) => {
+vi.mock('next/image', () => {
+  function MockNextImage(props: any) {
     React.useEffect(() => {
       if (props.onLoad) setTimeout(props.onLoad, 0);
     }, []);
     // Render a simple img for test
     return <img {...props} data-testid={props['data-testid'] || 'mock-image'} />;
-  },
-}));
+  }
+  return {
+    __esModule: true,
+    default: MockNextImage,
+  };
+});
 
 // Minimal artwork with image
 const mockArtworks = [
