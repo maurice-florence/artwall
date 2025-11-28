@@ -53,9 +53,15 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, item, isAdmin, onEdit })
           <TextContainer>
             <h2 data-testid="modal-title" style={{ marginTop: 0 }}>{item.title}</h2>
             {item.description && <p>{item.description}</p>}
-            {item.content && <pre style={{ whiteSpace: 'pre-wrap', fontFamily: 'inherit' }}>{item.content}</pre>}
-            {item.location1 && <div><b>Locatie:</b> {item.location1}</div>}
-            {item.year && <div><b>Jaar:</b> {item.year}</div>}
+            {item.content && (
+              <div
+                style={{ whiteSpace: 'pre-wrap', fontFamily: 'inherit' }}
+                dangerouslySetInnerHTML={{ __html: item.content }}
+              />
+            )}
+            {/* Only show location/year if not present in content (avoid duplicate) */}
+            {!item.content?.includes('Locatie:') && item.location1 && <div><b>Locatie:</b> {item.location1}</div>}
+            {!item.content?.includes('Jaar:') && item.year && <div><b>Jaar:</b> {item.year}</div>}
             {isAdmin && onEdit && (
               <button onClick={() => onEdit(item)} style={{ marginTop: 16 }}>Bewerk</button>
             )}
