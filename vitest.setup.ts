@@ -1,3 +1,6 @@
+// Ensure .env.local is loaded for all tests
+import dotenv from 'dotenv';
+dotenv.config({ path: '.env.local' });
 // Mock react-responsive-masonry to avoid named export errors in tests
 import React from 'react';
 vi.mock('react-responsive-masonry', () => {
@@ -11,21 +14,7 @@ import '@testing-library/jest-dom';
 import { vi } from 'vitest';
 
 // Provide simple mocks for Firebase modules used at module-initialization time
-vi.mock('firebase/database', () => {
-  return {
-    getDatabase: vi.fn(() => ({})),
-    ref: vi.fn(() => ({})),
-    onValue: vi.fn((_ref: any, _cb: any) => {
-      // return unsubscribe
-      return () => {};
-    }),
-    off: vi.fn(),
-    remove: vi.fn(async () => {}),
-    update: vi.fn(async () => {}),
-    push: vi.fn(() => ({ key: 'mock-key' })),
-    set: vi.fn(async () => {}),
-  };
-});
+
 
 vi.mock('firebase/firestore', () => ({
   getFirestore: () => ({}),

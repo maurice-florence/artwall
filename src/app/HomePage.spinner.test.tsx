@@ -1,3 +1,17 @@
+// Mock firebase/app to provide a consistent singleton app for getApps
+vi.mock('firebase/app', () => {
+  const mockApp = {};
+  return {
+    getApps: () => [mockApp],
+    initializeApp: vi.fn(() => mockApp),
+  };
+});
+// Mock firebase/database to avoid getProvider errors in test environment
+vi.mock('firebase/database', () => ({
+  getDatabase: vi.fn(),
+  ref: vi.fn(),
+  onValue: vi.fn(() => () => {}), // Return a no-op unsubscribe function
+}));
 import { render, screen } from '@/__tests__/test-utils';
 import React from 'react';
 import HomeClient from '@/app/HomeClient';

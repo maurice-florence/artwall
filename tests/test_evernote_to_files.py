@@ -2,7 +2,9 @@ import unittest
 import pathlib
 import tempfile
 import shutil
-from evernote_to_files import (
+import sys, os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), 'src')))
+from src.evernote_to_files import (
     get_medium_subtype_from_category,
     validate_medium_subtype,
     normalize_subtype,

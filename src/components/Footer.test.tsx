@@ -1,3 +1,8 @@
+// Mock firebase/app to provide getApps and initializeApp for singleton guard
+vi.mock('firebase/app', () => ({
+  getApps: () => [],
+  initializeApp: vi.fn(() => ({})),
+}));
 
 import React from 'react';
 import { render, screen, act } from '@testing-library/react';
