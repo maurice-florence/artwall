@@ -138,64 +138,11 @@ const Footer: React.FC<FooterProps> = ({ onAddNewArtwork, artworks }) => {
     const unsubscribeAuth = onAuthStateChanged(auth, (user: User | null) => {
       setIsLoggedIn(!!user); // Set to true if user exists, false otherwise.
     });
-    // ...existing code...
 
-    // SECTION: Styled Components
-    const FooterWrapper = styled.footer`
-      text-align: center;
-      padding: 3rem 2rem 2rem;
-      margin-top: 4rem;
-      border-top: 1px solid #dddddd;
-      background-color: ${({ theme }) => theme.cardBg};
-      color: ${({ theme }) => theme.cardText};
-    `;
     // 3. Return a cleanup function to unsubscribe from both listeners.
-    const AddArtworkButton = styled.button`
-      background: ${({ theme }) => theme.accent};
-      color: ${({ theme }) => theme.accentText};
-      border: none;
-      border-radius: 6px;
-      padding: 0.75rem 1.5rem;
-      font-size: 1rem;
-      cursor: pointer;
-      margin-bottom: 1rem;
-    `;
     return () => {
-    const LastUpdatedText = styled.p`
-      font-size: 0.8rem;
-      color: #999;
-    `;
       unsubscribeDb();
-    const VersionTag = styled.div`
-      position: fixed;
-      bottom: 12px;
-      right: 16px;
-      background: #eee;
-      color: #333;
-      font-size: 0.75rem;
-      border-radius: 6px;
-      padding: 0.4em 0.8em;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-      opacity: 0.95;
-      z-index: 2000;
-      border: 2px solid #0b8783;
-    `;
       unsubscribeAuth();
-    const DebugWrapper = styled.div`
-      margin-top: 16px;
-      font-size: 0.9rem;
-      color: #888;
-      ul {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-      }
-      a {
-        color: #E07A5F;
-        font-weight: bold;
-        margin: 0 8px;
-      }
-    `;
     };
   }, []); // Empty dependency array means this runs only once on mount.
 
