@@ -8,9 +8,11 @@ interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
   item: Artwork;
+  isAdmin?: boolean;
+  onEdit?: (item: Artwork) => void;
 }
 
-const Modal: React.FC<ModalProps> = ({ isOpen, onClose, item }) => {
+const Modal: React.FC<ModalProps> = ({ isOpen, onClose, item, isAdmin, onEdit }) => {
   if (!isOpen) return null;
   // Simulate the full-size image variant for test compatibility
   let fullImageUrl = item.coverImageUrl || '';
@@ -24,6 +26,9 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, item }) => {
       <div data-testid="modal-media-image-0">
         <img src={fullImageUrl} alt={item.title} />
       </div>
+      {isAdmin && onEdit && (
+        <button onClick={() => onEdit(item)}>Edit</button>
+      )}
       <button onClick={onClose}>Close</button>
     </div>
   );
