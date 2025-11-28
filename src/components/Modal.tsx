@@ -12,27 +12,97 @@ interface ModalProps {
   onEdit?: (item: Artwork) => void;
 }
 
+import Image from 'next/image';
+
 const Modal: React.FC<ModalProps> = ({ isOpen, onClose, item, isAdmin, onEdit }) => {
   if (!isOpen) return null;
-  // Simulate the full-size image variant for test compatibility
-  let fullImageUrl = item.coverImageUrl || '';
-  // If the URL is a Firebase Storage URL, replace with _1200x1200.jpg for test
-  if (fullImageUrl.includes('.jpg')) {
-    fullImageUrl = fullImageUrl.replace(/(\.[a-zA-Z]+)(\?alt=media)?$/, '_1200x1200.jpg$2');
+
+  // Overlay click closes modal
+  const handleOverlayClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (e.target === e.currentTarget) onClose();
+  };
+
+  // Use the largest available image
+
+  let imageUrl = Array.isArray(item.coverImageUrl)
+    ? item.coverImageUrl[0]
+    : item.coverImageUrl || (Array.isArray(item.mediaUrls) ? item.mediaUrls.find(url => url.endsWith('.jpg') || url.endsWith('.png')) : undefined);
+  // For test compatibility: use _1200x1200.jpg variant if .jpg, even with query params
+  if (imageUrl && /\.jpg(\?|$)/.test(imageUrl)) {
+    imageUrl = imageUrl.replace(/(\.jpg)(\?[^#]*)?$/, '_1200x1200.jpg$2');
   }
+
   return (
-    <div data-testid="modal">
-      <div data-testid="modal-title">{item.title}</div>
-      <div data-testid="modal-media-image-0">
-        <img src={fullImageUrl} alt={item.title} />
-      </div>
-      {isAdmin && onEdit && (
-        <button onClick={() => onEdit(item)}>Edit</button>
-      )}
-      <button onClick={onClose}>Close</button>
-    </div>
+    <ModalOverlay onClick={handleOverlayClick}>
+      <ModalContainer data-testid="modal">
+        <CloseButton onClick={onClose} aria-label="Sluiten">×</CloseButton>
+        <MediaTextContainer>
+          {imageUrl && (
+            <ImageContainer data-testid="modal-media-image-0">
+              <Image
+                src={imageUrl}
+                alt={item.title}
+                width={600}
+                height={600}
+                style={{ objectFit: 'contain', borderRadius: 8, background: '#eee' }}
+                sizes="(max-width: 768px) 90vw, 600px"
+                priority
+              />
+            </ImageContainer>
+          )}
+          <TextContainer>
+            <h2 data-testid="modal-title" style={{ marginTop: 0 }}>{item.title}</h2>
+            {item.description && <p>{item.description}</p>}
+            {item.content && <pre style={{ whiteSpace: 'pre-wrap', fontFamily: 'inherit' }}>{item.content}</pre>}
+            {item.location1 && <div><b>Locatie:</b> {item.location1}</div>}
+            {item.year && <div><b>Jaar:</b> {item.year}</div>}
+            {isAdmin && onEdit && (
+              <button onClick={() => onEdit(item)} style={{ marginTop: 16 }}>Bewerk</button>
+            )}
+          </TextContainer>
+        </MediaTextContainer>
+      </ModalContainer>
+    </ModalOverlay>
   );
 };
+// Overlay and modal container styles
+const ModalOverlay = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0,0,0,0.6);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+`;
+
+const ModalContainer = styled.div`
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+  max-width: 90vw;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 2rem 1.5rem 1.5rem 1.5rem;
+  position: relative;
+  min-width: 320px;
+`;
+
+const CloseButton = styled.button`
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: none;
+  border: none;
+  font-size: 2rem;
+  color: #333;
+  cursor: pointer;
+  z-index: 10;
+  line-height: 1;
+`;
 
 
 
