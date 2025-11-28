@@ -7,8 +7,8 @@ const pkg = JSON.parse(fs.readFileSync(path.resolve(__dirname, 'package.json'), 
 const nextConfig = {
   reactStrictMode: true,
   eslint: {
-    ignoreDuringBuilds: false,
-    dirs: ['src']
+    ignoreDuringBuilds: false
+    // dirs: ['src']
   },
   typescript: {
     ignoreBuildErrors: false
