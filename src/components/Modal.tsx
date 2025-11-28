@@ -23,13 +23,46 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, item, isAdmin, onEdit })
   };
 
   // Use the largest available image
-
   let imageUrl = Array.isArray(item.coverImageUrl)
     ? item.coverImageUrl[0]
     : item.coverImageUrl || (Array.isArray(item.mediaUrls) ? item.mediaUrls.find(url => url.endsWith('.jpg') || url.endsWith('.png')) : undefined);
   // For test compatibility: use _1200x1200.jpg variant if .jpg, even with query params
   if (imageUrl && /\.jpg(\?|$)/.test(imageUrl)) {
     imageUrl = imageUrl.replace(/(\.jpg)(\?[^#]*)?$/, '_1200x1200.jpg$2');
+  }
+
+  // Utility to strip title, location, and date from content HTML
+  function stripTitleAndMeta(content: string, title?: string, location?: string, year?: number) {
+    let html = content;
+    if (title) {
+      // Remove <b>Title</b> or <strong>Title</strong> or plain title at start
+      html = html.replace(new RegExp(`^(<b>|<strong>)?${escapeRegExp(title)}(</b>|</strong>)?`, 'i'), '');
+    }
+    if (location) {
+      html = html.replace(new RegExp(`<i>.*${escapeRegExp(location)}.*</i><br>?`, 'i'), '');
+      html = html.replace(new RegExp(`Locatie:? ?${escapeRegExp(location)}`, 'i'), '');
+    }
+    if (year) {
+      html = html.replace(new RegExp(`<i>.*${year}.*</i><br>?`, 'i'), '');
+      html = html.replace(new RegExp(`Jaar:? ?${year}`, 'i'), '');
+    }
+    // Remove extra <br> at start
+    html = html.replace(/^(<br\s*\/?\>)+/i, '');
+    return html.trim();
+  }
+
+  // Utility to check if location or year is present in content
+  function hasMetaInContent(content?: string, location?: string, year?: number) {
+    if (!content) return false;
+    let found = false;
+    if (location && new RegExp(`Locatie:? ?${escapeRegExp(location)}`, 'i').test(content)) found = true;
+    if (year && new RegExp(`Jaar:? ?${year}`, 'i').test(content)) found = true;
+    return found;
+  }
+
+  // Escape RegExp special chars
+  function escapeRegExp(str: string) {
+    return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   }
 
   return (
@@ -56,12 +89,14 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, item, isAdmin, onEdit })
             {item.content && (
               <div
                 style={{ whiteSpace: 'pre-wrap', fontFamily: 'inherit' }}
-                dangerouslySetInnerHTML={{ __html: item.content }}
+                dangerouslySetInnerHTML={{
+                  __html: stripTitleAndMeta(item.content, item.title, item.location1, item.year)
+                }}
               />
             )}
             {/* Only show location/year if not present in content (avoid duplicate) */}
-            {!item.content?.includes('Locatie:') && item.location1 && <div><b>Locatie:</b> {item.location1}</div>}
-            {!item.content?.includes('Jaar:') && item.year && <div><b>Jaar:</b> {item.year}</div>}
+            {!hasMetaInContent(item.content, item.location1, item.year) && item.location1 && <div><b>Locatie:</b> {item.location1}</div>}
+            {!hasMetaInContent(item.content, item.location1, item.year) && item.year && <div><b>Jaar:</b> {item.year}</div>}
             {isAdmin && onEdit && (
               <button onClick={() => onEdit(item)} style={{ marginTop: 16 }}>Bewerk</button>
             )}
