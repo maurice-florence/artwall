@@ -289,8 +289,9 @@ const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, artworkToEdit 
               {/* --- Modal Footer --- */}
               <ModalFooter>
                 <FooterLeft>
-                  {formatDate(formData.year, formData.month, formData.day)}
-                  {formData.location1 && <span>{formData.location1}</span>}
+                  <span style={{ fontStyle: 'italic', color: theme.textSecondary }}>
+                    {[formData.location1, formatDate(formData.year, formData.month, formData.day)].filter(Boolean).join(', ')}
+                  </span>
                 </FooterLeft>
                 <FooterRight>
                   {formData.medium && (
