@@ -163,15 +163,15 @@ const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, artworkToEdit 
   function getPillColor(medium?: string, subtype?: string) {
     if (!medium) return theme.categories?.other || '#888';
     // Prefer subcategory color if present
-    if (subtype && theme.categories?.[subtype]) return theme.categories[subtype];
-    return theme.categories[medium] || '#888';
+    if (subtype && theme.categories?.[subtype as keyof typeof theme.categories]) return theme.categories[subtype as keyof typeof theme.categories];
+    return theme.categories[medium as keyof typeof theme.categories] || '#888';
   }
   // Get pill label
   function getMediumLabel(medium?: string) {
-    return (medium && MEDIUM_LABELS[medium]) || medium || '';
+    return (medium && MEDIUM_LABELS[medium as keyof typeof MEDIUM_LABELS]) || medium || '';
   }
   function getSubtypeLabel(subtype?: string) {
-    return (subtype && SUBTYPE_LABELS[subtype]) || subtype || '';
+    return (subtype && SUBTYPE_LABELS[subtype as keyof typeof SUBTYPE_LABELS]) || subtype || '';
   }
 
   return (
