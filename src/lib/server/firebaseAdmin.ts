@@ -5,6 +5,9 @@ import { cert, getApps, initializeApp, App } from 'firebase-admin/app';
 import { getDatabase } from 'firebase-admin/database';
 import type { Artwork } from '@/types';
 
+// DEBUG LOG: File loaded
+console.log('[firebaseAdmin] Module loaded');
+
 function getRequiredEnv(name: string): string {
   const v = process.env[name];
   if (!v || v === '') {
@@ -26,9 +29,14 @@ function collectMissingEnv(): string[] {
 let adminApp: App | undefined;
 
 function getAdminApp(): App {
-  if (adminApp) return adminApp;
+  console.log('[firebaseAdmin] getAdminApp called');
+  if (adminApp) {
+    console.log('[firebaseAdmin] Returning cached adminApp');
+    return adminApp;
+  }
   if (getApps().length) {
     adminApp = getApps()[0]!;
+    console.log('[firebaseAdmin] Returning existing app from getApps');
     return adminApp;
   }
 
@@ -36,24 +44,23 @@ function getAdminApp(): App {
   const databaseURL = process.env.FIREBASE_DATABASE_URL || process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL;
   if (!databaseURL) missing.push('FIREBASE_DATABASE_URL');
 
+  console.log('[firebaseAdmin] Env check, missing:', missing);
   if (missing.length) {
     const msg = `Missing required Firebase env vars: ${missing.join(', ')}`;
-    // On Vercel (production or preview) we want a hard failure so deployments surface misconfiguration.
     if (process.env.VERCEL) {
+      console.log('[firebaseAdmin] Throwing error due to missing env on Vercel:', msg);
       throw new Error(msg);
     }
-    // Locally (dev/test) fall back to a mock app that yields empty data.
     console.warn(`[firebaseAdmin] ${msg}. Returning a mock admin app; fetchArtworks() will return [].`);
-    // Provide a dummy app-like object to satisfy getDatabase without real calls.
-    // Instead of constructing a real Firebase app with invalid creds, we short-circuit in fetchArtworks.
     throw new Error(msg); // We will catch this in fetchArtworks and soft-fail locally.
   }
 
   const projectId = getRequiredEnv('FIREBASE_PROJECT_ID');
   const clientEmail = getRequiredEnv('FIREBASE_CLIENT_EMAIL');
   const rawKey = getRequiredEnv('FIREBASE_PRIVATE_KEY');
-  const privateKey = rawKey.replace(/\\n/g, '\n');
+  const privateKey = rawKey.replace(/\n/g, '\n');
 
+  console.log('[firebaseAdmin] Initializing Firebase Admin app');
   adminApp = initializeApp({
     credential: cert({ projectId, clientEmail, privateKey }),
     databaseURL: databaseURL!,
@@ -62,6 +69,7 @@ function getAdminApp(): App {
 }
 
 export async function fetchArtworks(): Promise<Artwork[]> {
+  console.log('[firebaseAdmin] fetchArtworks called');
   let app: App;
   try {
     app = getAdminApp();
@@ -71,10 +79,13 @@ export async function fetchArtworks(): Promise<Artwork[]> {
       console.warn('[firebaseAdmin] fetchArtworks soft-failed due to missing configuration; returning empty list.');
       return [];
     }
+    console.log('[firebaseAdmin] getAdminApp threw error:', e);
     throw e;
   }
   const db = getDatabase(app);
+  console.log('[firebaseAdmin] Fetching artworks from database');
   const snap = await db.ref('artwall').get();
+  console.log('[firebaseAdmin] Database fetch complete');
   const val = snap.val() as Record<string, Record<string, any>> | null;
   if (val) {
     const mediumKeys = Object.keys(val);
