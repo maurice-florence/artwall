@@ -61,6 +61,7 @@ import {
 } from './styles';
 
 const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, artworkToEdit }) => {
+  const theme = useTheme();
   const {
     formData,
     errors,
@@ -151,7 +152,7 @@ const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, artworkToEdit 
   // Debug: log when AdminModal is rendered
   // eslint-disable-next-line no-console
   console.log('AdminModal: rendered, isOpen:', isOpen);
-  const theme = useTheme();
+  // theme is now declared at the top
   // Helper: format date as "Month D, YYYY"
   function formatDate(year?: number, month?: number, day?: number) {
     if (!year || !month || !day) return '';
