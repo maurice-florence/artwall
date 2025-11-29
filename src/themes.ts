@@ -9,11 +9,28 @@ export const atelierTheme = {
   cardText: '#3D405B',
   categories: {
     music: '#D94A4A',
+    // Audio subcategories
+    beat: '#E57373',         // lighter red
+    electronic: '#B71C1C',   // darker red
+    other: '#FF8A65',        // orange-red
+    rap: '#C62828',          // deep red
+    song: '#FF5252',         // vivid red
+    soundpoem: '#FFB3B3',    // pale red
+    // Writing subcategories
+    essay: '#28B463',        // same as prose (green)
+    novel: '#239B56',        // darker green
     poem: '#2E86C1',
     prosepoem: '#A569BD',
     prose: '#28B463',
+    shortstory: '#58D68D',   // lighter green
+    // Sculpture subcategory
     sculpture: '#AF601A',
+    clay: '#D68910',         // lighter brown-orange
+    // Drawing subcategories
     drawing: '#884EA0',
+    digital: '#BB8FCE',      // lighter purple
+    marker: '#512E5F',       // darker purple
+    pencil: '#A569BD',       // mid purple
   },
   cardBackgrounds: {
     default: '#FFFFFF',
@@ -45,11 +62,28 @@ export const blueprintTheme = {
   cardText: '#17202A',
   categories: {
     music: '#C0392B',
+    // Audio subcategories
+    beat: '#E57373',
+    electronic: '#922B21',
+    other: '#FF8A65',
+    rap: '#A93226',
+    song: '#FF5252',
+    soundpoem: '#F5B7B1',
+    // Writing subcategories
+    essay: '#27AE60',
+    novel: '#229954',
     poem: '#2980B9',
     prosepoem: '#8E44AD',
     prose: '#27AE60',
+    shortstory: '#58D68D',
+    // Sculpture subcategory
     sculpture: '#D35400',
-    drawing: '#16A085',  // Distinct teal-green for drawing
+    clay: '#F5B041',
+    // Drawing subcategories
+    drawing: '#16A085',
+    digital: '#48C9B0',
+    marker: '#117864',
+    pencil: '#76D7C4',
   },
   cardBackgrounds: {
     default: '#FFFFFF',
@@ -81,11 +115,28 @@ export const darkModeTheme = {
   cardText: '#EAF2F8',
   categories: {
     music: '#CF6679',
+    // Audio subcategories
+    beat: '#FF8A80',
+    electronic: '#B71C1C',
+    other: '#FFB3B3',
+    rap: '#C62828',
+    song: '#FF5252',
+    soundpoem: '#F8BBD0',
+    // Writing subcategories
+    essay: '#55E6C1',
+    novel: '#00BFAE',
     poem: '#74B9FF',
     prosepoem: '#BB8FCE',
     prose: '#55E6C1',
+    shortstory: '#A7FFEB',
+    // Sculpture subcategory
     sculpture: '#FFB74D',
+    clay: '#FFD180',
+    // Drawing subcategories
     drawing: '#BA68C8',
+    digital: '#E1BEE7',
+    marker: '#6A1B9A',
+    pencil: '#CE93D8',
   },
   cardBackgrounds: {
     default: '#1E2732',
