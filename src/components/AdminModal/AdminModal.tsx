@@ -3,6 +3,40 @@
 "use client";
 
 import React, { useRef, useEffect } from "react";
+import styled, { useTheme } from 'styled-components';
+import { MEDIUM_LABELS, SUBTYPE_LABELS } from '@/constants/medium';
+// --- Modal Footer Styles ---
+const ModalFooter = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-top: 2rem;
+  gap: 2rem;
+  font-size: 1rem;
+`;
+const FooterLeft = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  font-style: italic;
+  color: ${({ theme }) => theme.textSecondary};
+`;
+const FooterRight = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.5rem;
+`;
+const Pill = styled.span<{ $color: string }>`
+  display: inline-block;
+  padding: 0.25em 1em;
+  border-radius: 999px;
+  font-size: 0.95em;
+  font-weight: 600;
+  color: #fff;
+  background: ${({ $color }) => $color};
+  margin-bottom: 0.2em;
+`;
 import { AdminModalProps } from './types';
 import { ArtworkFormData } from '@/types';
 import { useAdminModal } from './hooks/useAdminModal';
@@ -117,123 +151,160 @@ const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, artworkToEdit 
   // Debug: log when AdminModal is rendered
   // eslint-disable-next-line no-console
   console.log('AdminModal: rendered, isOpen:', isOpen);
+  const theme = useTheme();
+  // Helper: format date as "Month D, YYYY"
+  function formatDate(year?: number, month?: number, day?: number) {
+    if (!year || !month || !day) return '';
+    const date = new Date(year, month - 1, day);
+    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  }
+  // Get pill color from theme.categories
+  function getPillColor(medium?: string, subtype?: string) {
+    if (!medium) return theme.categories?.other || '#888';
+    // Prefer subcategory color if present
+    if (subtype && theme.categories?.[subtype]) return theme.categories[subtype];
+    return theme.categories[medium] || '#888';
+  }
+  // Get pill label
+  function getMediumLabel(medium?: string) {
+    return (medium && MEDIUM_LABELS[medium]) || medium || '';
+  }
+  function getSubtypeLabel(subtype?: string) {
+    return (subtype && SUBTYPE_LABELS[subtype]) || subtype || '';
+  }
+
   return (
-  <ModalBackdrop>
-    <ModalContent
-      ref={modalRef}
-      onClick={(e) => e.stopPropagation()}
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="adminmodal-title"
-    >
-      <CloseButton onClick={handleClose} aria-label="Sluiten">
-        ×
-      </CloseButton>
-      <div data-testid="adminmodal">
-        <h2 id="adminmodal-title" data-testid="form-title">{artworkToEdit ? 'Kunstwerk Bewerken' : 'Nieuw Kunstwerk'}</h2>
-        <form
-          onSubmit={onSubmit}
-          role="form"
-          ref={el => {
-            // eslint-disable-next-line no-console
-            console.log('AdminModal: form ref set', el);
-          }}
-        >
-          <FormWrapper>
-            {/* Debug: show errors and formData in DOM for validation */}
-            <pre data-testid="errors-debug" style={{ color: 'red', fontSize: '10px' }}>{JSON.stringify({ errors, formData }, null, 2)}</pre>
-            {showDraftRecovery && (
-              <DraftRecovery
-                onLoadDraft={handleLoadDraft}
-                onClearDraft={handleClearDraft}
-                onDismiss={handleDismissDraft}
+    <ModalBackdrop>
+      <ModalContent
+        ref={modalRef}
+        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="adminmodal-title"
+      >
+        <CloseButton onClick={handleClose} aria-label="Sluiten">
+          ×
+        </CloseButton>
+        <div data-testid="adminmodal">
+          <h2 id="adminmodal-title" data-testid="form-title">{artworkToEdit ? 'Kunstwerk Bewerken' : 'Nieuw Kunstwerk'}</h2>
+          <form
+            onSubmit={onSubmit}
+            role="form"
+            ref={el => {
+              // eslint-disable-next-line no-console
+              console.log('AdminModal: form ref set', el);
+            }}
+          >
+            <FormWrapper>
+              {/* Debug: show errors and formData in DOM for validation */}
+              <pre data-testid="errors-debug" style={{ color: 'red', fontSize: '10px' }}>{JSON.stringify({ errors, formData }, null, 2)}</pre>
+              {showDraftRecovery && (
+                <DraftRecovery
+                  onLoadDraft={handleLoadDraft}
+                  onClearDraft={handleClearDraft}
+                  onDismiss={handleDismissDraft}
+                />
+              )}
+              <SmartFormIndicator
+                smartState={smartState}
+                nextSuggestedField={getNextSuggestedField()}
+                totalFields={smartState.visibleFields.length}
+                completedFields={smartState.visibleFields.filter(field => {
+                  const value = formData[field];
+                  return value && (typeof value !== 'string' || value.trim() !== '');
+                }).length}
               />
-            )}
-            <SmartFormIndicator
-              smartState={smartState}
-              nextSuggestedField={getNextSuggestedField()}
-              totalFields={smartState.visibleFields.length}
-              completedFields={smartState.visibleFields.filter(field => {
-                const value = formData[field];
-                return value && (typeof value !== 'string' || value.trim() !== '');
-              }).length}
-            />
-            <BasicInfoForm 
-              formData={formData}
-              errors={errors}
-              updateField={updateField}
-              isFieldLoading={isFieldLoading}
-              shouldShowField={shouldShowField}
-              isFieldRequired={isFieldRequired}
-              shouldAnimateField={shouldAnimateField}
-              getContextualHelpText={getContextualHelpText}
-              getSmartSuggestions={getSmartSuggestions}
-            />
-            <CategorySpecificFields
-              formData={formData}
-              errors={errors}
-              updateField={updateField}
-              isFieldLoading={isFieldLoading}
-              shouldShowField={shouldShowField}
-              isFieldRequired={isFieldRequired}
-              shouldAnimateField={shouldAnimateField}
-              getContextualHelpText={getContextualHelpText}
-              getSmartSuggestions={getSmartSuggestions}
-            />
-            <MediaUploadSection
-              formData={formData}
-              errors={errors}
-              updateField={updateField}
-              isFieldLoading={isFieldLoading}
-              shouldShowField={shouldShowField}
-              isFieldRequired={isFieldRequired}
-              shouldAnimateField={shouldAnimateField}
-              getContextualHelpText={getContextualHelpText}
-              getSmartSuggestions={getSmartSuggestions}
-            />
-            <MetadataSection
-              formData={formData}
-              errors={errors}
-              updateField={updateField}
-              isFieldLoading={isFieldLoading}
-              shouldShowField={shouldShowField}
-              isFieldRequired={isFieldRequired}
-              shouldAnimateField={shouldAnimateField}
-              getContextualHelpText={getContextualHelpText}
-              getSmartSuggestions={getSmartSuggestions}
-            />
-            {/* Debug: print errors.general before rendering */}
-            {/* Always render errors.debug for test reliability */}
-            <pre data-testid="errors-debug-visible" style={{ color: 'red', fontSize: '12px' }}>{JSON.stringify(errors, null, 2)}</pre>
-            {/* Render all error messages, or a general error if errors exist */}
-            {(Object.keys(errors).length > 0 || errors.general) && (
-              <ErrorMessage data-testid="error-message">
-                {Object.values(errors).filter(Boolean).join(' | ') || errors.general || 'Please fill in all required fields.'}
-              </ErrorMessage>
-            )}
-            {message && (
-              <SuccessMessage>{message}</SuccessMessage>
-            )}
-            <ButtonGroup>
-              <Button
-                type="submit"
-                disabled={isLoading}
-                onClick={() => {
-                  // eslint-disable-next-line no-console
-                  console.log('AdminModal: submit button clicked');
-                }}
-              >
-                {isLoading ? 'Bezig met opslaan...' : 'Opslaan'}
-              </Button>
-              <SecondaryButton type="button" onClick={handleClose}>
-                Annuleren
-              </SecondaryButton>
-            </ButtonGroup>
-          </FormWrapper>
-        </form>
-      </div>
-    </ModalContent>
-  </ModalBackdrop>
+              <BasicInfoForm 
+                formData={formData}
+                errors={errors}
+                updateField={updateField}
+                isFieldLoading={isFieldLoading}
+                shouldShowField={shouldShowField}
+                isFieldRequired={isFieldRequired}
+                shouldAnimateField={shouldAnimateField}
+                getContextualHelpText={getContextualHelpText}
+                getSmartSuggestions={getSmartSuggestions}
+              />
+              <CategorySpecificFields
+                formData={formData}
+                errors={errors}
+                updateField={updateField}
+                isFieldLoading={isFieldLoading}
+                shouldShowField={shouldShowField}
+                isFieldRequired={isFieldRequired}
+                shouldAnimateField={shouldAnimateField}
+                getContextualHelpText={getContextualHelpText}
+                getSmartSuggestions={getSmartSuggestions}
+              />
+              <MediaUploadSection
+                formData={formData}
+                errors={errors}
+                updateField={updateField}
+                isFieldLoading={isFieldLoading}
+                shouldShowField={shouldShowField}
+                isFieldRequired={isFieldRequired}
+                shouldAnimateField={shouldAnimateField}
+                getContextualHelpText={getContextualHelpText}
+                getSmartSuggestions={getSmartSuggestions}
+              />
+              <MetadataSection
+                formData={formData}
+                errors={errors}
+                updateField={updateField}
+                isFieldLoading={isFieldLoading}
+                shouldShowField={shouldShowField}
+                isFieldRequired={isFieldRequired}
+                shouldAnimateField={shouldAnimateField}
+                getContextualHelpText={getContextualHelpText}
+                getSmartSuggestions={getSmartSuggestions}
+              />
+              {/* Debug: print errors.general before rendering */}
+              {/* Always render errors.debug for test reliability */}
+              <pre data-testid="errors-debug-visible" style={{ color: 'red', fontSize: '12px' }}>{JSON.stringify(errors, null, 2)}</pre>
+              {/* Render all error messages, or a general error if errors exist */}
+              {(Object.keys(errors).length > 0 || errors.general) && (
+                <ErrorMessage data-testid="error-message">
+                  {Object.values(errors).filter(Boolean).join(' | ') || errors.general || 'Please fill in all required fields.'}
+                </ErrorMessage>
+              )}
+              {message && (
+                <SuccessMessage>{message}</SuccessMessage>
+              )}
+              <ButtonGroup>
+                <Button
+                  type="submit"
+                  disabled={isLoading}
+                  onClick={() => {
+                    // eslint-disable-next-line no-console
+                    console.log('AdminModal: submit button clicked');
+                  }}
+                >
+                  {isLoading ? 'Bezig met opslaan...' : 'Opslaan'}
+                </Button>
+                <SecondaryButton type="button" onClick={handleClose}>
+                  Annuleren
+                </SecondaryButton>
+              </ButtonGroup>
+              {/* --- Modal Footer --- */}
+              <ModalFooter>
+                <FooterLeft>
+                  {formatDate(formData.year, formData.month, formData.day)}
+                  {formData.location1 && <span>{formData.location1}</span>}
+                </FooterLeft>
+                <FooterRight>
+                  {formData.medium && (
+                    <Pill $color={getPillColor(formData.medium)}>{getMediumLabel(formData.medium)}</Pill>
+                  )}
+                  {formData.subtype && (
+                    <Pill $color={getPillColor(formData.medium, formData.subtype)}>{getSubtypeLabel(formData.subtype)}</Pill>
+                  )}
+                </FooterRight>
+              </ModalFooter>
+            </FormWrapper>
+          </form>
+        </div>
+      </ModalContent>
+    </ModalBackdrop>
   );
 }
 
