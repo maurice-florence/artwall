@@ -1,0 +1,53 @@
+# Firebase App Hosting configuration
+# Environment variables for build and runtime. Public variables (NEXT_PUBLIC_) are exposed client-side.
+# For sensitive values (e.g., FIREBASE_PRIVATE_KEY) consider migrating to Secret Manager later.
+
+env:
+  - variable: NEXT_PUBLIC_FIREBASE_API_KEY
+    value: "AIzaSyD3A9bkk6BgRQCS2eEiuW6wxuUCqu5rrhA"
+  - variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+    value: "artwall-by-jr.firebaseapp.com"
+  - variable: NEXT_PUBLIC_FIREBASE_DATABASE_URL
+    value: "https://artwall-by-jr-default-rtdb.europe-west1.firebasedatabase.app/"
+  - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
+    value: "artwall-by-jr"
+  - variable: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+    value: "gs://artwall-by-jr.firebasestorage.app"
+  - variable: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
+    value: "685080228794"
+  - variable: NEXT_PUBLIC_FIREBASE_APP_ID
+    value: "1:685080228794:web:9ff03f803c2b68773ea383"
+  - variable: NEXT_PUBLIC_APP_VERSION
+    value: "0.43"
+
+  # Server-side Firebase Admin credentials
+  - variable: FIREBASE_PROJECT_ID
+    value: "artwall-by-jr"
+  - variable: FIREBASE_CLIENT_EMAIL
+    value: "firebase-adminsdk-fbsvc@artwall-by-jr.iam.gserviceaccount.com"
+  - variable: FIREBASE_PRIVATE_KEY
+    secret: firebase-private-key
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: FIREBASE_DATABASE_URL
+    value: "https://artwall-by-jr-default-rtdb.europe-west1.firebasedatabase.app/"
+  - variable: FIREBASE_PRIVATE_KEY_ID
+    value: "a752685b97cca8a851e70d793a2614d3507d5633"
+  - variable: FIREBASE_CLIENT_ID
+    value: "105726572973286016215"
+  - variable: FIREBASE_AUTH_URI
+    value: "https://accounts.google.com/o/oauth2/auth"
+  - variable: FIREBASE_TOKEN_URI
+    value: "https://oauth2.googleapis.com/token"
+  - variable: FIREBASE_AUTH_PROVIDER_X509_CERT_URL
+    value: "https://www.googleapis.com/oauth2/v1/certs"
+  - variable: FIREBASE_CLIENT_X509_CERT_URL
+    value: "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-fbsvc%40artwall-by-jr.iam.gserviceaccount.com"
+  - variable: FIREBASE_UNIVERSE_DOMAIN
+    value: "googleapis.com"
+
+# NOTE: Consider migrating FIREBASE_PRIVATE_KEY to Cloud Secret Manager:
+# env:
+#   - variable: FIREBASE_PRIVATE_KEY
+#     secret: firebase-private-key
