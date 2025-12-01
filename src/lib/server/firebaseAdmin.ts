@@ -55,9 +55,29 @@ function getAdminApp(): App {
     throw new Error(msg); // We will catch this in fetchArtworks and soft-fail locally.
   }
 
-  const projectId = getRequiredEnv('FIREBASE_PROJECT_ID');
-  const clientEmail = getRequiredEnv('FIREBASE_CLIENT_EMAIL');
-  let rawKey = getRequiredEnv('FIREBASE_PRIVATE_KEY');
+  // Prefer a full JSON secret if provided (single secret containing project_id, client_email, private_key)
+  const jsonSecret = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
+  let projectId = process.env.FIREBASE_PROJECT_ID || '';
+  let clientEmail = process.env.FIREBASE_CLIENT_EMAIL || '';
+  let rawKey = process.env.FIREBASE_PRIVATE_KEY || '';
+  let fromJsonSecret = false;
+  if (jsonSecret && jsonSecret.trim().startsWith('{')) {
+    try {
+      const parsed = JSON.parse(jsonSecret);
+      if (parsed.project_id && parsed.client_email && parsed.private_key) {
+        projectId = String(parsed.project_id);
+        clientEmail = String(parsed.client_email);
+        rawKey = String(parsed.private_key);
+        fromJsonSecret = true;
+        console.log('[firebaseAdmin] Using FIREBASE_SERVICE_ACCOUNT_JSON for credentials');
+      }
+    } catch (e) {
+      console.warn('[firebaseAdmin] Failed parsing FIREBASE_SERVICE_ACCOUNT_JSON:', e);
+    }
+  }
+  if (!projectId) projectId = getRequiredEnv('FIREBASE_PROJECT_ID');
+  if (!clientEmail) clientEmail = getRequiredEnv('FIREBASE_CLIENT_EMAIL');
+  if (!rawKey) rawKey = getRequiredEnv('FIREBASE_PRIVATE_KEY');
   rawKey = rawKey.trim();
   let parsedFromJson = false;
   let extractedViaRegex = false;
@@ -102,6 +122,7 @@ function getAdminApp(): App {
     parsedFromJson,
     extractedViaRegex,
     hasPemMarkers,
+    fromJsonSecret,
     first40: privateKey.slice(0, 40),
     last40: privateKey.slice(-40)
   });

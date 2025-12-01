@@ -31,6 +31,13 @@ env:
     availability:
       - BUILD
       - RUNTIME
+  # Optional consolidated JSON secret (project_id, client_email, private_key). After regenerating a new key,
+  # store the entire downloaded JSON here instead of quoting the PEM.
+  - variable: FIREBASE_SERVICE_ACCOUNT_JSON
+    secret: firebase-service-account
+    availability:
+      - BUILD
+      - RUNTIME
   - variable: FIREBASE_DATABASE_URL
     value: "https://artwall-by-jr-default-rtdb.europe-west1.firebasedatabase.app/"
   - variable: FIREBASE_PRIVATE_KEY_ID
