@@ -58,25 +58,47 @@ function getAdminApp(): App {
   const projectId = getRequiredEnv('FIREBASE_PROJECT_ID');
   const clientEmail = getRequiredEnv('FIREBASE_CLIENT_EMAIL');
   let rawKey = getRequiredEnv('FIREBASE_PRIVATE_KEY');
+  rawKey = rawKey.trim();
   let parsedFromJson = false;
-  // If the secret stored is the full service account JSON, extract private_key
-  if (rawKey.trim().startsWith('{')) {
+  let extractedViaRegex = false;
+  const originalFirstChar = rawKey[0];
+  // Attempt JSON parse if this looks like JSON or contains a private_key field
+  if (originalFirstChar === '{' || /"private_key"\s*:/.test(rawKey)) {
     try {
       const svc = JSON.parse(rawKey);
       if (svc.private_key) {
-        rawKey = svc.private_key as string;
+        rawKey = String(svc.private_key).trim();
         parsedFromJson = true;
       } else {
-        console.warn('[firebaseAdmin] JSON secret did not contain private_key field.');
+        console.warn('[firebaseAdmin] JSON secret parsed but no private_key field present.');
       }
     } catch (e) {
-      console.warn('[firebaseAdmin] Failed to parse JSON service account secret:', e);
+      // Fallback: regex extract if JSON parse fails (handles secrets stored with minimal escaping)
+      const match = rawKey.match(/"private_key"\s*:\s*"([^\"]+)"/s);
+      if (match) {
+        rawKey = match[1].trim();
+        extractedViaRegex = true;
+      } else {
+        console.warn('[firebaseAdmin] Failed to parse JSON service account secret and regex extraction failed:', e);
+      }
     }
   }
-  // Support both secret manager multi-line PEM and escaped \\n form
+  // Remove wrapping quotes if somehow still present
+  if (rawKey.startsWith('"') && rawKey.endsWith('"')) {
+    rawKey = rawKey.slice(1, -1);
+  }
+  // Support both secret manager multi-line PEM and escaped \n form
   const privateKey = rawKey.includes('\\n') ? rawKey.replace(/\\n/g, '\n') : rawKey;
   const hasPemMarkers = privateKey.includes('-----BEGIN PRIVATE KEY-----') && privateKey.includes('-----END PRIVATE KEY-----');
-  console.log('[firebaseAdmin] Private key length:', privateKey.length, 'escaped?', rawKey.includes('\\n'), 'parsedFromJson?', parsedFromJson, 'hasPemMarkers?', hasPemMarkers);
+  console.log('[firebaseAdmin] Private key diagnostics:', {
+    length: privateKey.length,
+    escaped: rawKey.includes('\\n'),
+    parsedFromJson,
+    extractedViaRegex,
+    hasPemMarkers,
+    first40: privateKey.slice(0, 40),
+    last40: privateKey.slice(-40)
+  });
   if (!hasPemMarkers) {
     throw new Error('Invalid private key format: PEM markers missing');
   }
