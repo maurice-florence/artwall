@@ -74,7 +74,8 @@ function getAdminApp(): App {
       }
     } catch (e) {
       // Fallback: regex extract if JSON parse fails (handles secrets stored with minimal escaping)
-      const match = rawKey.match(/"private_key"\s*:\s*"([^\"]+)"/s);
+      // Use a multiline regex without dotAll to stay compatible with older TS targets
+      const match = rawKey.match(/"private_key"\s*:\s*"([^\"]+)"/m);
       if (match) {
         rawKey = match[1].trim();
         extractedViaRegex = true;
