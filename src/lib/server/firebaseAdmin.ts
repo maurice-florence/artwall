@@ -58,7 +58,9 @@ function getAdminApp(): App {
   const projectId = getRequiredEnv('FIREBASE_PROJECT_ID');
   const clientEmail = getRequiredEnv('FIREBASE_CLIENT_EMAIL');
   const rawKey = getRequiredEnv('FIREBASE_PRIVATE_KEY');
-  const privateKey = rawKey.replace(/\n/g, '\n');
+  // Support both secret manager multi-line PEM and escaped \n form
+  const privateKey = rawKey.includes('\\n') ? rawKey.replace(/\\n/g, '\n') : rawKey;
+  console.log('[firebaseAdmin] Private key length:', privateKey.length, 'escaped?', rawKey.includes('\\n'));
 
   console.log('[firebaseAdmin] Initializing Firebase Admin app');
   adminApp = initializeApp({

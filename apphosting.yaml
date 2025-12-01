@@ -26,7 +26,8 @@ env:
   - variable: FIREBASE_CLIENT_EMAIL
     value: "firebase-adminsdk-fbsvc@artwall-by-jr.iam.gserviceaccount.com"
   - variable: FIREBASE_PRIVATE_KEY
-    secret: firebase-private-key
+    # Using existing shared secret managed in Cloud Secret Manager
+    secret: firebase-service-account
     availability:
       - BUILD
       - RUNTIME
