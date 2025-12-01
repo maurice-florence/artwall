@@ -84,9 +84,14 @@ function getAdminApp(): App {
       }
     }
   }
-  // Remove wrapping quotes if somehow still present
-  if (rawKey.startsWith('"') && rawKey.endsWith('"')) {
-    rawKey = rawKey.slice(1, -1);
+  // Remove wrapping quotes / trailing comma artifacts (secret stored as quoted PEM)
+  if (rawKey.startsWith('"-----BEGIN PRIVATE KEY-----')) {
+    rawKey = rawKey.substring(1); // drop leading quote
+  }
+  if (rawKey.endsWith('",')) {
+    rawKey = rawKey.slice(0, -2); // drop trailing ",
+  } else if (rawKey.endsWith('"')) {
+    rawKey = rawKey.slice(0, -1);
   }
   // Support both secret manager multi-line PEM and escaped \n form
   const privateKey = rawKey.includes('\\n') ? rawKey.replace(/\\n/g, '\n') : rawKey;
