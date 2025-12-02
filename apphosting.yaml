@@ -27,14 +27,14 @@ env:
     value: "firebase-adminsdk-fbsvc@artwall-by-jr.iam.gserviceaccount.com"
   - variable: FIREBASE_PRIVATE_KEY
     # Legacy fallback; keep until confident JSON secret covers all. Points to new key secret.
-    secret: firebase-service-key
+    secret: projects/artwall-by-jr/secrets/firebase-service-key/versions/latest
     availability:
       - BUILD
       - RUNTIME
   # Optional consolidated JSON secret (project_id, client_email, private_key). After regenerating a new key,
   # store the entire downloaded JSON here instead of quoting the PEM.
   - variable: FIREBASE_SERVICE_ACCOUNT_JSON
-    secret: firebase-service-key
+    secret: projects/artwall-by-jr/secrets/firebase-service-key/versions/latest
     availability:
       - BUILD
       - RUNTIME
