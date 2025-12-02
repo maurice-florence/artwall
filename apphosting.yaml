@@ -5,26 +5,56 @@
 env:
   - variable: NEXT_PUBLIC_FIREBASE_API_KEY
     value: "AIzaSyD3A9bkk6BgRQCS2eEiuW6wxuUCqu5rrhA"
+    availability:
+      - BUILD
+      - RUNTIME
   - variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
     value: "artwall-by-jr.firebaseapp.com"
+    availability:
+      - BUILD
+      - RUNTIME
   - variable: NEXT_PUBLIC_FIREBASE_DATABASE_URL
     value: "https://artwall-by-jr-default-rtdb.europe-west1.firebasedatabase.app/"
+    availability:
+      - BUILD
+      - RUNTIME
   - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
     value: "artwall-by-jr"
+    availability:
+      - BUILD
+      - RUNTIME
   - variable: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
     value: "gs://artwall-by-jr.firebasestorage.app"
+    availability:
+      - BUILD
+      - RUNTIME
   - variable: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
     value: "685080228794"
+    availability:
+      - BUILD
+      - RUNTIME
   - variable: NEXT_PUBLIC_FIREBASE_APP_ID
     value: "1:685080228794:web:9ff03f803c2b68773ea383"
+    availability:
+      - BUILD
+      - RUNTIME
   - variable: NEXT_PUBLIC_APP_VERSION
     value: "0.43"
+    availability:
+      - BUILD
+      - RUNTIME
 
   # Server-side Firebase Admin credentials
   - variable: FIREBASE_PROJECT_ID
     value: "artwall-by-jr"
+    availability:
+      - BUILD
+      - RUNTIME
   - variable: FIREBASE_CLIENT_EMAIL
     value: "firebase-adminsdk-fbsvc@artwall-by-jr.iam.gserviceaccount.com"
+    availability:
+      - BUILD
+      - RUNTIME
   - variable: FIREBASE_PRIVATE_KEY
     # Legacy fallback; keep until confident JSON secret covers all. Points to new key secret.
     secret: firebase-service-key
@@ -40,6 +70,9 @@ env:
       - RUNTIME
   - variable: FIREBASE_DATABASE_URL
     value: "https://artwall-by-jr-default-rtdb.europe-west1.firebasedatabase.app/"
+    availability:
+      - BUILD
+      - RUNTIME
   - variable: FIREBASE_PRIVATE_KEY_ID
     value: "a752685b97cca8a851e70d793a2614d3507d5633"
   - variable: FIREBASE_CLIENT_ID
